@@ -6,6 +6,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileUnavailable } from '@/components/app';
 import { useAuth } from '@/providers/AuthProvider';
@@ -13,8 +14,12 @@ import { isStaff } from '@/config/permissions.config';
 import { colors, spacing, typography } from '@/theme';
 import { ROLE_HOME_ROUTE } from '@/types/roles';
 
+/** Tab bar height excluding the system inset, which is added at runtime. */
+const TAB_BAR_CONTENT_HEIGHT = 60;
+
 export default function CommitteeLayout() {
   const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
+  const insets = useSafeAreaInsets();
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
   // A failed profile fetch would otherwise leave this layout rendering nothing
@@ -32,7 +37,13 @@ export default function CommitteeLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+            paddingBottom: insets.bottom + spacing.xs,
+          },
+        ],
         tabBarLabelStyle: typography.caption,
         tabBarHideOnKeyboard: Platform.OS === 'android',
       }}
@@ -81,8 +92,6 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: colors.surface,
     borderTopColor: colors.border,
-    height: Platform.OS === 'ios' ? 84 : 64,
     paddingTop: spacing.xs,
-    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.sm,
   },
 });

@@ -5,10 +5,12 @@
  * does not use it but toasts and screens do; Toast wraps Auth so an auth error
  * can be surfaced.
  */
+import { NavigationBar } from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -59,6 +61,15 @@ export default function RootLayout() {
         <QueryProvider>
           <AuthProvider>
             <ToastProvider>
+              {/*
+                Hide the Android navigation buttons so the app runs full screen.
+                Android keeps them available: swiping up from the bottom edge
+                brings them back transiently, then they hide again.
+
+                Android only — `expo-navigation-bar` is a no-op elsewhere, and
+                iOS has no equivalent bar to hide.
+              */}
+              {Platform.OS === 'android' ? <NavigationBar hidden /> : null}
               <StatusBar style="auto" />
               <RootNavigator />
             </ToastProvider>

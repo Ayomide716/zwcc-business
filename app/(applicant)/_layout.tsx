@@ -8,6 +8,7 @@
 import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import { Platform, StyleSheet, View } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Text } from '@/components/ui/Text';
 import { useUnreadCount } from '@/hooks/queries';
@@ -28,8 +29,12 @@ function UnreadBadge({ count }: { count: number }) {
   );
 }
 
+/** Tab bar height excluding the system inset, which is added at runtime. */
+const TAB_BAR_CONTENT_HEIGHT = 60;
+
 export default function ApplicantLayout() {
   const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
+  const insets = useSafeAreaInsets();
   const { data: unreadCount = 0 } = useUnreadCount();
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
@@ -49,7 +54,13 @@ export default function ApplicantLayout() {
         headerShown: false,
         tabBarActiveTintColor: colors.brand,
         tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: styles.tabBar,
+        tabBarStyle: [
+          styles.tabBar,
+          {
+            height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+            paddingBottom: insets.bottom + spacing.xs,
+          },
+        ],
         tabBarLabelStyle: typography.caption,
         tabBarHideOnKeyboard: Platform.OS === 'android',
       }}
@@ -111,9 +122,7 @@ const styles = StyleSheet.create({
   tabBar: {
     backgroundColor: colors.surface,
     borderTopColor: colors.border,
-    height: Platform.OS === 'ios' ? 84 : 64,
     paddingTop: spacing.xs,
-    paddingBottom: Platform.OS === 'ios' ? spacing.xl : spacing.sm,
   },
   badge: {
     position: 'absolute',

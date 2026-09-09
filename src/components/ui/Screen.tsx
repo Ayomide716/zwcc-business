@@ -28,6 +28,12 @@ export interface ScreenProps {
   padded?: boolean;
   /** Honour the bottom safe area. Turn off when a tab bar already does. */
   edgeToEdgeBottom?: boolean;
+  /**
+   * Let content run under the status bar. Only for screens whose first element
+   * applies the top inset itself — `BrandHeader` does. Everything else must
+   * leave this off, or the title collides with the clock and battery icons.
+   */
+  edgeToEdgeTop?: boolean;
   onRefresh?: () => void;
   refreshing?: boolean;
   background?: keyof typeof colors;
@@ -43,6 +49,7 @@ export function Screen({
   scrollable = true,
   padded = true,
   edgeToEdgeBottom = false,
+  edgeToEdgeTop = false,
   onRefresh,
   refreshing = false,
   background = 'background',
@@ -54,12 +61,16 @@ export function Screen({
   const insets = useSafeAreaInsets();
 
   const paddingBottom = edgeToEdgeBottom ? 0 : Math.max(insets.bottom, spacing.base);
+  // Without this, every screen that does not use BrandHeader renders its title
+  // underneath the status bar.
+  const paddingTop = edgeToEdgeTop ? 0 : insets.top;
 
   const content = scrollable ? (
     <ScrollView
       style={styles.flex}
       contentContainerStyle={[
         padded && styles.padded,
+        { paddingTop: paddingTop + (padded ? spacing.base : 0) },
         { paddingBottom: paddingBottom + spacing.xxl },
         contentContainerStyle,
       ]}
@@ -80,7 +91,16 @@ export function Screen({
       {children}
     </ScrollView>
   ) : (
-    <View style={[styles.flex, padded && styles.padded, contentContainerStyle]}>{children}</View>
+    <View
+      style={[
+        styles.flex,
+        padded && styles.padded,
+        { paddingTop: paddingTop + (padded ? spacing.base : 0) },
+        contentContainerStyle,
+      ]}
+    >
+      {children}
+    </View>
   );
 
   return (
@@ -103,7 +123,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   padded: {
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.base,
   },
   footer: {
     paddingHorizontal: spacing.base,

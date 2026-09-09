@@ -75,24 +75,39 @@ export function formatDateTime(value: string | Date | null | undefined): string 
   }).format(date);
 }
 
-/** "3 days ago", "in 2 weeks". Used on dashboards and notification lists. */
+/**
+ * "3 days ago", "in 2 weeks". Used on dashboards and notification lists.
+ *
+ * Written by hand rather than with `Intl.RelativeTimeFormat`, which **Hermes on
+ * Android does not implement**. Constructing it throws, and because this runs
+ * inside a list row it took the whole app down when the Updates tab opened.
+ * Hermes does support Intl.DateTimeFormat and Intl.NumberFormat, which the rest
+ * of this file uses; RelativeTimeFormat is the specific gap.
+ */
 export function formatRelative(value: string | Date | null | undefined, now = new Date()): string {
   const date = toDate(value);
   if (!date) return '—';
 
-  const diffMs = date.getTime() - now.getTime();
-  const diffSeconds = Math.round(diffMs / 1000);
-  const absSeconds = Math.abs(diffSeconds);
+  const diffSeconds = Math.round((date.getTime() - now.getTime()) / 1000);
+  const past = diffSeconds < 0;
+  const seconds = Math.abs(diffSeconds);
 
-  const formatter = new Intl.RelativeTimeFormat('en', { numeric: 'auto' });
+  const say = (count: number, unit: string) => {
+    const plural = count === 1 ? unit : `${unit}s`;
+    return past ? `${count} ${plural} ago` : `in ${count} ${plural}`;
+  };
 
-  if (absSeconds < 60) return formatter.format(diffSeconds, 'second');
-  if (absSeconds < 3600) return formatter.format(Math.round(diffSeconds / 60), 'minute');
-  if (absSeconds < 86_400) return formatter.format(Math.round(diffSeconds / 3600), 'hour');
-  if (absSeconds < 604_800) return formatter.format(Math.round(diffSeconds / 86_400), 'day');
-  if (absSeconds < 2_592_000) return formatter.format(Math.round(diffSeconds / 604_800), 'week');
-  if (absSeconds < 31_536_000) return formatter.format(Math.round(diffSeconds / 2_592_000), 'month');
-  return formatter.format(Math.round(diffSeconds / 31_536_000), 'year');
+  if (seconds < 45) return past ? 'just now' : 'in a moment';
+  if (seconds < 5400) {
+    const minutes = Math.round(seconds / 60);
+    return minutes < 60 ? say(minutes, 'minute') : say(1, 'hour');
+  }
+  if (seconds < 86_400) return say(Math.round(seconds / 3600), 'hour');
+  if (seconds < 172_800) return past ? 'yesterday' : 'tomorrow';
+  if (seconds < 604_800) return say(Math.round(seconds / 86_400), 'day');
+  if (seconds < 2_592_000) return say(Math.round(seconds / 604_800), 'week');
+  if (seconds < 31_536_000) return say(Math.round(seconds / 2_592_000), 'month');
+  return say(Math.round(seconds / 31_536_000), 'year');
 }
 
 /** Whole days between two dates, positive when `date` is in the future. */

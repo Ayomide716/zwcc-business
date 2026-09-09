@@ -50,6 +50,7 @@ export default function CommitteeDashboard() {
       onRefresh={handleRefresh}
       refreshing={refreshing}
       edgeToEdgeBottom
+      edgeToEdgeTop
     >
       <BrandHeader
         eyebrow="Grant Committee"

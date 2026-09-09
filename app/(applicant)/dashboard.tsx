@@ -84,6 +84,7 @@ export default function ApplicantDashboard() {
       onRefresh={handleRefresh}
       refreshing={refreshing}
       edgeToEdgeBottom
+      edgeToEdgeTop
     >
       <BrandHeader
         eyebrow={greeting()}
