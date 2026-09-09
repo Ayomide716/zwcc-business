@@ -12,6 +12,7 @@ export * from './form.config';
 export * from './monitoring.config';
 export * from './registration-code.config';
 export * from './program.config';
+export * from './scoring.config';
 export * from './notifications.config';
 export * from './agreement.config';
 export * from './rejection-reasons.config';

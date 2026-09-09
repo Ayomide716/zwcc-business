@@ -141,10 +141,14 @@ export interface ApplicationReviewRow extends Timestamps {
   application_id: string;
   reviewer_id: string;
   stage: string;
-  decision: 'approve' | 'reject' | 'request_changes' | 'note' | null;
+  decision: 'approve' | 'reject' | 'request_changes' | 'note' | 'score' | null;
   notes: string | null;
   /** Internal notes are never visible to the applicant (enforced by RLS). */
   is_internal: boolean;
+  /** Criterion id to a 1-5 value. Keys come from `scoring.config.ts`. */
+  scores: Record<string, number>;
+  /** `RUBRIC_VERSION` when scored. Scores across versions are not comparable. */
+  rubric_version: number | null;
 }
 
 export interface StatusHistoryRow {
@@ -352,7 +356,9 @@ export interface Database {
       >;
       application_reviews: TableDef<
         ApplicationReviewRow,
-        Insertable<ApplicationReviewRow, DefaultCols>,
+        // `scores` defaults to '{}' in the database, so a note or a decision
+        // need not send one.
+        Insertable<ApplicationReviewRow, DefaultCols | 'scores'>,
         Partial<ApplicationReviewRow>
       >;
       application_status_history: TableDef<

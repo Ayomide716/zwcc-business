@@ -12,7 +12,12 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { ApplicationTimeline, StatusBadge } from '@/components/app';
+import {
+  ApplicationTimeline,
+  CommitteeScoreSummary,
+  ScoreSheetCard,
+  StatusBadge,
+} from '@/components/app';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -57,6 +62,13 @@ const DOC_TONES: Record<string, Tone> = {
   rejected: 'danger',
 };
 
+/**
+ * Scoring is open while the decision still is. Once an application is approved
+ * or declined the sheet locks: scores are a record of the judgement made at the
+ * time, not something to be revised afterwards.
+ */
+const SCOREABLE_STATUSES = ['submitted', 'verification', 'committee_review'];
+
 export default function ApplicationDetailScreen() {
   const router = useRouter();
   const toast = useToast();
@@ -78,6 +90,36 @@ export default function ApplicationDetailScreen() {
   const [docReasonCode, setDocReasonCode] = useState<string | null>(null);
   const [docReasonNote, setDocReasonNote] = useState('');
   const [busy, setBusy] = useState(false);
+  const [savingScores, setSavingScores] = useState(false);
+
+  // Score rows are separated from note rows: the sheet edits this reviewer's
+  // own row, the summary averages everybody's.
+  const scoreRows = useMemo(
+    () => reviews.filter((review) => review.decision === 'score'),
+    [reviews],
+  );
+  const myScores = useMemo(
+    () => scoreRows.find((review) => review.reviewer_id === actor.id)?.scores ?? {},
+    [scoreRows, actor.id],
+  );
+  const noteRows = useMemo(
+    () => reviews.filter((review) => review.decision !== 'score'),
+    [reviews],
+  );
+
+  async function handleSaveScores(scores: Record<string, number>) {
+    if (!application) return;
+    setSavingScores(true);
+    try {
+      await reviewService.saveScores(application.id, actor, scores);
+      invalidate(application.id);
+      toast.success('Scores saved', 'Only the committee can see your assessment.');
+    } catch (error) {
+      toast.error(error, 'Could not save your scores');
+    } finally {
+      setSavingScores(false);
+    }
+  }
 
   const application = context.data?.application;
   const values = useMemo(
@@ -387,11 +429,21 @@ export default function ApplicationDetailScreen() {
         );
       })}
 
+      {/* Scoring. Reviewers score before deciding, and the sheet locks after. */}
+      <ScoreSheetCard
+        value={myScores}
+        onSave={handleSaveScores}
+        saving={savingScores}
+        readOnly={!SCOREABLE_STATUSES.includes(application.status)}
+      />
+
+      <CommitteeScoreSummary sheets={scoreRows.map((review) => review.scores)} />
+
       {/* Review notes */}
-      {reviews.length > 0 ? (
+      {noteRows.length > 0 ? (
         <Card style={styles.card}>
           <Text variant="title3">Review notes</Text>
-          {reviews.map((review) => (
+          {noteRows.map((review) => (
             <View key={review.id} style={styles.noteRow}>
               <View style={styles.noteHeader}>
                 <Text variant="label">{review.reviewer?.full_name ?? 'Reviewer'}</Text>

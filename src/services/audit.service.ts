@@ -28,6 +28,7 @@ export type AuditAction =
   | 'document.rejected'
   | 'review.created'
   | 'review.note_added'
+  | 'review.scored'
   | 'application.approved'
   | 'application.rejected'
   | 'agreement.issued'

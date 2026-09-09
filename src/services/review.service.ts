@@ -6,6 +6,7 @@
  * that accompanies them — the notes, the reasoning, the trail of who looked at
  * what.
  */
+import { RUBRIC_VERSION, type ScoreSheet } from '@/config/scoring.config';
 import { supabase } from '@/lib/supabase';
 import type { ApplicationReviewRow } from '@/types/database';
 import type { Role } from '@/types/roles';
@@ -34,6 +35,50 @@ export const reviewService = {
 
     if (error) throw error;
     return (data ?? []) as unknown as ReviewWithReviewer[];
+  },
+
+  /**
+   * Record or revise this reviewer's scores.
+   *
+   * Upserted rather than inserted: a reviewer who looks again should change
+   * their mind on the record, not add a second sheet that quietly skews the
+   * application's average. The database enforces the same thing with a partial
+   * unique index, so a race between two devices cannot create a duplicate.
+   */
+  async saveScores(
+    applicationId: string,
+    reviewer: { id: string; role: Role },
+    scores: ScoreSheet,
+    stage = 'committee_review',
+  ): Promise<ApplicationReviewRow> {
+    const { data, error } = await supabase
+      .from('application_reviews')
+      .upsert(
+        {
+          application_id: applicationId,
+          reviewer_id: reviewer.id,
+          stage,
+          decision: 'score',
+          scores,
+          rubric_version: RUBRIC_VERSION,
+          is_internal: true,
+        },
+        { onConflict: 'application_id,reviewer_id,stage' },
+      )
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    await auditService.record({
+      action: 'review.scored',
+      entityType: 'application',
+      entityId: applicationId,
+      actorId: reviewer.id,
+      actorRole: reviewer.role,
+    });
+
+    return data;
   },
 
   /** Add an internal note. Never visible to the applicant. */

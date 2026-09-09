@@ -17,3 +17,5 @@ export { RegistrationCodeCard } from './RegistrationCodeCard';
 export { LegalDocumentView } from './LegalDocumentView';
 export { ProfileUnavailable } from './ProfileUnavailable';
 export { OfflineBanner } from './OfflineBanner';
+export { ScoreSheetCard } from './ScoreSheetCard';
+export { CommitteeScoreSummary } from './CommitteeScoreSummary';
