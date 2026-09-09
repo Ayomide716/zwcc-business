@@ -9,6 +9,7 @@ import { Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileUnavailable } from '@/components/app';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useAuth } from '@/providers/AuthProvider';
 import { isStaff } from '@/config/permissions.config';
 import { colors, spacing, typography } from '@/theme';
@@ -19,6 +20,9 @@ const TAB_BAR_CONTENT_HEIGHT = 60;
 
 export default function CommitteeLayout() {
   const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
+
+  // Asked for here, not at the root: by this point the person is using the app.
+  usePushNotifications();
   const insets = useSafeAreaInsets();
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;

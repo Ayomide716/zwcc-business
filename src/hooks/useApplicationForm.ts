@@ -25,6 +25,7 @@ import {
   type FormValues,
 } from '@/config/form.config';
 import { logger } from '@/lib/logger';
+import { useNetwork } from '@/providers/NetworkProvider';
 import { applicationService } from '@/services/application.service';
 import { validateField, validateStep } from '@/validation/application';
 
@@ -65,6 +66,7 @@ export function useApplicationForm(
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [saveState, setSaveState] = useState<SaveState>('idle');
   const [hydrating, setHydrating] = useState(true);
+  const { isOnline } = useNetwork();
 
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const pendingStep = useRef<string | undefined>(undefined);
@@ -226,6 +228,24 @@ export function useApplicationForm(
     },
     [],
   );
+
+  /*
+    Push to the server the moment the connection comes back.
+
+    Without this, a save that failed while offline was only retried when the
+    applicant next typed. Someone who finished a section on a bad signal and
+    then put the phone down would have their work sitting on the device only —
+    safe, but invisible to the committee and lost if they reinstalled.
+  */
+  const wasOnline = useRef(isOnline);
+  useEffect(() => {
+    const cameBackOnline = isOnline && !wasOnline.current;
+    wasOnline.current = isOnline;
+
+    if (cameBackOnline && dirty.current && applicationId) {
+      void persistToServer(valuesRef.current, pendingStep.current);
+    }
+  }, [isOnline, applicationId, persistToServer]);
 
   /* ---------------------------- Validation ----------------------------- */
 

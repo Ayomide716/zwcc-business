@@ -136,6 +136,16 @@ export interface DocumentRow extends Timestamps {
   deleted_at: string | null;
 }
 
+export interface DeviceTokenRow extends Timestamps {
+  id: string;
+  user_id: string;
+  /** The Expo push token, e.g. ExponentPushToken[xxxxxxxx]. */
+  token: string;
+  platform: 'ios' | 'android' | 'web';
+  is_active: boolean;
+  last_seen_at: string;
+}
+
 export interface ApplicationReviewRow extends Timestamps {
   id: string;
   application_id: string;
@@ -353,6 +363,11 @@ export interface Database {
         DocumentRow,
         Insertable<DocumentRow, DefaultCols>,
         Partial<DocumentRow>
+      >;
+      device_tokens: TableDef<
+        DeviceTokenRow,
+        Insertable<DeviceTokenRow, DefaultCols | 'is_active' | 'last_seen_at'>,
+        Partial<DeviceTokenRow>
       >;
       application_reviews: TableDef<
         ApplicationReviewRow,

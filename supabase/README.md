@@ -29,6 +29,40 @@ idempotent, so re-running is safe.
 | 4 | `migrations/0004_seed_configuration.sql` | Statuses, document types, programme, settings |
 | 5 | `migrations/0005_staff_notifications.sql` | `notify_staff_about_application()` |
 | 6 | `migrations/0006_search_indexes.sql` | Trigram indexes behind the committee search box |
+| 7 | `migrations/0007_review_scores.sql` | Committee scoring rubric |
+| 8 | `migrations/0008_push_tokens.sql` | Device tokens for push notifications |
+| 9 | `migrations/0009_push_dispatch.sql` | Trigger that sends a push per notification |
+
+## Turning push notifications on
+
+Migrations 8 and 9 create everything except the sender, which cannot live in
+the app: it reads other people's device tokens and therefore needs the service
+role key, which must never ship to a phone.
+
+Three steps, all one-off:
+
+```bash
+# 1. Deploy the sender.
+supabase functions deploy send-push --no-verify-jwt
+```
+
+```sql
+-- 2. Tell the trigger where it lives, and how to authenticate to it.
+alter database postgres set app.push_function_url =
+  'https://<your-project-ref>.supabase.co/functions/v1/send-push';
+alter database postgres set app.service_role_key = '<service role key>';
+```
+
+3. Enable the `pg_net` extension if the dashboard has not already
+   (Database → Extensions → `pg_net`).
+
+Until all three are done, notifications still appear inside the app and nothing
+errors — the trigger checks for its settings and returns quietly when they are
+missing. Verified: with the settings absent, and with them set but `pg_net`
+unavailable, the notification insert still succeeds and only logs a warning.
+
+The service role key is a database setting, readable only by a database
+superuser. It never reaches the app, `.env`, or `eas.json`.
 
 With the Supabase CLI instead:
 

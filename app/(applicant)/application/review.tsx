@@ -27,6 +27,7 @@ import { useApplicationContext, useInvalidateApplication, useMyApplication } fro
 import { clearLocalDraft } from '@/hooks/useApplicationForm';
 import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
 import { useActor } from '@/providers/AuthProvider';
+import { useNetwork } from '@/providers/NetworkProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { applicationService } from '@/services/application.service';
 import { colors, spacing } from '@/theme';
@@ -43,6 +44,7 @@ export default function ReviewScreen() {
 
   const [confirming, setConfirming] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const { isOnline } = useNetwork();
 
   const values = useMemo(
     () => (application?.form_data as Record<string, unknown>) ?? {},
@@ -107,14 +109,22 @@ export default function ReviewScreen() {
       footer={
         editable ? (
           <Button
-            label="Submit application"
+            label={isOnline ? 'Submit application' : 'Waiting for a connection'}
             onPress={() => setConfirming(true)}
-            disabled={!canSubmit}
+            // Submitting is deliberately not queued for later. It issues a
+            // registration code the applicant needs to see, and sending a grant
+            // application on someone's behalf while they are not watching is
+            // not a decision this app should make for them.
+            disabled={!canSubmit || !isOnline}
             fullWidth
             size="lg"
-            icon="paper-plane-outline"
+            icon={isOnline ? 'paper-plane-outline' : 'cloud-offline-outline'}
             accessibilityHint={
-              canSubmit ? 'Opens a confirmation' : blockers[0] ?? 'Complete every section first'
+              !isOnline
+                ? 'You need an internet connection to submit'
+                : canSubmit
+                  ? 'Opens a confirmation'
+                  : blockers[0] ?? 'Complete every section first'
             }
           />
         ) : undefined
@@ -131,6 +141,15 @@ export default function ReviewScreen() {
         }
         showBack
       />
+
+      {editable && !isOnline ? (
+        <Banner
+          tone="warning"
+          title="You are offline"
+          message="Your answers are saved on this phone. You can submit as soon as you have a connection."
+          icon="cloud-offline-outline"
+        />
+      ) : null}
 
       {!editable ? (
         <Banner

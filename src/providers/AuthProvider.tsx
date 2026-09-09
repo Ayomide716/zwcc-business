@@ -21,6 +21,7 @@ import { logger } from '@/lib/logger';
 import { toUserError, type UserError } from '@/lib/errors';
 import { isSupabaseConfigured, startAuthAutoRefresh, supabase } from '@/lib/supabase';
 import { profileService } from '@/services/profile.service';
+import { pushService } from '@/services/push.service';
 import type { ProfileRow } from '@/types/database';
 import type { Role } from '@/types/roles';
 
@@ -144,6 +145,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signOut = useCallback(async () => {
     try {
+      /*
+        Stop pushing to this device before the session goes.
+
+        Phones are shared here. Without this, the next person to sign in would
+        keep receiving the previous user's notifications — the title of a
+        decision on someone else's grant application, on their lock screen.
+      */
+      const token = await pushService.getExistingToken();
+      if (token) await pushService.deactivate(token);
+
       await profileService.signOut();
     } catch (error) {
       // Even if the network call fails, clear local state so the user is not

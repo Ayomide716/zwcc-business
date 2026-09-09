@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text } from '@/components/ui/Text';
 import { useUnreadCount } from '@/hooks/queries';
 import { ProfileUnavailable } from '@/components/app';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useAuth } from '@/providers/AuthProvider';
 import { colors, radius, spacing, typography } from '@/theme';
 import { ROLE_HOME_ROUTE } from '@/types/roles';
@@ -34,6 +35,9 @@ const TAB_BAR_CONTENT_HEIGHT = 60;
 
 export default function ApplicantLayout() {
   const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
+
+  // Asked for here, not at the root: by this point the person is using the app.
+  usePushNotifications();
   const insets = useSafeAreaInsets();
   const { data: unreadCount = 0 } = useUnreadCount();
 
