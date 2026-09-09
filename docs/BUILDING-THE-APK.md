@@ -111,3 +111,39 @@ with no cache.
 # The real project ref should appear; 'placeholder.supabase.co' should not.
 grep -oa "https://[a-z0-9]*\.supabase\.co" <bundle>.hbc | sort -u
 ```
+
+
+## Building from a phone (no terminal)
+
+`.github/workflows/build-apk.yml` runs the EAS build for you, so the whole flow
+works from the GitHub website or mobile app.
+
+**One-time setup**
+
+1. expo.dev -> sign up -> **Settings -> Access tokens** -> **Create token**, copy it.
+2. GitHub repo -> **Settings -> Secrets and variables -> Actions** ->
+   **New repository secret**. Name it exactly `EXPO_TOKEN`, paste the value.
+
+**Every build**
+
+GitHub -> **Actions** -> **Build Android APK** -> **Run workflow** -> pick
+`preview` -> Run.
+
+The workflow checks the token, typechecks, links the EAS project, and waits for
+the cloud build. When it goes green, the APK download link is on your Expo
+dashboard under Builds.
+
+### Why the Run workflow button is visible
+
+GitHub only shows `workflow_dispatch` workflows that exist on the repository's
+**default branch**. This repo's default branch is
+`claude/zwcc-grant-mobile-app-cmeh1t`, which is where the workflow lives, so it
+appears. If the default branch is ever changed to `main`, this workflow must be
+merged there or the button disappears.
+
+### Rotate the Expo token if it has been shared
+
+An Expo access token grants full control of the account: builds, submissions,
+and over-the-air updates to installed apps. If the token has been pasted into a
+chat, an email, or anywhere else, revoke it at expo.dev -> Settings -> Access
+tokens once the build works, create a fresh one, and update the GitHub secret.

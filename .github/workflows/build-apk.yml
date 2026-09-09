@@ -48,6 +48,12 @@ jobs:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
 
+      - name: Confirm the Expo token works
+        # Fails here in seconds with a clear message, rather than deep inside
+        # the build with an opaque error.
+        run: |
+          echo "Authenticated to Expo as: $(npx eas whoami)"
+
       - name: Install dependencies
         run: npm ci
 
@@ -55,8 +61,13 @@ jobs:
         run: npm run typecheck
 
       - name: Link or create the EAS project
-        # Writes extra.eas.projectId into app.json for this run. Safe to repeat.
-        run: npx eas init --force --non-interactive
+        # app.json intentionally ships without an EAS projectId, so this writes
+        # one for the duration of the run. --force overwrites any stale id.
+        run: |
+          npx eas init --force --non-interactive || {
+            echo "::error::eas init failed. Open expo.dev and check the account tied to EXPO_TOKEN can create projects."
+            exit 1
+          }
 
       - name: Build the APK
         # --wait blocks until the cloud build finishes so the run either
