@@ -85,16 +85,31 @@ jobs:
         # --wait blocks until the cloud build finishes so the run either
         # succeeds with a link or fails visibly, rather than exiting early.
         run: |
+          # pipefail matters: without it tee's exit status masks a failed build.
+          set -o pipefail
           eas build \
             --platform android \
             --profile ${{ inputs.profile }} \
             --non-interactive \
-            --wait
+            --wait 2>&1 | tee /tmp/eas-build.log
 
       - name: Where to download it
         if: always()
         run: |
-          echo "### Build finished" >> $GITHUB_STEP_SUMMARY
-          echo "" >> $GITHUB_STEP_SUMMARY
-          echo "Download the APK from your Expo dashboard:" >> $GITHUB_STEP_SUMMARY
-          echo "https://expo.dev/accounts/_/projects/zwcc-business-grant/builds" >> $GITHUB_STEP_SUMMARY
+          # Lift the install link out of the build output so it is one tap from
+          # the run summary, rather than buried in the log.
+          URL="$(grep -Eo 'https://expo\.dev/accounts/[^[:space:]]+/builds/[a-f0-9-]+' /tmp/eas-build.log 2>/dev/null | tail -1 || true)"
+
+          {
+            echo "### Android build"
+            echo ""
+            if [ -n "$URL" ]; then
+              echo "**Open this on the phone to install:**"
+              echo ""
+              echo "$URL"
+            else
+              echo "No install link found — the build did not finish."
+              echo ""
+              echo "All builds: https://expo.dev/accounts/_/projects/zwcc-business-grant/builds"
+            fi
+          } >> $GITHUB_STEP_SUMMARY
