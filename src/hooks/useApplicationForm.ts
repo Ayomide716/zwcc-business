@@ -18,13 +18,15 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import {
   APPLICATION_STEPS,
+  getField,
   getStep,
   getVisibleFields,
+  isFieldVisible,
   type FormValues,
 } from '@/config/form.config';
 import { logger } from '@/lib/logger';
 import { applicationService } from '@/services/application.service';
-import { validateStep } from '@/validation/application';
+import { validateField, validateStep } from '@/validation/application';
 
 const DRAFT_KEY_PREFIX = 'zwcc.draft.';
 const AUTOSAVE_DELAY_MS = 1500;
@@ -38,6 +40,13 @@ export interface UseApplicationFormResult {
   errors: Record<string, string>;
   /** Validate a step and surface its errors. Returns whether it passed. */
   validate: (stepId: string) => boolean;
+  /**
+   * Check one field, for when focus leaves it. Silent on an empty field the
+   * applicant has not filled in yet — "this is required" belongs at the end of
+   * the step, not the moment someone taps past a question they mean to return
+   * to.
+   */
+  validateOnBlur: (fieldId: string) => void;
   clearError: (fieldId: string) => void;
   completedStepIds: string[];
   isStepComplete: (stepId: string) => boolean;
@@ -61,6 +70,10 @@ export function useApplicationForm(
   const pendingStep = useRef<string | undefined>(undefined);
   // Avoids a save firing for values that are already on the server.
   const dirty = useRef(false);
+  // The latest answers, readable synchronously. `validateOnBlur` needs this
+  // because the date picker validates in the same tick as its own change, when
+  // the `values` captured by this render is still the previous one.
+  const valuesRef = useRef<FormValues>(serverValues);
 
   const draftKey = applicationId ? `${DRAFT_KEY_PREFIX}${applicationId}` : null;
 
@@ -83,7 +96,11 @@ export function useApplicationForm(
           const draft = JSON.parse(stored) as FormValues;
           // The device draft is newer than what the server returned whenever a
           // save did not complete, so it wins on conflict.
-          setValuesState((current) => ({ ...current, ...draft }));
+          setValuesState((current) => {
+            const merged = { ...current, ...draft };
+            valuesRef.current = merged;
+            return merged;
+          });
         }
       } catch (error) {
         logger.warn('Could not read local draft', { error });
@@ -101,7 +118,11 @@ export function useApplicationForm(
   // Adopt fresh server values only for fields the user has not touched.
   useEffect(() => {
     if (dirty.current) return;
-    setValuesState((current) => ({ ...serverValues, ...current }));
+    setValuesState((current) => {
+      const merged = { ...serverValues, ...current };
+      valuesRef.current = merged;
+      return merged;
+    });
   }, [serverValues]);
 
   /* ------------------------------ Saving ------------------------------- */
@@ -158,6 +179,7 @@ export function useApplicationForm(
 
       setValuesState((current) => {
         const next = { ...current, [fieldId]: value };
+        valuesRef.current = next;
         writeLocalDraft(next);
         scheduleSave(next);
         return next;
@@ -180,6 +202,7 @@ export function useApplicationForm(
       dirty.current = true;
       setValuesState((current) => {
         const merged = { ...current, ...next };
+        valuesRef.current = merged;
         writeLocalDraft(merged);
         scheduleSave(merged);
         return merged;
@@ -214,6 +237,24 @@ export function useApplicationForm(
     },
     [values],
   );
+
+  const validateOnBlur = useCallback((fieldId: string) => {
+    const current = valuesRef.current;
+    const field = getField(fieldId);
+    if (!field || !isFieldVisible(field, current)) return;
+
+    const value = current[fieldId];
+    if (value === undefined || value === null || value === '') return;
+
+    const message = validateField(field, value);
+    setErrors((existing) => {
+      if (message === (existing[fieldId] ?? null)) return existing;
+      const next = { ...existing };
+      if (message) next[fieldId] = message;
+      else delete next[fieldId];
+      return next;
+    });
+  }, []);
 
   const clearError = useCallback((fieldId: string) => {
     setErrors((current) => {
@@ -250,6 +291,7 @@ export function useApplicationForm(
     setValues,
     errors,
     validate,
+    validateOnBlur,
     clearError,
     completedStepIds,
     isStepComplete,

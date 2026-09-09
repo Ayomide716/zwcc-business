@@ -46,7 +46,17 @@ export function RegistrationCodeCard({
         accessibilityHint="Double tap to copy"
         style={({ pressed }) => [styles.codeRow, pressed && styles.pressed]}
       >
-        <Text variant="title1" color="onBrand" style={styles.code} selectable>
+        <Text
+          variant="title1"
+          color="onBrand"
+          style={styles.code}
+          selectable
+          // The code must read as one unbroken string. Wrapping split it mid-code
+          // on narrower phones, which invites someone to copy down half of it.
+          numberOfLines={1}
+          adjustsFontSizeToFit
+          minimumFontScale={0.6}
+        >
           {code}
         </Text>
         <Ionicons name="copy-outline" size={18} color={colors.textOnBrandMuted} />
@@ -83,7 +93,7 @@ const styles = StyleSheet.create({
   },
   code: {
     // Wide tracking so 4 / A / 7 stay distinguishable when read out.
-    letterSpacing: 2,
+    letterSpacing: 1.5,
     flex: 1,
   },
   guidance: {

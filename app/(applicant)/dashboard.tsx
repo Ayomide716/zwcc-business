@@ -128,12 +128,22 @@ export default function ApplicantDashboard() {
                 {describeStatus(app.status, 'applicant')}
               </Text>
 
+              {/*
+                Labelled "grant process", not "progress": the Application tab
+                shows how much of the FORM is filled, and at 100% there against
+                35% here the two read as contradicting each other. This bar
+                tracks the journey from applying to completing the grant.
+              */}
               <ProgressBar
                 value={getProgress(app.status)}
-                label="Overall progress"
+                label="Grant process"
                 showPercentage
                 tone={statusDefinition?.tone === 'danger' ? 'warning' : 'brand'}
               />
+              <Text variant="caption" muted>
+                This tracks your whole journey, from applying through to the end
+                of monitoring. Filling in the form is the first part of it.
+              </Text>
 
               <View style={styles.metaGrid}>
                 <MetaItem

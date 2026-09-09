@@ -19,6 +19,11 @@ export interface FormFieldRendererProps {
   value: unknown;
   error?: string;
   onChange: (value: unknown) => void;
+  /**
+   * Called when the applicant leaves the field, so a badly formed answer is
+   * flagged there and then rather than at the end of the step.
+   */
+  onBlur?: () => void;
   disabled?: boolean;
 }
 
@@ -27,6 +32,7 @@ export function FormFieldRenderer({
   value,
   error,
   onChange,
+  onBlur,
   disabled,
 }: FormFieldRendererProps) {
   const asString = typeof value === 'string' ? value : '';
@@ -94,6 +100,7 @@ export function FormFieldRenderer({
           error={error}
           helpText={field.helpText}
           editable={!disabled}
+          onBlur={onBlur}
         />
       );
 
@@ -113,6 +120,7 @@ export function FormFieldRenderer({
           error={error}
           helpText={field.helpText}
           editable={!disabled}
+          onBlur={onBlur}
         />
       );
 
@@ -132,7 +140,10 @@ export function FormFieldRenderer({
         <DateField
           label={field.label}
           value={asString}
-          onChange={onChange}
+          onChange={(next) => {
+            onChange(next);
+            onBlur?.();
+          }}
           placeholder={field.placeholder ?? 'Tap to choose a date'}
           required={field.required}
           error={error}
@@ -161,6 +172,7 @@ export function FormFieldRenderer({
           error={error}
           helpText={field.helpText}
           editable={!disabled}
+          onBlur={onBlur}
         />
       );
 
@@ -178,6 +190,7 @@ export function FormFieldRenderer({
           error={error}
           helpText={field.helpText}
           editable={!disabled}
+          onBlur={onBlur}
         />
       );
 
@@ -196,6 +209,7 @@ export function FormFieldRenderer({
           helpText={field.helpText}
           autoCapitalize={field.autoCapitalize ?? 'sentences'}
           editable={!disabled}
+          onBlur={onBlur}
         />
       );
 
@@ -213,6 +227,7 @@ export function FormFieldRenderer({
           helpText={field.helpText}
           autoCapitalize={field.autoCapitalize ?? 'sentences'}
           editable={!disabled}
+          onBlur={onBlur}
         />
       );
   }

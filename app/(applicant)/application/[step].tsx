@@ -203,6 +203,7 @@ export default function ApplicationStepScreen() {
               value={form.values[field.id]}
               error={form.errors[field.id]}
               onChange={(value) => form.setValue(field.id, value)}
+              onBlur={() => form.validateOnBlur(field.id)}
               disabled={!editable}
             />
           </View>
