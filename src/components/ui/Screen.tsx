@@ -13,6 +13,8 @@
  * bar is transparent and scrolling content passes straight behind the clock and
  * battery, mixing with them. Padding alone only fixes the resting position. An
  * opaque strip pinned over that area is what actually hides scrolled content.
+ * It is navy, matching the dashboards' header, so the whole app is topped by the
+ * same band. The status bar icons are set light in the root layout to suit it.
  */
 import { useState } from 'react';
 import {
@@ -139,15 +141,10 @@ export function Screen({
       ) : (
         /*
           The strip that stops scrolled text running into the clock and battery.
-          It matches the page background, so content simply disappears under it.
+          Navy rather than the page colour, so every screen is topped by the same
+          band as the dashboards' header and the app reads as one piece.
         */
-        <View
-          pointerEvents="none"
-          style={[
-            styles.statusBarScrim,
-            { height: insets.top, backgroundColor: colors[background] },
-          ]}
-        />
+        <View pointerEvents="none" style={[styles.statusBarScrim, { height: insets.top }]} />
       )}
 
       {footer ? (
@@ -165,6 +162,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.base,
   },
   statusBarScrim: {
+    backgroundColor: colors.brand,
     position: 'absolute',
     top: 0,
     left: 0,

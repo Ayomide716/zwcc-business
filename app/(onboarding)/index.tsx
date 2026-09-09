@@ -61,7 +61,13 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: insets.top }]}>
+    <View style={styles.container}>
+      {/*
+        The navy band every other screen carries. Without it the status bar
+        icons, which are light app-wide, would be white on this white page.
+      */}
+      <View style={[styles.statusBarBand, { height: insets.top }]} />
+
       <View style={styles.topBar}>
         <Logo size={32} showWordmark={false} />
         {!isLast ? (
@@ -130,6 +136,9 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.surface,
+  },
+  statusBarBand: {
+    backgroundColor: colors.brand,
   },
   topBar: {
     flexDirection: 'row',

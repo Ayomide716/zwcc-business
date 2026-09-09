@@ -70,7 +70,11 @@ export default function RootLayout() {
                 iOS has no equivalent bar to hide.
               */}
               {Platform.OS === 'android' ? <NavigationBar hidden /> : null}
-              <StatusBar style="auto" />
+              {/*
+                Light icons, not "auto": every screen is now topped by a navy
+                band, so dark clock and battery icons would be invisible.
+              */}
+              <StatusBar style="light" />
               <RootNavigator />
             </ToastProvider>
           </AuthProvider>
