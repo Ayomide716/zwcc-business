@@ -54,10 +54,17 @@ jobs:
           packager: npm
 
       - name: Confirm the Expo token works
-        # Fails here in seconds with a clear message, rather than deep inside
-        # the build with an opaque error.
+        # `eas`, not `npx eas`: expo-github-action installs eas-cli globally and
+        # puts it on PATH, so npx looks for a local package that is not there
+        # and dies with "could not determine executable to run".
+        #
+        # Asserting directly rather than via echo "$(...)", which returns echo's
+        # exit status and therefore can never fail.
         run: |
-          echo "Authenticated to Expo as: $(npx eas whoami)"
+          eas whoami || {
+            echo "::error::EXPO_TOKEN is invalid, expired, or revoked. Create a new token at expo.dev (Settings -> Access tokens) and update the EXPO_TOKEN repository secret."
+            exit 1
+          }
 
       - name: Install dependencies
         run: npm ci
@@ -69,7 +76,7 @@ jobs:
         # app.json intentionally ships without an EAS projectId, so this writes
         # one for the duration of the run. --force overwrites any stale id.
         run: |
-          npx eas init --force --non-interactive || {
+          eas init --force --non-interactive || {
             echo "::error::eas init failed. Open expo.dev and check the account tied to EXPO_TOKEN can create projects."
             exit 1
           }
@@ -78,7 +85,7 @@ jobs:
         # --wait blocks until the cloud build finishes so the run either
         # succeeds with a link or fails visibly, rather than exiting early.
         run: |
-          npx eas build \
+          eas build \
             --platform android \
             --profile ${{ inputs.profile }} \
             --non-interactive \
