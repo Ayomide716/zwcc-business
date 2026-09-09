@@ -35,39 +35,38 @@ export function LogoMark({ size = 48, scheme = 'onLight', style }: LogoMarkProps
 
   return (
     <View style={style} accessible accessibilityRole="image" accessibilityLabel="Zion World Christian Center">
+      {/*
+        Geometry matches scripts/generate-brand-assets.js exactly, so the
+        in-app mark and the launcher icon are the same shape.
+      */}
       <Svg width={size} height={size} viewBox="0 0 64 64" fill="none">
         {/* Rounded plate */}
         <Rect x="2" y="2" width="60" height="60" rx="18" fill={plate} />
 
-        {/* Arch / shield outline */}
+        {/* Arch — a ring left open at the bottom (stewardship). */}
         <Path
-          d="M32 9c9.8 0 17.5 6.4 17.5 15.6v13.9C49.5 47.9 41.9 55 32 55s-17.5-7.1-17.5-16.5V24.6C14.5 15.4 22.2 9 32 9Z"
+          d="M20.83 49.29 A 19 19 0 1 1 43.17 49.29"
           stroke={primary}
-          strokeWidth={2.6}
+          strokeWidth={2.9}
+          strokeLinecap="round"
           fill="none"
-          strokeLinejoin="round"
         />
 
-        {/* Ascending chevron — growth */}
+        {/* Ascending chevron — growth. */}
         <Path
-          d="M22 38.5 32 27l10 11.5"
+          d="M21.12 40.32 32 30.08l10.88 10.24"
           stroke={primary}
-          strokeWidth={3.6}
+          strokeWidth={3.5}
           strokeLinecap="round"
           strokeLinejoin="round"
           fill="none"
         />
 
-        {/* Vertical stem, implying a cross with the chevron's crossbar */}
-        <Path
-          d="M32 27v17"
-          stroke={accent}
-          strokeWidth={3}
-          strokeLinecap="round"
-        />
+        {/* Gold stem, implying a cross with the chevron's crossbar. */}
+        <Path d="M32 30.08v16.64" stroke={accent} strokeWidth={2.9} strokeLinecap="round" />
 
-        {/* Keystone dot */}
-        <Circle cx="32" cy="20.5" r="2.6" fill={accent} />
+        {/* Keystone dot. */}
+        <Circle cx="32" cy="21.12" r="2.05" fill={accent} />
       </Svg>
     </View>
   );
