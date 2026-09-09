@@ -15,3 +15,4 @@ export * from './program.config';
 export * from './notifications.config';
 export * from './agreement.config';
 export * from './rejection-reasons.config';
+export * from './legal.config';

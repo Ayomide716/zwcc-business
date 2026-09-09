@@ -14,3 +14,4 @@ export type { ApplicationListItemProps } from './ApplicationListItem';
 export { StatTile } from './StatTile';
 export type { StatTileProps } from './StatTile';
 export { RegistrationCodeCard } from './RegistrationCodeCard';
+export { LegalDocumentView } from './LegalDocumentView';
