@@ -106,7 +106,17 @@ security definer
 set search_path = public, pg_temp
 as $$
 begin
-  if new.role is distinct from old.role and not public.is_admin() then
+  -- `auth.uid()` is null when there is no signed-in caller: a migration, the
+  -- Supabase SQL editor, or a service-role key. Those contexts are already
+  -- privileged, and this is how the FIRST administrator gets promoted — there
+  -- is no admin yet to authorise it. Blocking them would make bootstrapping
+  -- impossible.
+  --
+  -- The guard that matters is the one below it: any *signed-in* user who is
+  -- not an administrator is refused, so an applicant cannot escalate.
+  if new.role is distinct from old.role
+     and auth.uid() is not null
+     and not public.is_admin() then
     raise exception 'Only an administrator can change a user role.'
       using errcode = '42501';
   end if;

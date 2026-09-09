@@ -10,7 +10,9 @@
     "newArchEnabled": true,
     "backgroundColor": "#FFFFFF",
     "primaryColor": "#0B2545",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "org.zionworldcc.businessgrant",
@@ -71,11 +73,6 @@
     ],
     "experiments": {
       "typedRoutes": true
-    },
-    "extra": {
-      "eas": {
-        "projectId": "00000000-0000-0000-0000-000000000000"
-      }
     }
   }
 }

@@ -38,7 +38,11 @@ npm install
 ### 2. Create the Supabase project
 
 In the [Supabase dashboard](https://supabase.com/dashboard), create a project,
-then open the **SQL Editor** and run the migrations **in order**:
+then open the **SQL Editor** and paste in **[`supabase/SETUP.sql`](supabase/SETUP.sql)**.
+That one file contains every migration in the right order, and is safe to
+re-run. It has been verified by executing it against PostgreSQL 16.
+
+If you would rather apply them one at a time, the individual migrations are:
 
 | Order | File | What it does |
 | --- | --- | --- |
@@ -83,6 +87,17 @@ npm start           # then press a for Android, i for iOS
 npm run android
 npm run ios
 ```
+
+### Building an installable APK
+
+```bash
+npm install -g eas-cli && eas login && eas init
+npm run build:apk
+```
+
+See **[docs/BUILDING-THE-APK.md](docs/BUILDING-THE-APK.md)** — note that your
+Supabase keys must go in `eas.json` as well as `.env`, because `.env` is
+gitignored and never reaches the EAS build.
 
 ### Checks
 
