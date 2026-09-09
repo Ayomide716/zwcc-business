@@ -7,8 +7,8 @@
  * config makes it appear here with working validation and no new code.
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useMemo } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useMemo, useRef } from 'react';
+import { ScrollView, StyleSheet, View } from 'react-native';
 
 import { FormFieldRenderer } from '@/components/app';
 import { Button } from '@/components/ui/Button';
@@ -20,6 +20,7 @@ import { Text } from '@/components/ui/Text';
 import { APPLICATION_STEPS, getStep, getVisibleFields } from '@/config/form.config';
 import { useMyApplication } from '@/hooks/queries';
 import { useApplicationForm } from '@/hooks/useApplicationForm';
+import { pluralise } from '@/lib/format';
 import { colors, spacing } from '@/theme';
 import { isFormEditable } from '@/workflow/engine';
 
@@ -36,6 +37,15 @@ export default function ApplicationStepScreen() {
 
   const form = useApplicationForm(application?.id ?? null, serverValues);
 
+  // Where each field sits inside the scroll view, recorded as it lays out, so a
+  // failed "Next" can bring the offending question into view. Without this the
+  // button appears to do nothing when the problem is further down the page.
+  const scrollRef = useRef<ScrollView>(null);
+  const fieldOffsets = useRef<Record<string, number>>({});
+  // Field offsets are relative to their container, so the container's own
+  // position inside the scroll view has to be added back.
+  const fieldsTop = useRef(0);
+
   const step = getStep(stepId ?? '');
   const editable = application ? isFormEditable(application.status) : false;
 
@@ -49,6 +59,11 @@ export default function ApplicationStepScreen() {
   const navigableSteps = useMemo(
     () => APPLICATION_STEPS.filter((candidate) => candidate.kind !== 'review'),
     [],
+  );
+
+  const errorCount = useMemo(
+    () => visibleFields.filter((field) => form.errors[field.id]).length,
+    [visibleFields, form.errors],
   );
 
   const currentIndex = navigableSteps.findIndex((candidate) => candidate.id === stepId);
@@ -79,7 +94,7 @@ export default function ApplicationStepScreen() {
     if (!step) return;
 
     if (!form.validate(step.id)) {
-      // Errors are now rendered under each field; nothing more to announce.
+      scrollToFirstError();
       return;
     }
 
@@ -98,6 +113,18 @@ export default function ApplicationStepScreen() {
     router.push(`/(applicant)/application/${nextStep.id}`);
   }
 
+  /** Scrolls to the topmost field that failed, leaving room for the header. */
+  function scrollToFirstError() {
+    if (!step) return;
+    const firstErrored = getVisibleFields(step, form.values).find(
+      (field) => form.errors[field.id],
+    );
+    const offset = firstErrored ? fieldOffsets.current[firstErrored.id] : undefined;
+    if (offset === undefined) return;
+    const target = fieldsTop.current + offset - spacing.xxl;
+    scrollRef.current?.scrollTo({ y: Math.max(target, 0), animated: true });
+  }
+
   async function goBack() {
     if (step) await form.flush(step.id);
     router.back();
@@ -105,6 +132,7 @@ export default function ApplicationStepScreen() {
 
   return (
     <Screen
+      scrollRef={scrollRef}
       footer={
         <View style={styles.footer}>
           {previousStep ? (
@@ -148,16 +176,36 @@ export default function ApplicationStepScreen() {
         />
       ) : null}
 
-      <View style={styles.fields}>
+      {errorCount > 0 ? (
+        <Banner
+          tone="warning"
+          title={`Please check ${errorCount} ${pluralise(errorCount, 'answer')}`}
+          message="The questions that need attention are marked below."
+          icon="alert-circle-outline"
+        />
+      ) : null}
+
+      <View
+        style={styles.fields}
+        onLayout={(event) => {
+          fieldsTop.current = event.nativeEvent.layout.y;
+        }}
+      >
         {visibleFields.map((field) => (
-          <FormFieldRenderer
+          <View
             key={field.id}
-            field={field}
-            value={form.values[field.id]}
-            error={form.errors[field.id]}
-            onChange={(value) => form.setValue(field.id, value)}
-            disabled={!editable}
-          />
+            onLayout={(event) => {
+              fieldOffsets.current[field.id] = event.nativeEvent.layout.y;
+            }}
+          >
+            <FormFieldRenderer
+              field={field}
+              value={form.values[field.id]}
+              error={form.errors[field.id]}
+              onChange={(value) => form.setValue(field.id, value)}
+              disabled={!editable}
+            />
+          </View>
         ))}
       </View>
 

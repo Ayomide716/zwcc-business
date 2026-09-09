@@ -92,7 +92,14 @@ export function buildProgressMediaPath(
 /* Validation                                                                  */
 /* -------------------------------------------------------------------------- */
 
-export function validateAgainstDocumentType(file: LocalFile, documentTypeId: string): void {
+/** Image types `compressImage` can shrink. Anything else uploads as-is. */
+const COMPRESSIBLE = ['image/jpeg', 'image/jpg', 'image/png'];
+
+/**
+ * Checks the file's kind. Split from the size check because size is only
+ * meaningful after compression — see `uploadDocument`.
+ */
+export function validateDocumentKind(file: LocalFile, documentTypeId: string): void {
   const type = getDocumentType(documentTypeId);
   if (!type) {
     throw new AppError('validation', 'Unknown document', 'That document type is not recognised.');
@@ -106,21 +113,35 @@ export function validateAgainstDocumentType(file: LocalFile, documentTypeId: str
       `Please upload ${readable} for your ${type.label.toLowerCase()}.`,
     );
   }
+}
+
+export function validateDocumentSize(file: LocalFile, documentTypeId: string): void {
+  const type = getDocumentType(documentTypeId);
+  if (!type) {
+    throw new AppError('validation', 'Unknown document', 'That document type is not recognised.');
+  }
 
   if (file.size > type.maxSizeMb * MB) {
+    const advice = COMPRESSIBLE.includes(file.mimeType)
+      ? 'try taking the photo again from further back'
+      : 'please choose a smaller file';
     throw new AppError(
       'validation',
       'File too large',
-      `Your ${type.label.toLowerCase()} is ${formatFileSize(file.size)}. The limit is ${type.maxSizeMb} MB — try taking the photo again or using a smaller file.`,
+      `Your ${type.label.toLowerCase()} is ${formatFileSize(file.size)}. The limit is ${type.maxSizeMb} MB — ${advice}.`,
     );
   }
+}
+
+/** Both checks, for callers that already hold a final file. */
+export function validateAgainstDocumentType(file: LocalFile, documentTypeId: string): void {
+  validateDocumentKind(file, documentTypeId);
+  validateDocumentSize(file, documentTypeId);
 }
 
 /* -------------------------------------------------------------------------- */
 /* Compression                                                                 */
 /* -------------------------------------------------------------------------- */
-
-const COMPRESSIBLE = ['image/jpeg', 'image/jpg', 'image/png'];
 
 /**
  * Shrink an image before upload. Returns the original untouched if it is not an
@@ -223,11 +244,14 @@ export const storageService = {
     documentTypeId: string,
     file: LocalFile,
   ): Promise<UploadedFile> {
-    validateAgainstDocumentType(file, documentTypeId);
+    // Kind first, size last. A photo straight from a modern phone camera is
+    // routinely 6-10 MB, well over the per-type limit, but compresses to a
+    // fraction of that — so checking the size before compressing would reject
+    // documents that upload perfectly well.
+    validateDocumentKind(file, documentTypeId);
 
     const prepared = await compressImage(file);
-    // Re-check after compression: a huge PDF is still huge.
-    validateAgainstDocumentType(prepared, documentTypeId);
+    validateDocumentSize(prepared, documentTypeId);
 
     const path = buildDocumentPath(applicantId, applicationId, documentTypeId, prepared);
     return uploadToBucket(BUCKETS.documents, path, prepared);

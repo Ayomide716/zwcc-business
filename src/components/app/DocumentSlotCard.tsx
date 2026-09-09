@@ -88,6 +88,15 @@ export function DocumentSlotCard({
         </View>
       </View>
 
+      {uploading ? (
+        // A photo on a slow Nigerian mobile connection can take a while. Saying
+        // so stops people tapping again or backing out mid-upload.
+        <Text variant="caption" color="brand" accessibilityLiveRegion="polite">
+          Uploading… please keep this screen open. This can take a moment on a
+          slow connection.
+        </Text>
+      ) : null}
+
       <View style={styles.statusRow}>
         <Badge label={DOCUMENT_STATUS_LABELS[slot.status]} tone={tone} size="sm" />
         {slot.document ? (

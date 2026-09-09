@@ -55,6 +55,17 @@ export interface FieldDefinition {
    * Hidden fields are never required and are stripped from validation.
    */
   visibleWhen?: { field: string; equals: string[] };
+  /**
+   * Date bounds, in whole years relative to today. `minAge: 18` means the date
+   * must be at least 18 years ago. Kept as config so the client can change the
+   * eligibility age without touching validation code.
+   */
+  minAge?: number;
+  maxAge?: number;
+  /** Reject dates after today. Defaults to true for `date` fields. */
+  allowFuture?: boolean;
+  /** Reject dates before today. */
+  allowPast?: boolean;
   /** Retired fields stay here so historical answers still render. */
   archived?: boolean;
   autoCapitalize?: 'none' | 'words' | 'sentences';
@@ -110,6 +121,8 @@ export const APPLICATION_STEPS: StepDefinition[] = [
         label: 'Date of birth',
         type: 'date',
         required: true,
+        minAge: 18,
+        maxAge: 100,
         helpText: 'You must be at least 18 years old to apply.',
       },
       {

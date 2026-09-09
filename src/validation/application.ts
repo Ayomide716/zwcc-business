@@ -15,6 +15,7 @@ import {
   type FormValues,
   type StepDefinition,
 } from '@/config/form.config';
+import { ageInYears, parseISODate } from '@/lib/date';
 
 export interface FieldError {
   fieldId: string;
@@ -69,12 +70,42 @@ function buildFieldSchema(field: FieldDefinition): z.ZodTypeAny {
     }
 
     case 'date': {
+      // Checked in order so the applicant sees the most specific reason: an
+      // unparseable value first, then the calendar rules from the config.
       const schema = z
         .string()
-        .refine((value) => !Number.isNaN(new Date(value).getTime()), {
-          message: 'Enter a valid date.',
+        .min(1, { message: 'This is required.' })
+        .superRefine((value, ctx) => {
+          const date = parseISODate(value);
+          if (!date) {
+            ctx.addIssue({ code: 'custom', message: 'Choose a date.' });
+            return;
+          }
+
+          const now = new Date();
+          if (field.allowFuture !== true && date.getTime() > now.getTime()) {
+            ctx.addIssue({ code: 'custom', message: 'This date cannot be in the future.' });
+            return;
+          }
+          if (field.allowPast === false && date.getTime() < now.getTime()) {
+            ctx.addIssue({ code: 'custom', message: 'This date cannot be in the past.' });
+            return;
+          }
+
+          const age = ageInYears(date, now);
+          if (field.minAge !== undefined && age < field.minAge) {
+            ctx.addIssue({
+              code: 'custom',
+              message: `You must be at least ${field.minAge} years old.`,
+            });
+            return;
+          }
+          if (field.maxAge !== undefined && age > field.maxAge) {
+            ctx.addIssue({ code: 'custom', message: 'Please check the year you entered.' });
+          }
         });
-      return required ? schema.min(1, { message: 'This is required.' }) : schema.optional();
+
+      return required ? schema : schema.or(z.literal('')).optional();
     }
 
     case 'email': {

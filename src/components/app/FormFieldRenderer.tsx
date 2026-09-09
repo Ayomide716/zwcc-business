@@ -7,9 +7,11 @@
 import { useCallback } from 'react';
 
 import { Checkbox, RadioGroup, Select } from '@/components/ui/Choice';
+import { DateField } from '@/components/ui/DateField';
 import { TextField } from '@/components/ui/TextField';
 import type { FieldDefinition } from '@/config/form.config';
 import { GRANT_PROGRAM } from '@/config/program.config';
+import { shiftYears } from '@/lib/date';
 import { formatCurrencyInput, parseCurrencyInput } from '@/lib/format';
 
 export interface FormFieldRendererProps {
@@ -114,21 +116,34 @@ export function FormFieldRenderer({
         />
       );
 
-    case 'date':
+    case 'date': {
+      // Bounds come from the same config the validation reads, so the picker
+      // cannot offer a date the form will then reject.
+      const today = new Date();
+      const minimumDate = field.maxAge !== undefined ? shiftYears(today, -field.maxAge) : undefined;
+      const maximumDate =
+        field.minAge !== undefined
+          ? shiftYears(today, -field.minAge)
+          : field.allowFuture === true
+            ? undefined
+            : today;
+
       return (
-        <TextField
+        <DateField
           label={field.label}
           value={asString}
-          onChangeText={onChange}
-          placeholder="YYYY-MM-DD"
-          keyboardType="numbers-and-punctuation"
-          autoCorrect={false}
+          onChange={onChange}
+          placeholder={field.placeholder ?? 'Tap to choose a date'}
           required={field.required}
           error={error}
-          helpText={field.helpText ?? 'Enter as YYYY-MM-DD, for example 1990-04-23.'}
-          editable={!disabled}
+          helpText={field.helpText}
+          disabled={disabled}
+          minimumDate={minimumDate}
+          maximumDate={maximumDate}
+          defaultDate={maximumDate}
         />
       );
+    }
 
     case 'email':
       return (

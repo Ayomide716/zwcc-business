@@ -11,6 +11,8 @@ export { Badge } from './Badge';
 export type { BadgeProps } from './Badge';
 export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
+export { DateField } from './DateField';
+export type { DateFieldProps } from './DateField';
 export { RadioGroup, Checkbox, Select } from './Choice';
 export type { Option, RadioGroupProps, CheckboxProps, SelectProps } from './Choice';
 export { ProgressBar, StepIndicator } from './Progress';

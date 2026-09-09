@@ -3,6 +3,7 @@
  * is formatted in exactly one place so they cannot drift.
  */
 import { GRANT_PROGRAM } from '@/config/program.config';
+import { parseISODate } from '@/lib/date';
 
 /** ₦1,250,000 — no decimals, since grant amounts are always whole naira. */
 export function formatCurrency(
@@ -36,7 +37,15 @@ export function formatCurrencyInput(input: string): string {
 
 function toDate(value: string | Date | null | undefined): Date | null {
   if (!value) return null;
-  const date = value instanceof Date ? value : new Date(value);
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? null : value;
+
+  // A bare `YYYY-MM-DD` is a calendar day, not an instant. `new Date()` reads
+  // it as UTC midnight, which renders as the previous day in any time zone west
+  // of Greenwich, so it is parsed as a local day instead.
+  const calendarDay = parseISODate(value);
+  if (calendarDay) return calendarDay;
+
+  const date = new Date(value);
   return Number.isNaN(date.getTime()) ? null : date;
 }
 

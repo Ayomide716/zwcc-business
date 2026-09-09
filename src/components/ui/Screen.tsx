@@ -41,6 +41,8 @@ export interface ScreenProps {
   style?: StyleProp<ViewStyle>;
   /** Rendered outside the scroll area, pinned to the bottom (e.g. Next/Back). */
   footer?: React.ReactNode;
+  /** Access to the scroll view, so a screen can scroll to its first error. */
+  scrollRef?: React.RefObject<ScrollView | null>;
   testID?: string;
 }
 
@@ -56,6 +58,7 @@ export function Screen({
   contentContainerStyle,
   style,
   footer,
+  scrollRef,
   testID,
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
@@ -67,6 +70,7 @@ export function Screen({
 
   const content = scrollable ? (
     <ScrollView
+      ref={scrollRef}
       style={styles.flex}
       contentContainerStyle={[
         padded && styles.padded,
