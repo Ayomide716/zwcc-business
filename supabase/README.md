@@ -28,6 +28,7 @@ idempotent, so re-running is safe.
 | 3 | `migrations/0003_storage.sql` | Private buckets and their policies |
 | 4 | `migrations/0004_seed_configuration.sql` | Statuses, document types, programme, settings |
 | 5 | `migrations/0005_staff_notifications.sql` | `notify_staff_about_application()` |
+| 6 | `migrations/0006_search_indexes.sql` | Trigram indexes behind the committee search box |
 
 With the Supabase CLI instead:
 
