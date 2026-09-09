@@ -72,13 +72,56 @@ export const notifications = {
     }
   },
 
-  /** Raise the same event for several users (committee alerts, broadcasts). */
+  /** Raise the same event for several users (broadcasts by staff/admins). */
   async raiseMany(
     eventId: string,
     userIds: string[],
     payload: NotificationPayload = {},
   ): Promise<void> {
     await Promise.all(userIds.map((userId) => this.raise(eventId, userId, payload)));
+  },
+
+  /**
+   * Notify every committee member and administrator about an application.
+   *
+   * This cannot be done with `raiseMany`: Row Level Security stops an applicant
+   * reading the staff list, and stops them inserting a notification addressed to
+   * anyone but themselves. Both are correct — an applicant has no business
+   * enumerating reviewers. So the insert runs inside a SECURITY DEFINER
+   * function that first checks the caller actually owns the application (see
+   * migration 0005).
+   *
+   * Copy still comes from this file's templates; the function only decides who
+   * receives it.
+   */
+  async notifyStaff(
+    eventId: string,
+    applicationId: string,
+    payload: NotificationPayload = {},
+  ): Promise<void> {
+    const template = getTemplate(eventId);
+    if (!template) {
+      logger.warn('Unknown staff notification event', { eventId });
+      return;
+    }
+
+    try {
+      const { error } = await supabase.rpc('notify_staff_about_application', {
+        p_application_id: applicationId,
+        p_event_id: template.id,
+        p_category: template.category,
+        p_title: renderTemplate(template.title, payload),
+        p_body: renderTemplate(template.body, payload),
+        p_route: template.route ?? null,
+        p_payload: payload as Json,
+        p_important: template.important ?? false,
+      });
+
+      if (error) throw error;
+    } catch (error) {
+      // A missed staff alert must not fail the applicant's submission.
+      logger.error('Failed to notify staff', error, { eventId, applicationId });
+    }
   },
 
   /**

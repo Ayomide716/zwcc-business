@@ -18,6 +18,7 @@ import {
 import { AppError, notFoundError, workflowError } from '@/lib/errors';
 import { supabase } from '@/lib/supabase';
 import { logger } from '@/lib/logger';
+import { formatCurrency } from '@/lib/format';
 import type { ApplicationRow, DocumentRow, Json } from '@/types/database';
 import type { Role } from '@/types/roles';
 import { isFormComplete, sanitiseFormValues } from '@/validation/application';
@@ -25,7 +26,6 @@ import { canTransition } from '@/workflow/engine';
 
 import { auditService, type AuditAction } from './audit.service';
 import { notifications } from './notifications';
-import { profileService } from './profile.service';
 
 export type FormValues = Record<string, unknown>;
 
@@ -443,11 +443,20 @@ export const applicationService = {
       });
     }
 
-    // A new submission is work for the committee — tell them too.
+    // A new submission is work for the committee — tell them too. This goes
+    // through notifyStaff rather than raiseMany because an applicant cannot
+    // read the staff list or write notifications addressed to anyone else.
     if (toStatus === 'submitted') {
-      const staffIds = await profileService.getStaffIds();
-      await notifications.raiseMany('verification_started', staffIds, {
+      await notifications.notifyStaff('staff_new_application', application.id, {
+        applicantName: application.applicant_name ?? 'An applicant',
+        amount: formatCurrency(application.requested_amount),
         registrationCode: application.registration_code,
+      });
+    }
+
+    if (toStatus === 'agreement_signed') {
+      await notifications.notifyStaff('staff_agreement_signed', application.id, {
+        applicantName: application.applicant_name ?? 'A beneficiary',
       });
     }
   },

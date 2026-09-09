@@ -240,6 +240,11 @@ export const monitoringService = {
 
     const mediaErrors = await this.attachMedia(report, beneficiary.applicant_id, media);
 
+    await notifications.notifyStaff('staff_report_submitted', beneficiary.application_id, {
+      periodLabel: period.label,
+      applicantName: 'A beneficiary',
+    });
+
     await auditService.record({
       action: 'report.submitted',
       entityType: 'progress_report',

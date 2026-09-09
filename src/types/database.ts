@@ -406,7 +406,27 @@ export interface Database {
     // postgrest-js's GenericSchema constraint, which silently degrades every
     // query result to `never`.
     Views: { [_ in never]: never };
-    Functions: { [_ in never]: never };
+    Functions: {
+      /**
+       * Inserts a notification for every committee member and administrator.
+       * SECURITY DEFINER, guarded by application ownership — see migration
+       * 0005. Called through `notifications.notifyStaff()`, never directly.
+       */
+      notify_staff_about_application: {
+        Args: {
+          p_application_id: string;
+          p_event_id: string;
+          p_category: string;
+          p_title: string;
+          p_body: string;
+          p_route: string | null;
+          p_payload: Json;
+          p_important: boolean;
+        };
+        /** Number of staff notified. */
+        Returns: number;
+      };
+    };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };
   };

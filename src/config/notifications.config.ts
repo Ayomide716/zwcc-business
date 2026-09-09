@@ -66,6 +66,35 @@ export const NOTIFICATION_TEMPLATES: Record<string, NotificationTemplate> = {
     route: '/(applicant)/dashboard',
     important: true,
   },
+  /* ---------------------------------------------------------------------- */
+  /* Staff-facing. Raised via notify_staff_about_application(), never sent to  */
+  /* an applicant.                                                            */
+  /* ---------------------------------------------------------------------- */
+  staff_new_application: {
+    id: 'staff_new_application',
+    category: 'application',
+    title: 'New application to verify',
+    body: '{{applicantName}} submitted an application for {{amount}} ({{registrationCode}}).',
+    channels: ['in_app'],
+    route: '/(committee)/applications',
+  },
+  staff_agreement_signed: {
+    id: 'staff_agreement_signed',
+    category: 'agreement',
+    title: 'Agreement signed',
+    body: '{{applicantName}} has signed their grant agreement and is ready for disbursement authorisation.',
+    channels: ['in_app'],
+    route: '/(committee)/applications',
+  },
+  staff_report_submitted: {
+    id: 'staff_report_submitted',
+    category: 'monitoring',
+    title: 'Progress report submitted',
+    body: '{{applicantName}} submitted their {{periodLabel}} business progress report.',
+    channels: ['in_app'],
+    route: '/(committee)/beneficiaries',
+  },
+
   verification_started: {
     id: 'verification_started',
     category: 'application',
