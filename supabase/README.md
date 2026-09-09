@@ -1,5 +1,21 @@
 # Supabase setup
 
+## Two forms of the same setup
+
+| File | Size | Use |
+| --- | --- | --- |
+| `SETUP.sql` | 68 KB | Fully commented. Read this one. |
+| `SETUP.min.sql` | 48 KB | Same SQL, comments stripped. Easier to paste on a phone. |
+
+`SETUP.min.sql` is generated from `SETUP.sql` by removing whole-line comments
+**outside** function bodies only — bodies are left byte-identical, since
+stripping inside them risks corrupting a string literal.
+
+Both were executed against PostgreSQL 16 on fresh databases and produce an
+identical schema: 17 tables, 201 columns, 208 constraints, 50 functions,
+50 indexes, 68 policies, 17 triggers, 3 storage buckets. All 80 policy
+expressions and 50 function bodies compare byte-identical as stored by Postgres.
+
 ## Running the migrations
 
 Open **SQL Editor** in the Supabase dashboard and run these in order. Each is
