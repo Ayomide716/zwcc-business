@@ -30,7 +30,9 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Must be >= 22: eas-cli 23.x depends on @oclif/plugin-autocomplete,
+          # which declares engines.node >= 22 and hard-fails installation on 20.
+          node-version: 22
           cache: npm
 
       - name: Fail early if EXPO_TOKEN is missing
@@ -47,6 +49,9 @@ jobs:
         with:
           eas-version: latest
           token: ${{ secrets.EXPO_TOKEN }}
+          # The action defaults to yarn for installing the CLI; this project is
+          # npm-based, and yarn without a lockfile adds noise for no benefit.
+          packager: npm
 
       - name: Confirm the Expo token works
         # Fails here in seconds with a clear message, rather than deep inside
