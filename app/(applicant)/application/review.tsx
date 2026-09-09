@@ -25,12 +25,12 @@ import {
 } from '@/config/form.config';
 import { useApplicationContext, useInvalidateApplication, useMyApplication } from '@/hooks/queries';
 import { clearLocalDraft } from '@/hooks/useApplicationForm';
-import { formatCurrency, formatDate } from '@/lib/format';
+import { formatCurrency, formatDate, formatDateShort } from '@/lib/format';
 import { useActor } from '@/providers/AuthProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { applicationService } from '@/services/application.service';
 import { colors, spacing } from '@/theme';
-import { getAvailableTransitions } from '@/workflow/engine';
+import { getAvailableTransitions, isFormEditable } from '@/workflow/engine';
 
 export default function ReviewScreen() {
   const router = useRouter();
@@ -97,29 +97,49 @@ export default function ReviewScreen() {
   const blockers = submitOption?.blockers ?? [];
   const canSubmit = submitOption?.allowed ?? false;
 
+  // The same screen serves two purposes: the last check before submitting, and
+  // the record of what was sent. After submission there is nothing to edit and
+  // nothing to submit, so every control that implies otherwise comes off.
+  const editable = isFormEditable(application.status);
+
   return (
     <Screen
       footer={
-        <Button
-          label="Submit application"
-          onPress={() => setConfirming(true)}
-          disabled={!canSubmit}
-          fullWidth
-          size="lg"
-          icon="paper-plane-outline"
-          accessibilityHint={
-            canSubmit ? 'Opens a confirmation' : blockers[0] ?? 'Complete every section first'
-          }
-        />
+        editable ? (
+          <Button
+            label="Submit application"
+            onPress={() => setConfirming(true)}
+            disabled={!canSubmit}
+            fullWidth
+            size="lg"
+            icon="paper-plane-outline"
+            accessibilityHint={
+              canSubmit ? 'Opens a confirmation' : blockers[0] ?? 'Complete every section first'
+            }
+          />
+        ) : undefined
       }
     >
       <ScreenHeader
-        title="Review your application"
-        subtitle="Check everything carefully. You will not be able to edit after submitting."
+        title={editable ? 'Review your application' : 'Your answers'}
+        subtitle={
+          editable
+            ? 'Check everything carefully. You will not be able to edit after submitting.'
+            : application.submitted_at
+              ? `Submitted ${formatDateShort(application.submitted_at)}. These answers cannot be changed.`
+              : 'These answers can no longer be changed.'
+        }
         showBack
       />
 
-      {blockers.length > 0 ? (
+      {!editable ? (
+        <Banner
+          tone="info"
+          title="Locked"
+          message="Your application is with the review team. Nothing here can be edited."
+          icon="lock-closed-outline"
+        />
+      ) : blockers.length > 0 ? (
         <Card variant="outlined" style={styles.blockers}>
           <View style={styles.blockerHeader}>
             <Ionicons name="alert-circle" size={20} color={colors.warningStrong} />
@@ -157,13 +177,15 @@ export default function ReviewScreen() {
           <Card key={step.id} style={styles.section}>
             <View style={styles.sectionHeader}>
               <Text variant="title3">{step.title}</Text>
-              <Button
-                label="Edit"
-                variant="ghost"
-                size="sm"
-                onPress={() => router.push(`/(applicant)/application/${step.id}`)}
-                accessibilityLabel={`Edit ${step.title}`}
-              />
+              {editable ? (
+                <Button
+                  label="Edit"
+                  variant="ghost"
+                  size="sm"
+                  onPress={() => router.push(`/(applicant)/application/${step.id}`)}
+                  accessibilityLabel={`Edit ${step.title}`}
+                />
+              ) : null}
             </View>
 
             {fields.map((field) => (
