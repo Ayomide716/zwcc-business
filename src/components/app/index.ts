@@ -16,3 +16,4 @@ export type { StatTileProps } from './StatTile';
 export { RegistrationCodeCard } from './RegistrationCodeCard';
 export { LegalDocumentView } from './LegalDocumentView';
 export { ProfileUnavailable } from './ProfileUnavailable';
+export { OfflineBanner } from './OfflineBanner';

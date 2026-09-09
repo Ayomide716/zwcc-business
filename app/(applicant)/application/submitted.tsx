@@ -5,8 +5,8 @@
  * visual weight after the confirmation itself.
  */
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { useEffect } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useEffect, useRef } from 'react';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { RegistrationCodeCard } from '@/components/app';
 import { LogoMark } from '@/components/brand/Logo';
@@ -24,9 +24,24 @@ export default function SubmittedScreen() {
   const toast = useToast();
   const { code } = useLocalSearchParams<{ code?: string }>();
 
+  // Submitting is the emotional peak of the whole app — months of a business
+  // idea turned into a request for help. It deserves more than a navigation.
+  const pop = useRef(new Animated.Value(0)).current;
+  const rise = useRef(new Animated.Value(0)).current;
+
   useEffect(() => {
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-  }, []);
+
+    Animated.sequence([
+      Animated.spring(pop, { toValue: 1, friction: 5, tension: 80, useNativeDriver: true }),
+      Animated.timing(rise, {
+        toValue: 1,
+        duration: 280,
+        easing: Easing.out(Easing.cubic),
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [pop, rise]);
 
   return (
     <Screen
@@ -42,17 +57,36 @@ export default function SubmittedScreen() {
       }
     >
       <View style={styles.hero}>
-        <View style={styles.successRing}>
+        <Animated.View
+          style={[
+            styles.successRing,
+            {
+              opacity: pop,
+              transform: [
+                { scale: pop.interpolate({ inputRange: [0, 1], outputRange: [0.4, 1] }) },
+              ],
+            },
+          ]}
+        >
           <LogoMark size={56} />
-        </View>
+        </Animated.View>
 
-        <Text variant="display" align="center" accessibilityRole="header">
-          Application submitted
-        </Text>
-        <Text variant="body" muted align="center">
-          Thank you. We have received your application and our team will begin verifying your
-          details and documents.
-        </Text>
+        <Animated.View
+          style={{
+            opacity: rise,
+            transform: [
+              { translateY: rise.interpolate({ inputRange: [0, 1], outputRange: [12, 0] }) },
+            ],
+          }}
+        >
+          <Text variant="display" align="center" accessibilityRole="header">
+            Application submitted
+          </Text>
+          <Text variant="body" muted align="center" style={styles.heroBody}>
+            Thank you. We have received your application and our team will begin verifying your
+            details and documents.
+          </Text>
+        </Animated.View>
       </View>
 
       {code ? <RegistrationCodeCard code={code} onCopied={() => toast.success('Code copied')} /> : null}
@@ -87,6 +121,9 @@ export default function SubmittedScreen() {
 }
 
 const styles = StyleSheet.create({
+  heroBody: {
+    marginTop: spacing.sm,
+  },
   content: {
     paddingHorizontal: spacing.lg,
     paddingTop: spacing.xxl,

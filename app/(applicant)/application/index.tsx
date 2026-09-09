@@ -191,7 +191,9 @@ export default function ApplicationOverview() {
                       else router.push(`/(applicant)/application/${step.id}`);
                     }
               }
-              accessibilityLabel={`${step.title}, ${step.complete ? 'complete' : 'incomplete'}`}
+              accessibilityLabel={`${step.title}, ${step.complete ? 'complete' : 'incomplete'}${
+                editable ? '' : ', view only'
+              }`}
               accessibilityHint={locked ? 'Complete every section first' : undefined}
               style={[styles.stepCard, locked && styles.stepCardLocked]}
             >
@@ -217,8 +219,15 @@ export default function ApplicationOverview() {
                 </Text>
               </View>
 
+              {/*
+                Once submitted the sections are still worth opening, but a
+                chevron promises editing. An eye says "look", which is what it
+                actually does now.
+              */}
               <Ionicons
-                name={locked ? 'lock-closed-outline' : 'chevron-forward'}
+                name={
+                  locked ? 'lock-closed-outline' : editable ? 'chevron-forward' : 'eye-outline'
+                }
                 size={18}
                 color={colors.textMuted}
               />

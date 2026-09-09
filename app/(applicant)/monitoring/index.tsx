@@ -11,6 +11,7 @@ import { StyleSheet, View } from 'react-native';
 import { MonitoringTimeline } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { OnboardingArt } from '@/components/brand/OnboardingArt';
 import { Banner, EmptyState, LoadingState } from '@/components/ui/Feedback';
 import { ScreenHeader } from '@/components/ui/Header';
 import { ProgressBar } from '@/components/ui/Progress';
@@ -44,7 +45,7 @@ export default function MonitoringScreen() {
       <Screen>
         <ScreenHeader title="Monthly reports" />
         <EmptyState
-          icon="bar-chart-outline"
+          illustration={<OnboardingArt name="reports" size={168} />}
           title="Reporting has not started"
           message="Once your grant has been approved, signed for and released, you will submit a short business progress report here each month for twelve months."
         />

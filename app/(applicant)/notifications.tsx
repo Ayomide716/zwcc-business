@@ -11,6 +11,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { OnboardingArt } from '@/components/brand/OnboardingArt';
 import { EmptyState, SkeletonList } from '@/components/ui/Feedback';
 import { ScreenHeader } from '@/components/ui/Header';
 import { Screen } from '@/components/ui/Screen';
@@ -73,7 +74,7 @@ export default function NotificationsScreen() {
         <SkeletonList count={4} />
       ) : items.length === 0 ? (
         <EmptyState
-          icon="notifications-outline"
+          illustration={<OnboardingArt name="updates" size={168} />}
           title="Nothing yet"
           message="We will let you know as soon as there is news about your application."
         />

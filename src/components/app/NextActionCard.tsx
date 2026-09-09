@@ -14,6 +14,7 @@ import { StyleSheet, View } from 'react-native';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
+import { STAGE_EXPECTATIONS } from '@/config/program.config';
 import { colors, radius, spacing } from '@/theme';
 import type { Role } from '@/types/roles';
 import { describeStatus, getNextActionFor, getStatusDefinition } from '@/workflow/engine';
@@ -34,6 +35,9 @@ export function NextActionCard({ status, role, onAction, actionLabel }: NextActi
 
   /* Waiting on someone else — reassure rather than show an empty card. */
   if (!hint) {
+    // Saying roughly how long the wait is stops people refreshing for news.
+    const expectation = role === 'applicant' ? STAGE_EXPECTATIONS[status] : null;
+
     return (
       <Card variant="outlined" style={styles.waitingCard}>
         <View style={styles.row}>
@@ -45,6 +49,14 @@ export function NextActionCard({ status, role, onAction, actionLabel }: NextActi
             <Text variant="callout" muted>
               {describeStatus(status, role)}
             </Text>
+            {expectation ? (
+              <View style={styles.expectation}>
+                <Ionicons name="calendar-outline" size={14} color={colors.brand} />
+                <Text variant="caption" color="brand" style={styles.expectationText}>
+                  {expectation}
+                </Text>
+              </View>
+            ) : null}
           </View>
         </View>
       </Card>
@@ -93,6 +105,15 @@ export function NextActionCard({ status, role, onAction, actionLabel }: NextActi
 }
 
 const styles = StyleSheet.create({
+  expectation: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: spacing.xs,
+    marginTop: spacing.xs,
+  },
+  expectationText: {
+    flex: 1,
+  },
   actionCard: {
     gap: spacing.base,
   },

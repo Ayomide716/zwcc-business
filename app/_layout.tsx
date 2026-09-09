@@ -14,7 +14,9 @@ import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { OfflineBanner } from '@/components/app';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
+import { NetworkProvider } from '@/providers/NetworkProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
 import { ToastProvider } from '@/providers/ToastProvider';
 import { colors } from '@/theme';
@@ -58,27 +60,30 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <QueryProvider>
-          <AuthProvider>
-            <ToastProvider>
-              {/*
-                Hide the Android navigation buttons so the app runs full screen.
-                Android keeps them available: swiping up from the bottom edge
-                brings them back transiently, then they hide again.
+        <NetworkProvider>
+          <QueryProvider>
+            <AuthProvider>
+              <ToastProvider>
+                {/*
+                  Hide the Android navigation buttons so the app runs full screen.
+                  Android keeps them available: swiping up from the bottom edge
+                  brings them back transiently, then they hide again.
 
-                Android only — `expo-navigation-bar` is a no-op elsewhere, and
-                iOS has no equivalent bar to hide.
-              */}
-              {Platform.OS === 'android' ? <NavigationBar hidden /> : null}
-              {/*
-                Light icons, not "auto": every screen is now topped by a navy
-                band, so dark clock and battery icons would be invisible.
-              */}
-              <StatusBar style="light" />
-              <RootNavigator />
-            </ToastProvider>
-          </AuthProvider>
-        </QueryProvider>
+                  Android only — `expo-navigation-bar` is a no-op elsewhere, and
+                  iOS has no equivalent bar to hide.
+                */}
+                {Platform.OS === 'android' ? <NavigationBar hidden /> : null}
+                {/*
+                  Light icons, not "auto": every screen is now topped by a navy
+                  band, so dark clock and battery icons would be invisible.
+                */}
+                <StatusBar style="light" />
+                <RootNavigator />
+                <OfflineBanner />
+              </ToastProvider>
+            </AuthProvider>
+          </QueryProvider>
+        </NetworkProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

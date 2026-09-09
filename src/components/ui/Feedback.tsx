@@ -98,6 +98,11 @@ export function LoadingState({ message = 'Loading…' }: { message?: string }) {
 
 export interface EmptyStateProps {
   icon?: keyof typeof Ionicons.glyphMap;
+  /**
+   * Rendered instead of the icon circle. Screens pass a brand illustration
+   * here; the primitive stays unaware of the brand art.
+   */
+  illustration?: React.ReactNode;
   title: string;
   message?: string;
   actionLabel?: string;
@@ -107,6 +112,7 @@ export interface EmptyStateProps {
 
 export function EmptyState({
   icon = 'document-text-outline',
+  illustration,
   title,
   message,
   actionLabel,
@@ -115,9 +121,13 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <View style={[styles.centered, style]}>
-      <View style={styles.emptyIcon}>
-        <Ionicons name={icon} size={30} color={colors.brandMuted} />
-      </View>
+      {illustration ? (
+        <View style={styles.emptyIllustration}>{illustration}</View>
+      ) : (
+        <View style={styles.emptyIcon}>
+          <Ionicons name={icon} size={30} color={colors.brandMuted} />
+        </View>
+      )}
       <Text variant="title3" align="center">
         {title}
       </Text>
@@ -231,6 +241,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.xxxl,
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
+  },
+  emptyIllustration: {
+    marginBottom: spacing.xs,
   },
   emptyIcon: {
     width: 64,

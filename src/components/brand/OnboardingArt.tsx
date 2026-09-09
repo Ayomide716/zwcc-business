@@ -10,7 +10,14 @@ import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import { colors, palette } from '@/theme';
 
-export type ArtName = 'welcome' | 'eligibility' | 'process' | 'documents' | 'monitoring';
+export type ArtName =
+  | 'welcome'
+  | 'eligibility'
+  | 'process'
+  | 'documents'
+  | 'monitoring'
+  | 'updates'
+  | 'reports';
 
 export interface OnboardingArtProps {
   name: ArtName;
@@ -112,6 +119,48 @@ const ART: Record<ArtName, React.ReactNode> = {
       <Rect x="64" y="116" width="16" height="14" rx="3" fill={light} />
       <Rect x="90" y="116" width="16" height="14" rx="3" fill={light} />
       <Rect x="116" y="116" width="16" height="14" rx="3" fill={light} />
+    </>
+  ),
+
+  /* A bell with a quiet chime — nothing has arrived yet. */
+  updates: (
+    <>
+      <Path
+        d="M100 50c-18 0-30 13-30 31 0 24-8 30-8 36h76c0-6-8-12-8-36 0-18-12-31-30-31Z"
+        stroke={navy}
+        strokeWidth={4.5}
+        strokeLinejoin="round"
+        fill={colors.surface}
+      />
+      <Path d="M100 40v10" stroke={navy} strokeWidth={5} strokeLinecap="round" />
+      <Path
+        d="M88 128a12 12 0 0 0 24 0"
+        stroke={navy}
+        strokeWidth={4.5}
+        strokeLinecap="round"
+      />
+      <Circle cx="132" cy="66" r="7" fill={gold} />
+      <Path d="M56 96h-9M60 76l-8-5M60 116l-8 5" stroke={light} strokeWidth={4} strokeLinecap="round" />
+    </>
+  ),
+
+  /* A rising bar chart on a card — the monthly reporting yet to begin. */
+  reports: (
+    <>
+      <Rect
+        x="48"
+        y="54"
+        width="104"
+        height="94"
+        rx="10"
+        stroke={navy}
+        strokeWidth={4.5}
+        fill={colors.surface}
+      />
+      <Path d="M66 128V106" stroke={light} strokeWidth={9} strokeLinecap="round" />
+      <Path d="M88 128V92" stroke={light} strokeWidth={9} strokeLinecap="round" />
+      <Path d="M110 128V80" stroke={gold} strokeWidth={9} strokeLinecap="round" />
+      <Path d="M132 128V68" stroke={navy} strokeWidth={9} strokeLinecap="round" />
     </>
   ),
 };

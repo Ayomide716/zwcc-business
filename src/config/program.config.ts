@@ -31,6 +31,36 @@ export const GRANT_PROGRAM = {
 } as const;
 
 /* -------------------------------------------------------------------------- */
+/* How long each stage takes                                                   */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * What an applicant is told to expect while they are waiting.
+ *
+ * "Nothing needed from you" is honest but leaves people refreshing the app for
+ * news. A stated timeframe is the single cheapest thing that stops that.
+ *
+ * ⚠️ PLACEHOLDER TIMINGS. These are reasonable guesses, not the church's
+ * commitments. Zion World Christian Center must confirm each one before this
+ * app is used for a real grant round. Set a value to `null` to say nothing at
+ * all for that stage rather than promise something untrue.
+ */
+export const STAGE_EXPECTATIONS: Record<string, string | null> = {
+  submitted: 'We usually begin checking applications within 5 working days.',
+  verification: 'Document checks usually take about a week.',
+  committee_review:
+    'The committee meets regularly. Most decisions are made within three weeks of review starting.',
+  approved: 'Your agreement is usually ready within a few days of approval.',
+  agreement_signed: 'Authorisation usually follows within a week of signing.',
+  disbursement_authorised:
+    'Your grant will be released outside the app. The team will be in touch about timing.',
+  monitoring: null,
+};
+
+/** True while the timings above are still the placeholder set. */
+export const STAGE_EXPECTATIONS_ARE_PROVISIONAL = true;
+
+/* -------------------------------------------------------------------------- */
 /* Onboarding                                                                  */
 /* -------------------------------------------------------------------------- */
 
