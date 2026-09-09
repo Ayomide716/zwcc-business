@@ -278,15 +278,37 @@ export interface AppSettingRow {
  * Insert/Update shapes. Columns with database defaults (ids, timestamps) are
  * optional on insert; everything is optional on update.
  */
-type Insertable<T, OptionalKeys extends keyof T = never> = Omit<T, OptionalKeys> &
-  Partial<Pick<T, OptionalKeys>>;
+/** Keys whose column accepts NULL, and which Postgres therefore defaults. */
+type NullableKeys<T> = {
+  [K in keyof T]-?: null extends T[K] ? K : never;
+}[keyof T];
+
+/**
+ * Insert shape: columns with a database default (ids, timestamps) and every
+ * nullable column are optional, matching what Postgres actually requires.
+ */
+type Insertable<T, DefaultedKeys extends keyof T = never> = Omit<
+  T,
+  DefaultedKeys | NullableKeys<T>
+> &
+  Partial<Pick<T, DefaultedKeys | NullableKeys<T>>>;
 
 type DefaultCols = 'id' | 'created_at' | 'updated_at';
 
+/**
+ * Collapses an interface (or an intersection) into a plain object type.
+ *
+ * postgrest-js constrains Row/Insert/Update to `Record<string, unknown>`, and
+ * TypeScript only grants an *implicit index signature* to anonymous object
+ * types — never to an `interface`. Without this, every table silently fails the
+ * `GenericSchema` constraint and every query result degrades to `never`.
+ */
+type Flatten<T> = { [K in keyof T]: T[K] };
+
 interface TableDef<Row, Insert, Update> {
-  Row: Row;
-  Insert: Insert;
-  Update: Update;
+  Row: Flatten<Row>;
+  Insert: Flatten<Insert>;
+  Update: Flatten<Update>;
   Relationships: [];
 }
 
@@ -379,9 +401,13 @@ export interface Database {
         Partial<AppSettingRow>
       >;
     };
-    Views: Record<string, never>;
-    Functions: Record<string, never>;
-    Enums: Record<string, never>;
-    CompositeTypes: Record<string, never>;
+    // `{ [_ in never]: never }` is the idiom `supabase gen types` emits for an
+    // empty group. `Record<string, never>` looks equivalent but fails
+    // postgrest-js's GenericSchema constraint, which silently degrades every
+    // query result to `never`.
+    Views: { [_ in never]: never };
+    Functions: { [_ in never]: never };
+    Enums: { [_ in never]: never };
+    CompositeTypes: { [_ in never]: never };
   };
 }
