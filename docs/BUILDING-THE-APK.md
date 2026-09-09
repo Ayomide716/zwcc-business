@@ -23,22 +23,21 @@ Then register in the app and promote yourself:
 update public.profiles set role = 'admin' where email = 'your-email@example.com';
 ```
 
-## 2. Put your keys in two places
+## 2. Keys are already configured
 
-**`.env`** — for running locally with `npm start`:
+`.env` and all three `eas.json` build profiles are set to the ZWCC project
+(`ygqtedzcagowklyielhz`). Nothing to do unless the project changes — in which
+case, update both places.
 
-```bash
-cp .env.example .env
-```
+Both places matter, for different reasons:
 
-```
-EXPO_PUBLIC_SUPABASE_URL=https://xxxxxxxx.supabase.co
-EXPO_PUBLIC_SUPABASE_ANON_KEY=eyJ...
-```
+- **`.env`** is used by `npm start` on a development machine. It is gitignored.
+- **`eas.json`** is used by cloud builds. Because `.env` is gitignored it never
+  reaches EAS, so the same values live in each profile's `env` block.
 
-**`eas.json`** — for cloud builds. `.env` is gitignored and is *not* uploaded
-to EAS, so the values must also be in the `env` block of each build profile.
-Replace the `REPLACE_WITH_...` placeholders.
+The anon key is designed to be shipped in client apps; RLS is what protects the
+data. If you would rather not have it in git, move it to EAS environment
+variables (`eas env:create`) and delete the `env` blocks.
 
 ## 3. Build
 
@@ -86,3 +85,29 @@ profile you built with, not just `.env`.
 - **Version bumps**: `eas.json` uses `"appVersionSource": "remote"`, so EAS
   manages the Android `versionCode` for you. Bump the user-facing
   `expo.version` in `app.json` for each release.
+
+
+## Watch out: stale Metro cache hides key changes
+
+If you change `.env` or `eas.json` and rebuild **locally**, Metro may reuse a
+cached transform and silently bake in the *old* values. The app then shows
+"Setup required" even though the config looks correct.
+
+This was confirmed in practice: after writing the real keys, a local
+`expo export` still produced a bundle containing the `placeholder.supabase.co`
+fallback. Rebuilding with `--clear` fixed it.
+
+```bash
+npx expo export --platform android --clear
+npx expo start --clear
+```
+
+**EAS cloud builds are not affected** — each build starts on a clean machine
+with no cache.
+
+### Confirming the keys really made it in
+
+```bash
+# The real project ref should appear; 'placeholder.supabase.co' should not.
+grep -oa "https://[a-z0-9]*\.supabase\.co" <bundle>.hbc | sort -u
+```
