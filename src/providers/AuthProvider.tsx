@@ -18,6 +18,7 @@ import type { Session, User } from '@supabase/supabase-js';
 
 import { can, type Capability } from '@/config/permissions.config';
 import { logger } from '@/lib/logger';
+import { toUserError, type UserError } from '@/lib/errors';
 import { isSupabaseConfigured, startAuthAutoRefresh, supabase } from '@/lib/supabase';
 import { profileService } from '@/services/profile.service';
 import type { ProfileRow } from '@/types/database';
@@ -32,6 +33,13 @@ interface AuthContextValue {
   initialising: boolean;
   /** True while the profile is being fetched for a known session. */
   loadingProfile: boolean;
+  /**
+   * Set when the profile could not be loaded for a signed-in user — almost
+   * always a dropped connection. Without this the app has a session but no
+   * role, and every role-gated layout renders nothing: a blank screen with no
+   * error and no way out. Screens use it to offer Retry / Sign out.
+   */
+  profileError: UserError | null;
   isAuthenticated: boolean;
   isSupabaseConfigured: boolean;
   can: (capability: Capability) => boolean;
@@ -46,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [profile, setProfile] = useState<ProfileRow | null>(null);
   const [initialising, setInitialising] = useState(true);
   const [loadingProfile, setLoadingProfile] = useState(false);
+  const [profileError, setProfileError] = useState<UserError | null>(null);
 
   // Guards against a late profile fetch overwriting state after sign-out.
   const activeUserId = useRef<string | null>(null);
@@ -59,14 +68,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const loadProfile = useCallback(async (user: User) => {
     activeUserId.current = user.id;
     setLoadingProfile(true);
+    setProfileError(null);
 
     try {
       const row = await profileService.ensureProfile(user.id, user.email ?? '');
       // Ignore a response that arrived after the user changed.
-      if (activeUserId.current === user.id) setProfile(row);
+      if (activeUserId.current === user.id) {
+        setProfile(row);
+        setProfileError(null);
+      }
     } catch (error) {
       logger.error('Failed to load profile', error, { userId: user.id });
-      if (activeUserId.current === user.id) setProfile(null);
+      if (activeUserId.current === user.id) {
+        setProfile(null);
+        setProfileError(toUserError(error));
+      }
     } finally {
       if (activeUserId.current === user.id) setLoadingProfile(false);
     }
@@ -137,6 +153,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       activeUserId.current = null;
       setSession(null);
       setProfile(null);
+      setProfileError(null);
     }
   }, []);
 
@@ -150,13 +167,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       role,
       initialising,
       loadingProfile,
+      profileError,
       isAuthenticated: Boolean(session?.user),
       isSupabaseConfigured,
       can: (capability: Capability) => can(role, capability),
       refreshProfile,
       signOut,
     };
-  }, [session, profile, initialising, loadingProfile, refreshProfile, signOut]);
+  }, [session, profile, initialising, loadingProfile, profileError, refreshProfile, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

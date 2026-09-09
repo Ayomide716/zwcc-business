@@ -7,6 +7,7 @@
 import { Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
+import { ProfileUnavailable } from '@/components/app';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { LoadingState } from '@/components/ui/Feedback';
@@ -17,7 +18,8 @@ import { colors, spacing } from '@/theme';
 import { ROLE_HOME_ROUTE } from '@/types/roles';
 
 export default function Index() {
-  const { isAuthenticated, role, loadingProfile, profile, isSupabaseConfigured } = useAuth();
+  const { isAuthenticated, role, loadingProfile, profile, profileError, isSupabaseConfigured } =
+    useAuth();
 
   /* Misconfigured build: say so clearly instead of failing with a network error. */
   if (!isSupabaseConfigured) {
@@ -26,6 +28,12 @@ export default function Index() {
 
   if (!isAuthenticated) {
     return <Redirect href="/(auth)/sign-in" />;
+  }
+
+  // Signed in, but the profile could not be fetched. Offer a way out rather
+  // than spinning forever.
+  if (profileError && !loadingProfile) {
+    return <ProfileUnavailable />;
   }
 
   // Signed in, but the profile (and therefore the role) is still loading.

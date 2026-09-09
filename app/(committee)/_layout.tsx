@@ -7,15 +7,19 @@ import { Ionicons } from '@expo/vector-icons';
 import { Redirect, Tabs } from 'expo-router';
 import { Platform, StyleSheet } from 'react-native';
 
+import { ProfileUnavailable } from '@/components/app';
 import { useAuth } from '@/providers/AuthProvider';
 import { isStaff } from '@/config/permissions.config';
 import { colors, spacing, typography } from '@/theme';
 import { ROLE_HOME_ROUTE } from '@/types/roles';
 
 export default function CommitteeLayout() {
-  const { isAuthenticated, role, loadingProfile } = useAuth();
+  const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
+  // A failed profile fetch would otherwise leave this layout rendering nothing
+  // forever — a blank screen the user cannot escape.
+  if (profileError && !loadingProfile) return <ProfileUnavailable />;
   if (loadingProfile || !role) return null;
 
   // An applicant who somehow reaches this URL is sent home. RLS would refuse

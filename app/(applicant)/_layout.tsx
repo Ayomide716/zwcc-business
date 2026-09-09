@@ -11,6 +11,7 @@ import { Platform, StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components/ui/Text';
 import { useUnreadCount } from '@/hooks/queries';
+import { ProfileUnavailable } from '@/components/app';
 import { useAuth } from '@/providers/AuthProvider';
 import { colors, radius, spacing, typography } from '@/theme';
 import { ROLE_HOME_ROUTE } from '@/types/roles';
@@ -28,13 +29,16 @@ function UnreadBadge({ count }: { count: number }) {
 }
 
 export default function ApplicantLayout() {
-  const { isAuthenticated, role, loadingProfile } = useAuth();
+  const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
   const { data: unreadCount = 0 } = useUnreadCount();
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
 
   // Wait for the role rather than guessing; a staff member should never briefly
   // see the applicant shell.
+  // A failed profile fetch would otherwise leave this layout rendering nothing
+  // forever — a blank screen the user cannot escape.
+  if (profileError && !loadingProfile) return <ProfileUnavailable />;
   if (loadingProfile || !role) return null;
 
   if (role !== 'applicant') return <Redirect href={ROLE_HOME_ROUTE[role] as never} />;

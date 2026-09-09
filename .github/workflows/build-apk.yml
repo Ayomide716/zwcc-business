@@ -1,0 +1,77 @@
+name: Build Android APK
+
+# Run it from the GitHub website or mobile app:
+#   Actions -> Build Android APK -> Run workflow
+#
+# Requires one repository secret:
+#   EXPO_TOKEN   expo.dev -> account Settings -> Access tokens -> Create
+#                Add at: Settings -> Secrets and variables -> Actions
+#
+# The Supabase keys come from eas.json, so nothing else is needed here.
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'EAS build profile'
+        required: true
+        default: 'preview'
+        type: choice
+        options: [preview, production]
+
+jobs:
+  build:
+    name: Build ${{ inputs.profile }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Fail early if EXPO_TOKEN is missing
+        # Without this the eas step fails with a confusing auth error several
+        # minutes in. Better to say exactly what is wrong immediately.
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::EXPO_TOKEN is not set. Create a token at expo.dev (Settings -> Access tokens), then add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Link or create the EAS project
+        # Writes extra.eas.projectId into app.json for this run. Safe to repeat.
+        run: npx eas init --force --non-interactive
+
+      - name: Build the APK
+        # --wait blocks until the cloud build finishes so the run either
+        # succeeds with a link or fails visibly, rather than exiting early.
+        run: |
+          npx eas build \
+            --platform android \
+            --profile ${{ inputs.profile }} \
+            --non-interactive \
+            --wait
+
+      - name: Where to download it
+        if: always()
+        run: |
+          echo "### Build finished" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Download the APK from your Expo dashboard:" >> $GITHUB_STEP_SUMMARY
+          echo "https://expo.dev/accounts/_/projects/zwcc-business-grant/builds" >> $GITHUB_STEP_SUMMARY
