@@ -11,6 +11,7 @@ import { StyleSheet, View } from 'react-native';
 import { Badge } from '@/components/ui/Badge';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { ProgressBar } from '@/components/ui/Progress';
 import { Text } from '@/components/ui/Text';
 import { DOCUMENT_STATUS_LABELS, type DocumentStatus } from '@/config/documents.config';
 import { formatFileSize } from '@/lib/format';
@@ -38,6 +39,8 @@ export interface DocumentSlotCardProps {
   /** False once the workflow closes documents for editing. */
   editable: boolean;
   uploading?: boolean;
+  /** Fraction uploaded, 0 to 1. Only meaningful while `uploading`. */
+  uploadProgress?: number;
   onUpload: () => void;
   onPreview?: () => void;
   onRemove?: () => void;
@@ -47,6 +50,7 @@ export function DocumentSlotCard({
   slot,
   editable,
   uploading,
+  uploadProgress = 0,
   onUpload,
   onPreview,
   onRemove,
@@ -89,12 +93,19 @@ export function DocumentSlotCard({
       </View>
 
       {uploading ? (
-        // A photo on a slow Nigerian mobile connection can take a while. Saying
-        // so stops people tapping again or backing out mid-upload.
-        <Text variant="caption" color="brand" accessibilityLiveRegion="polite">
-          Uploading… please keep this screen open. This can take a moment on a
-          slow connection.
-        </Text>
+        // A photo on a slow Nigerian mobile connection can take a while. A bar
+        // that actually moves is the difference between waiting and giving up.
+        <View style={styles.uploading}>
+          <ProgressBar
+            value={uploadProgress}
+            label={uploadProgress >= 1 ? 'Finishing up' : 'Uploading'}
+            showPercentage={uploadProgress > 0 && uploadProgress < 1}
+            tone="brand"
+          />
+          <Text variant="caption" muted accessibilityLiveRegion="polite">
+            Please keep this screen open until it finishes.
+          </Text>
+        </View>
       ) : null}
 
       <View style={styles.statusRow}>
@@ -155,6 +166,9 @@ export function DocumentSlotCard({
 }
 
 const styles = StyleSheet.create({
+  uploading: {
+    gap: spacing.xs,
+  },
   card: {
     gap: spacing.md,
   },

@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MIN_TOUCH_TARGET, colors, radius, spacing } from '@/theme';
+import { MIN_TOUCH_TARGET, colors, radius, shadows, spacing } from '@/theme';
 
 import { Text } from './Text';
 
@@ -74,6 +74,12 @@ export interface BrandHeaderProps {
   subtitle?: string;
   right?: React.ReactNode;
   children?: React.ReactNode;
+  /**
+   * Pinned above a scrolling page rather than scrolling with it. Squares off
+   * the bottom corners, because content passing underneath would otherwise show
+   * through the two rounded notches.
+   */
+  pinned?: boolean;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -87,12 +93,20 @@ export function BrandHeader({
   subtitle,
   right,
   children,
+  pinned = false,
   style,
 }: BrandHeaderProps) {
   const insets = useSafeAreaInsets();
 
   return (
-    <View style={[styles.brandHeader, { paddingTop: insets.top + spacing.base }, style]}>
+    <View
+      style={[
+        styles.brandHeader,
+        pinned && styles.brandHeaderPinned,
+        { paddingTop: insets.top + spacing.base },
+        style,
+      ]}
+    >
       <View style={styles.brandRow}>
         <View style={styles.headerText}>
           {eyebrow ? (
@@ -145,6 +159,11 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: radius.xl,
     borderBottomRightRadius: radius.xl,
     gap: spacing.base,
+  },
+  brandHeaderPinned: {
+    borderBottomLeftRadius: 0,
+    borderBottomRightRadius: 0,
+    ...shadows.md,
   },
   brandRow: {
     flexDirection: 'row',

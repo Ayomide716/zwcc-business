@@ -181,6 +181,13 @@ export function startAuthAutoRefresh(): () => void {
   };
 }
 
+/**
+ * The project's REST origin, for the one place that talks to Storage directly
+ * rather than through supabase-js: the resumable, progress-reporting upload in
+ * `storage.service.ts`. Empty when the app has not been configured.
+ */
+export const SUPABASE_URL = supabaseUrl ?? '';
+
 /** Storage buckets. All private — see migration 0003. */
 export const BUCKETS = {
   documents: 'application-documents',

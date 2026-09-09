@@ -18,7 +18,11 @@ import type { Role } from '@/types/roles';
 
 import { auditService } from './audit.service';
 import { notifications } from './notifications';
-import { storageService, type LocalFile } from './storage.service';
+import {
+  storageService,
+  type LocalFile,
+  type UploadProgressHandler,
+} from './storage.service';
 
 /** A document type paired with whatever has been uploaded against it. */
 export interface DocumentSlot {
@@ -82,6 +86,7 @@ export const documentService = {
     applicantId: string,
     documentTypeId: string,
     file: LocalFile,
+    onProgress?: UploadProgressHandler,
   ): Promise<DocumentRow> {
     const type = getDocumentType(documentTypeId);
     if (!type) throw notFoundError('that document type');
@@ -91,6 +96,7 @@ export const documentService = {
       applicationId,
       documentTypeId,
       file,
+      onProgress,
     );
 
     const existing = await this.getLiveDocument(applicationId, documentTypeId);

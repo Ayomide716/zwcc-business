@@ -1,20 +1,24 @@
 /**
- * Applicant profile: contact details, application history, legal links and
- * sign-out.
+ * Applicant profile: identity, contact details, application history, legal
+ * links and sign-out.
+ *
+ * Laid out as grouped rows rather than a stack of loose cards. Every row shares
+ * one icon column and one value column, so labels line up down the page instead
+ * of each card setting its own alignment.
  *
  * Application history matters here — a rejected application is preserved and a
  * reapplication links back to it (brief §15), so the applicant can see the
  * whole chain rather than only their latest attempt.
  */
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import { StatusBadge } from '@/components/app';
+import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { ScreenHeader } from '@/components/ui/Header';
+import { BrandHeader } from '@/components/ui/Header';
+import { ListGroup, ListRow } from '@/components/ui/ListRow';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { TextField } from '@/components/ui/TextField';
@@ -60,6 +64,12 @@ export default function ProfileScreen() {
     }
   }
 
+  function cancelEditing() {
+    setEditing(false);
+    setFullName(profile?.full_name ?? '');
+    setPhone(profile?.phone ?? '');
+  }
+
   function handleSignOut() {
     Alert.alert('Sign out?', 'You will need to sign in again to see your application.', [
       { text: 'Cancel', style: 'cancel' },
@@ -75,45 +85,43 @@ export default function ProfileScreen() {
   }
 
   return (
-    <Screen>
-      <ScreenHeader title="Profile" />
+    <Screen
+      padded={false}
+      edgeToEdgeBottom
+      stickyHeader={
+        <BrandHeader
+          pinned
+          title="Profile"
+          right={<Logo size={32} showWordmark={false} scheme="onDark" />}
+        />
+      }
+    >
+      <View style={styles.body}>
+        {/* Identity. The one place a face-and-name block belongs. */}
+        <View style={styles.identity}>
+          <View style={styles.avatar}>
+            <Text variant="title2" color="brand">
+              {initials(profile?.full_name)}
+            </Text>
+          </View>
 
-      <Card style={styles.identity}>
-        <View style={styles.avatar}>
-          <Text variant="title2" color="brand">
-            {initials(profile?.full_name)}
+          <Text variant="title3" align="center">
+            {profile?.full_name ?? 'Your name'}
           </Text>
-        </View>
-
-        <View style={styles.identityText}>
-          <Text variant="title3">{profile?.full_name ?? 'Your name'}</Text>
-          <Text variant="callout" muted>
+          <Text variant="callout" muted align="center">
             {profile?.email}
           </Text>
           {role ? (
-            <Text variant="caption" color="brand">
-              {ROLE_LABELS[role]}
-            </Text>
-          ) : null}
-        </View>
-      </Card>
-
-      <Card style={styles.section}>
-        <View style={styles.sectionHeader}>
-          <Text variant="title3">Contact details</Text>
-          {!editing ? (
-            <Button
-              label="Edit"
-              variant="ghost"
-              size="sm"
-              onPress={() => setEditing(true)}
-              icon="create-outline"
-            />
+            <View style={styles.rolePill}>
+              <Text variant="caption" color="brand">
+                {ROLE_LABELS[role]}
+              </Text>
+            </View>
           ) : null}
         </View>
 
         {editing ? (
-          <View style={styles.form}>
+          <View style={styles.editCard}>
             <TextField
               label="Full name"
               value={fullName}
@@ -131,16 +139,8 @@ export default function ProfileScreen() {
               required
             />
 
-            <View style={styles.formActions}>
-              <Button
-                label="Cancel"
-                variant="ghost"
-                onPress={() => {
-                  setEditing(false);
-                  setFullName(profile?.full_name ?? '');
-                  setPhone(profile?.phone ?? '');
-                }}
-              />
+            <View style={styles.editActions}>
+              <Button label="Cancel" variant="ghost" onPress={cancelEditing} />
               <Button
                 label="Save"
                 onPress={handleSave}
@@ -150,147 +150,113 @@ export default function ProfileScreen() {
             </View>
           </View>
         ) : (
-          <View style={styles.details}>
-            <DetailRow icon="call-outline" label="Phone" value={profile?.phone ?? 'Not set'} />
-            <DetailRow icon="mail-outline" label="Email" value={profile?.email ?? '—'} />
-          </View>
+          <ListGroup
+            title="Contact details"
+            action={
+              <Button
+                label="Edit"
+                variant="ghost"
+                size="sm"
+                onPress={() => setEditing(true)}
+                icon="create-outline"
+              />
+            }
+          >
+            <ListRow icon="call-outline" label="Phone" value={profile?.phone ?? 'Not set'} />
+            <ListRow icon="mail-outline" label="Email" value={profile?.email ?? '—'} />
+          </ListGroup>
         )}
-      </Card>
 
-      {history.length > 0 ? (
-        <Card style={styles.section}>
-          <Text variant="title3">Application history</Text>
-          <Text variant="caption" muted>
-            Every application you have made is kept, including any that were not approved.
-          </Text>
+        {history.length > 0 ? (
+          <ListGroup
+            title="Application history"
+            caption="Every application you have made is kept, including any that were not approved."
+          >
+            {history.map((application) => (
+              <ListRow
+                key={application.id}
+                icon="document-text-outline"
+                label={
+                  application.registration_code ?? `Draft · attempt ${application.attempt_number}`
+                }
+                description={`Started ${formatDateShort(application.created_at)}`}
+                right={<StatusBadge status={application.status} size="sm" />}
+              />
+            ))}
+          </ListGroup>
+        ) : null}
 
-          {history.map((application) => (
-            <View key={application.id} style={styles.historyRow}>
-              <View style={styles.historyText}>
-                <Text variant="callout">
-                  {application.registration_code ?? `Draft · attempt ${application.attempt_number}`}
-                </Text>
-                <Text variant="caption" muted>
-                  Started {formatDateShort(application.created_at)}
-                </Text>
-              </View>
-              <StatusBadge status={application.status} size="sm" />
-            </View>
-          ))}
-        </Card>
-      ) : null}
+        <ListGroup title="Legal">
+          <ListRow
+            icon="document-text-outline"
+            label="Terms & Conditions"
+            onPress={() => router.push('/legal/terms')}
+            accessibilityHint="Opens in this app"
+          />
+          <ListRow
+            icon="shield-checkmark-outline"
+            label="Privacy Policy"
+            onPress={() => router.push('/legal/privacy')}
+            accessibilityHint="Opens in this app"
+          />
+        </ListGroup>
 
-      <Card style={styles.section}>
-        <Text variant="title3">Legal</Text>
-        <LinkRow
-          icon="document-text-outline"
-          label="Terms & Conditions"
-          onPress={() => router.push('/legal/terms')}
-        />
-        <LinkRow
-          icon="shield-checkmark-outline"
-          label="Privacy Policy"
-          onPress={() => router.push('/legal/privacy')}
-        />
-      </Card>
+        <ListGroup title="Help">
+          <ListRow icon="mail-outline" label="Email" value={ORGANISATION.supportEmail} />
+          <ListRow icon="call-outline" label="Phone" value={ORGANISATION.supportPhone} />
+        </ListGroup>
 
-      <Card style={styles.section}>
-        <Text variant="title3">Help</Text>
-        <DetailRow icon="mail-outline" label="Email" value={ORGANISATION.supportEmail} />
-        <DetailRow icon="call-outline" label="Phone" value={ORGANISATION.supportPhone} />
-      </Card>
+        <ListGroup>
+          <ListRow
+            icon="log-out-outline"
+            label="Sign out"
+            tone="danger"
+            onPress={handleSignOut}
+            chevron={false}
+          />
+        </ListGroup>
 
-      <Button
-        label="Sign out"
-        variant="outline"
-        onPress={handleSignOut}
-        icon="log-out-outline"
-        fullWidth
-        style={styles.signOut}
-      />
-
-      <Text variant="caption" muted align="center" style={styles.version}>
-        {ORGANISATION.name} · {ORGANISATION.location}
-      </Text>
+        <Text variant="caption" muted align="center" style={styles.footprint}>
+          {ORGANISATION.name} · {ORGANISATION.location}
+        </Text>
+      </View>
     </Screen>
   );
 }
 
-function DetailRow({
-  icon,
-  label,
-  value,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.detailRow}>
-      <Ionicons name={icon} size={18} color={colors.textMuted} />
-      <Text variant="caption" muted style={styles.detailLabel}>
-        {label}
-      </Text>
-      <Text variant="callout" style={styles.detailValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
-function LinkRow({
-  icon,
-  label,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  onPress: () => void;
-}) {
-  return (
-    <Button
-      label={label}
-      variant="ghost"
-      icon={icon}
-      onPress={onPress}
-      style={styles.linkRow}
-      accessibilityHint="Opens in this app"
-    />
-  );
-}
-
 const styles = StyleSheet.create({
+  body: {
+    padding: spacing.base,
+    gap: spacing.lg,
+  },
   identity: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.base,
-    marginBottom: spacing.base,
+    gap: spacing.xxs,
+    paddingVertical: spacing.sm,
   },
   avatar: {
-    width: 60,
-    height: 60,
+    width: 76,
+    height: 76,
     borderRadius: radius.pill,
     backgroundColor: colors.brandSurfaceStrong,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
-  identityText: {
-    flex: 1,
-    gap: 1,
+  rolePill: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brandSurface,
   },
-  section: {
-    gap: spacing.md,
-    marginBottom: spacing.base,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-  },
-  form: {
+  editCard: {
     gap: spacing.base,
+    padding: spacing.base,
+    borderRadius: radius.lg,
+    backgroundColor: colors.surface,
   },
-  formActions: {
+  editActions: {
     flexDirection: 'row',
     gap: spacing.sm,
     justifyContent: 'flex-end',
@@ -298,40 +264,7 @@ const styles = StyleSheet.create({
   saveButton: {
     minWidth: 110,
   },
-  details: {
-    gap: spacing.sm,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  detailLabel: {
-    width: 56,
-  },
-  detailValue: {
-    flex: 1,
-  },
-  historyRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    gap: spacing.sm,
-    paddingTop: spacing.sm,
-    borderTopWidth: StyleSheet.hairlineWidth,
-    borderTopColor: colors.divider,
-  },
-  historyText: {
-    flex: 1,
-  },
-  linkRow: {
-    justifyContent: 'flex-start',
-    paddingHorizontal: 0,
-  },
-  signOut: {
+  footprint: {
     marginTop: spacing.sm,
-  },
-  version: {
-    marginTop: spacing.lg,
   },
 });

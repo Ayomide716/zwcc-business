@@ -2,11 +2,19 @@
  * Screen scaffold: safe areas, keyboard avoidance, scrolling and
  * pull-to-refresh, so no screen has to re-solve them.
  *
- * Keyboard handling is the reason this exists. The application form has long
- * text areas, and without `KeyboardAvoidingView` plus
+ * Two things here are not obvious.
+ *
+ * Keyboard handling is the reason this exists at all. The application form has
+ * long text areas, and without `KeyboardAvoidingView` plus
  * `keyboardShouldPersistTaps="handled"` the keyboard covers the field being
  * typed into and the first tap on a button only dismisses the keyboard.
+ *
+ * The status-bar scrim is the second. The app draws edge to edge, so the status
+ * bar is transparent and scrolling content passes straight behind the clock and
+ * battery, mixing with them. Padding alone only fixes the resting position. An
+ * opaque strip pinned over that area is what actually hides scrolled content.
  */
+import { useState } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -29,11 +37,12 @@ export interface ScreenProps {
   /** Honour the bottom safe area. Turn off when a tab bar already does. */
   edgeToEdgeBottom?: boolean;
   /**
-   * Let content run under the status bar. Only for screens whose first element
-   * applies the top inset itself — `BrandHeader` does. Everything else must
-   * leave this off, or the title collides with the clock and battery icons.
+   * Pinned above the scroll area, covering the status bar. Content scrolls
+   * underneath it rather than being pushed below it, so the header stays put
+   * while the page moves. Supplying this replaces the status-bar scrim, since
+   * the header itself covers that area.
    */
-  edgeToEdgeTop?: boolean;
+  stickyHeader?: React.ReactNode;
   onRefresh?: () => void;
   refreshing?: boolean;
   background?: keyof typeof colors;
@@ -51,7 +60,7 @@ export function Screen({
   scrollable = true,
   padded = true,
   edgeToEdgeBottom = false,
-  edgeToEdgeTop = false,
+  stickyHeader,
   onRefresh,
   refreshing = false,
   background = 'background',
@@ -63,10 +72,13 @@ export function Screen({
 }: ScreenProps) {
   const insets = useSafeAreaInsets();
 
+  // Measured rather than assumed: the header's height depends on its own
+  // content and on the device's status bar, so content has to be pushed down by
+  // whatever it actually turns out to be.
+  const [headerHeight, setHeaderHeight] = useState(0);
+
   const paddingBottom = edgeToEdgeBottom ? 0 : Math.max(insets.bottom, spacing.base);
-  // Without this, every screen that does not use BrandHeader renders its title
-  // underneath the status bar.
-  const paddingTop = edgeToEdgeTop ? 0 : insets.top;
+  const paddingTop = stickyHeader ? headerHeight : insets.top;
 
   const content = scrollable ? (
     <ScrollView
@@ -88,6 +100,8 @@ export function Screen({
             onRefresh={onRefresh}
             tintColor={colors.brand}
             colors={[colors.brand]}
+            // Keeps the spinner clear of a pinned header rather than under it.
+            progressViewOffset={stickyHeader ? headerHeight : insets.top}
           />
         ) : undefined
       }
@@ -114,6 +128,28 @@ export function Screen({
       testID={testID}
     >
       {content}
+
+      {stickyHeader ? (
+        <View
+          style={styles.stickyHeader}
+          onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
+        >
+          {stickyHeader}
+        </View>
+      ) : (
+        /*
+          The strip that stops scrolled text running into the clock and battery.
+          It matches the page background, so content simply disappears under it.
+        */
+        <View
+          pointerEvents="none"
+          style={[
+            styles.statusBarScrim,
+            { height: insets.top, backgroundColor: colors[background] },
+          ]}
+        />
+      )}
+
       {footer ? (
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.base) }]}>
           {footer}
@@ -127,6 +163,23 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   padded: {
     paddingHorizontal: spacing.base,
+  },
+  statusBarScrim: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    // Android paints by elevation rather than source order, so both are set.
+    zIndex: 10,
+    elevation: 10,
+  },
+  stickyHeader: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    zIndex: 10,
+    elevation: 10,
   },
   footer: {
     paddingHorizontal: spacing.base,

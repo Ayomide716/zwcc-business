@@ -24,7 +24,7 @@ import { PROGRESS_MEDIA_CONFIG, getDocumentType } from '@/config/documents.confi
 import { AppError } from '@/lib/errors';
 import { formatFileSize } from '@/lib/format';
 import { logger } from '@/lib/logger';
-import { BUCKETS, supabase } from '@/lib/supabase';
+import { BUCKETS, SUPABASE_URL, supabase } from '@/lib/supabase';
 
 export interface LocalFile {
   uri: string;
@@ -211,17 +211,98 @@ async function readFileBytes(uri: string): Promise<ArrayBuffer> {
   }
 }
 
+/** Fraction uploaded, 0 to 1. Called many times; keep the handler cheap. */
+export type UploadProgressHandler = (fraction: number) => void;
+
+/**
+ * Upload with progress, over XHR rather than supabase-js.
+ *
+ * supabase-js gives no progress events, which on a slow Nigerian connection
+ * means a 30-second wait with nothing moving on screen. XHR does report
+ * progress, and sending the file as multipart form data lets React Native
+ * stream it straight from disk — so a large photo is never held in JavaScript
+ * memory, which also matters on a cheap phone.
+ *
+ * Storage accepts multipart the same way it accepts a raw body; the part must
+ * be named "file".
+ */
+function uploadViaXhr(
+  bucket: string,
+  path: string,
+  file: LocalFile,
+  accessToken: string,
+  onProgress?: UploadProgressHandler,
+): Promise<void> {
+  return new Promise((resolve, reject) => {
+    const form = new FormData();
+    form.append('file', {
+      uri: file.uri,
+      name: file.name,
+      type: file.mimeType,
+    } as unknown as Blob);
+
+    const request = new XMLHttpRequest();
+    request.open('POST', `${SUPABASE_URL}/storage/v1/object/${bucket}/${path}`);
+    request.setRequestHeader('Authorization', `Bearer ${accessToken}`);
+    request.setRequestHeader('cache-control', '3600');
+    // Paths carry a UUID, so a collision means a genuine bug rather than a
+    // legitimate replacement. Fail loudly instead of silently overwriting.
+    request.setRequestHeader('x-upsert', 'false');
+
+    if (onProgress) {
+      request.upload.onprogress = (event) => {
+        if (event.lengthComputable && event.total > 0) {
+          onProgress(Math.min(event.loaded / event.total, 1));
+        }
+      };
+    }
+
+    request.onload = () => {
+      if (request.status >= 200 && request.status < 300) {
+        onProgress?.(1);
+        resolve();
+        return;
+      }
+      reject(new Error(`Storage responded ${request.status}: ${request.responseText}`));
+    };
+    request.onerror = () => reject(new Error('The upload could not reach the server.'));
+    request.onabort = () => reject(new Error('The upload was cancelled.'));
+
+    request.send(form);
+  });
+}
+
 async function uploadToBucket(
   bucket: string,
   path: string,
   file: LocalFile,
+  onProgress?: UploadProgressHandler,
 ): Promise<UploadedFile> {
+  const {
+    data: { session },
+  } = await supabase.auth.getSession();
+
+  if (session?.access_token) {
+    try {
+      await uploadViaXhr(bucket, path, file, session.access_token, onProgress);
+      return {
+        storagePath: path,
+        fileName: file.name,
+        mimeType: file.mimeType,
+        sizeBytes: file.size,
+      };
+    } catch (error) {
+      // Progress is a convenience, not a requirement. If the direct request
+      // fails for a reason supabase-js would handle better, fall through rather
+      // than telling someone their document cannot be uploaded.
+      logger.warn('Progress upload failed; retrying through supabase-js', { error });
+    }
+  }
+
   const bytes = await readFileBytes(file.uri);
 
   const { error } = await supabase.storage.from(bucket).upload(path, bytes, {
     contentType: file.mimeType,
-    // Paths carry a UUID, so a collision means a genuine bug rather than a
-    // legitimate replacement. Fail loudly instead of silently overwriting.
     upsert: false,
     cacheControl: '3600',
   });
@@ -243,6 +324,7 @@ export const storageService = {
     applicationId: string,
     documentTypeId: string,
     file: LocalFile,
+    onProgress?: UploadProgressHandler,
   ): Promise<UploadedFile> {
     // Kind first, size last. A photo straight from a modern phone camera is
     // routinely 6-10 MB, well over the per-type limit, but compresses to a
@@ -254,7 +336,7 @@ export const storageService = {
     validateDocumentSize(prepared, documentTypeId);
 
     const path = buildDocumentPath(applicantId, applicationId, documentTypeId, prepared);
-    return uploadToBucket(BUCKETS.documents, path, prepared);
+    return uploadToBucket(BUCKETS.documents, path, prepared, onProgress);
   },
 
   /** Upload one photo or video attached to a monthly progress report. */
@@ -263,6 +345,7 @@ export const storageService = {
     reportId: string,
     file: LocalFile,
     mediaType: 'image' | 'video',
+    onProgress?: UploadProgressHandler,
   ): Promise<UploadedFile> {
     const rules = PROGRESS_MEDIA_CONFIG[mediaType];
 
@@ -290,7 +373,7 @@ export const storageService = {
     }
 
     const path = buildProgressMediaPath(applicantId, reportId, prepared);
-    return uploadToBucket(BUCKETS.progressMedia, path, prepared);
+    return uploadToBucket(BUCKETS.progressMedia, path, prepared, onProgress);
   },
 
   /**

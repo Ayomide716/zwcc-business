@@ -44,6 +44,7 @@ export default function DocumentsScreen() {
   const { data: documents = [], refetch, isRefetching } = useDocuments(application?.id);
 
   const [uploadingTypeId, setUploadingTypeId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [sourceSheetFor, setSourceSheetFor] = useState<string | null>(null);
 
   const editable = application ? areDocumentsEditable(application.status) : false;
@@ -76,6 +77,7 @@ export default function DocumentsScreen() {
 
       setSourceSheetFor(null);
       setUploadingTypeId(typeId);
+      setUploadProgress(0);
 
       try {
         const type = getDocumentType(typeId);
@@ -83,13 +85,16 @@ export default function DocumentsScreen() {
         const file = files[0];
         if (!file) return;
 
-        await documentService.upload(application.id, user.id, typeId, file);
+        await documentService.upload(application.id, user.id, typeId, file, (fraction) =>
+          setUploadProgress(fraction),
+        );
         invalidate(application.id);
         toast.success('Uploaded', `${type?.label ?? 'Document'} added to your application.`);
       } catch (error) {
         toast.error(error, 'Upload failed');
       } finally {
         setUploadingTypeId(null);
+        setUploadProgress(0);
       }
     },
     [application, user, pick, invalidate, toast],
@@ -213,6 +218,7 @@ export default function DocumentsScreen() {
               slot={slot}
               editable={editable}
               uploading={uploadingTypeId === slot.typeId}
+              uploadProgress={uploadProgress}
               onUpload={() => setSourceSheetFor(slot.typeId)}
               onPreview={
                 slot.document

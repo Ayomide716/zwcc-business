@@ -50,15 +50,16 @@ export default function CommitteeDashboard() {
       onRefresh={handleRefresh}
       refreshing={refreshing}
       edgeToEdgeBottom
-      edgeToEdgeTop
+      stickyHeader={
+        <BrandHeader
+          pinned
+          eyebrow="Grant Committee"
+          title={firstName(profile?.full_name)}
+          subtitle={GRANT_PROGRAM.name}
+          right={<Logo size={36} showWordmark={false} scheme="onDark" />}
+        />
+      }
     >
-      <BrandHeader
-        eyebrow="Grant Committee"
-        title={firstName(profile?.full_name)}
-        subtitle={GRANT_PROGRAM.name}
-        right={<Logo size={36} showWordmark={false} scheme="onDark" />}
-      />
-
       <View style={styles.body}>
         <View style={styles.grid}>
           <StatTile

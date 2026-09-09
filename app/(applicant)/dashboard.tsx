@@ -84,15 +84,18 @@ export default function ApplicantDashboard() {
       onRefresh={handleRefresh}
       refreshing={refreshing}
       edgeToEdgeBottom
-      edgeToEdgeTop
+      // Pinned rather than scrolling, so the greeting stays put and the page
+      // slides underneath it instead of running into the status bar.
+      stickyHeader={
+        <BrandHeader
+          pinned
+          eyebrow={greeting()}
+          title={firstName(profile?.full_name)}
+          subtitle={GRANT_PROGRAM.name}
+          right={<Logo size={36} showWordmark={false} scheme="onDark" />}
+        />
+      }
     >
-      <BrandHeader
-        eyebrow={greeting()}
-        title={firstName(profile?.full_name)}
-        subtitle={GRANT_PROGRAM.name}
-        right={<Logo size={36} showWordmark={false} scheme="onDark" />}
-      />
-
       <View style={styles.body}>
         {application.isLoading ? (
           <SkeletonList count={3} />

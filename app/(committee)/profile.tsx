@@ -1,14 +1,16 @@
 /**
  * Staff account screen. Deliberately spare — a reviewer's job is the queue, not
  * this page.
+ *
+ * Shares the applicant profile's grouped-row layout so both roles get the same
+ * shape and alignment.
  */
-import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, View } from 'react-native';
 
-import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
-import { ScreenHeader } from '@/components/ui/Header';
+import { Logo } from '@/components/brand/Logo';
+import { BrandHeader } from '@/components/ui/Header';
+import { ListGroup, ListRow } from '@/components/ui/ListRow';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { ROLE_CAPABILITIES } from '@/config/permissions.config';
@@ -39,136 +41,110 @@ export default function StaffProfileScreen() {
   const capabilityCount = role ? ROLE_CAPABILITIES[role].length : 0;
 
   return (
-    <Screen>
-      <ScreenHeader title="Account" />
+    <Screen
+      padded={false}
+      edgeToEdgeBottom
+      stickyHeader={
+        <BrandHeader
+          pinned
+          title="Account"
+          right={<Logo size={32} showWordmark={false} scheme="onDark" />}
+        />
+      }
+    >
+      <View style={styles.body}>
+        <View style={styles.identity}>
+          <View style={styles.avatar}>
+            <Text variant="title2" color="brand">
+              {initials(profile?.full_name)}
+            </Text>
+          </View>
 
-      <Card style={styles.identity}>
-        <View style={styles.avatar}>
-          <Text variant="title2" color="brand">
-            {initials(profile?.full_name)}
+          <Text variant="title3" align="center">
+            {profile?.full_name ?? 'Your name'}
           </Text>
-        </View>
-
-        <View style={styles.identityText}>
-          <Text variant="title3">{profile?.full_name ?? 'Your name'}</Text>
-          <Text variant="callout" muted>
+          <Text variant="callout" muted align="center">
             {profile?.email}
           </Text>
           {role ? (
-            <Text variant="caption" color="brand">
-              {ROLE_LABELS[role]} · {capabilityCount} permissions
-            </Text>
+            <View style={styles.rolePill}>
+              <Text variant="caption" color="brand">
+                {ROLE_LABELS[role]} · {capabilityCount} permissions
+              </Text>
+            </View>
           ) : null}
         </View>
-      </Card>
 
-      {role === 'admin' ? (
-        <Card style={styles.section}>
-          <Text variant="title3">Administration</Text>
-          <Button
-            label="Open admin dashboard"
-            variant="outline"
-            icon="settings-outline"
-            onPress={() => router.push('/(admin)/dashboard')}
-            fullWidth
+        {role === 'admin' ? (
+          <ListGroup title="Administration">
+            <ListRow
+              icon="settings-outline"
+              label="Admin dashboard"
+              description="Users, configuration and the audit trail"
+              onPress={() => router.push('/(admin)/dashboard')}
+            />
+          </ListGroup>
+        ) : null}
+
+        <ListGroup title="Programme">
+          <ListRow icon="ribbon-outline" label="Grant" value={GRANT_PROGRAM.name} />
+          <ListRow icon="business-outline" label="Organisation" value={ORGANISATION.name} />
+          <ListRow icon="location-outline" label="Location" value={ORGANISATION.location} />
+        </ListGroup>
+
+        <ListGroup title="Legal">
+          <ListRow
+            icon="document-text-outline"
+            label="Terms & Conditions"
+            onPress={() => router.push('/legal/terms')}
+            accessibilityHint="Opens in this app"
           />
-        </Card>
-      ) : null}
+          <ListRow
+            icon="shield-checkmark-outline"
+            label="Privacy Policy"
+            onPress={() => router.push('/legal/privacy')}
+            accessibilityHint="Opens in this app"
+          />
+        </ListGroup>
 
-      <Card style={styles.section}>
-        <Text variant="title3">Programme</Text>
-        <Row icon="ribbon-outline" label="Grant" value={GRANT_PROGRAM.name} />
-        <Row icon="business-outline" label="Organisation" value={ORGANISATION.name} />
-        <Row icon="location-outline" label="Location" value={ORGANISATION.location} />
-      </Card>
-
-      <Card style={styles.section}>
-        <Text variant="title3">Legal</Text>
-        <Button
-          label="Terms & Conditions"
-          variant="ghost"
-          icon="document-text-outline"
-          onPress={() => router.push('/legal/terms')}
-          style={styles.linkRow}
-        />
-        <Button
-          label="Privacy Policy"
-          variant="ghost"
-          icon="shield-checkmark-outline"
-          onPress={() => router.push('/legal/privacy')}
-          style={styles.linkRow}
-        />
-      </Card>
-
-      <Button
-        label="Sign out"
-        variant="outline"
-        icon="log-out-outline"
-        onPress={handleSignOut}
-        fullWidth
-      />
+        <ListGroup>
+          <ListRow
+            icon="log-out-outline"
+            label="Sign out"
+            tone="danger"
+            onPress={handleSignOut}
+            chevron={false}
+          />
+        </ListGroup>
+      </View>
     </Screen>
   );
 }
 
-function Row({
-  icon,
-  label,
-  value,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  value: string;
-}) {
-  return (
-    <View style={styles.row}>
-      <Ionicons name={icon} size={18} color={colors.textMuted} />
-      <Text variant="caption" muted style={styles.rowLabel}>
-        {label}
-      </Text>
-      <Text variant="callout" style={styles.rowValue} numberOfLines={1}>
-        {value}
-      </Text>
-    </View>
-  );
-}
-
 const styles = StyleSheet.create({
+  body: {
+    padding: spacing.base,
+    gap: spacing.lg,
+  },
   identity: {
-    flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.base,
-    marginBottom: spacing.base,
+    gap: spacing.xxs,
+    paddingVertical: spacing.sm,
   },
   avatar: {
-    width: 60,
-    height: 60,
+    width: 76,
+    height: 76,
     borderRadius: radius.pill,
     backgroundColor: colors.brandSurfaceStrong,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: spacing.sm,
   },
-  identityText: {
-    flex: 1,
-    gap: 1,
-  },
-  section: {
-    gap: spacing.md,
-    marginBottom: spacing.base,
-  },
-  row: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.sm,
-  },
-  rowLabel: {
-    width: 84,
-  },
-  rowValue: {
-    flex: 1,
-  },
-  linkRow: {
-    justifyContent: 'flex-start',
-    paddingHorizontal: 0,
+  rolePill: {
+    marginTop: spacing.xs,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xxs,
+    borderRadius: radius.pill,
+    backgroundColor: colors.brandSurface,
   },
 });
