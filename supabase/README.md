@@ -103,6 +103,33 @@ supabase link --project-ref <your-ref>
 supabase db push
 ```
 
+## Turning in-app PDF viewing on
+
+Documents open inside the app rather than in a browser tab. Photographs need
+nothing — they are already images. PDFs have to be rasterised first, and that
+happens once on the server:
+
+```bash
+supabase functions deploy render-document
+```
+
+There are no secrets to set. The function reads `SUPABASE_URL`,
+`SUPABASE_ANON_KEY` and `SUPABASE_SERVICE_ROLE_KEY`, all of which the platform
+injects.
+
+Leave JWT verification **on** for this one. Unlike `send-email` and
+`send-push`, which run on a schedule with no user behind them, this function is
+called by a signed-in person and uses their token to decide what they may see.
+Deploying it with `--no-verify-jwt` would turn it into a way to render any
+applicant's identity documents by guessing a document id.
+
+Rendered pages land in the private `document-pages` bucket, one folder per
+document, under the owning applicant's id — the same path convention and the
+same access rules as the originals. Nothing but the function can write there.
+
+If a PDF fails to render, the failure is recorded on `documents.pages_error`
+and the app offers the original file instead of retrying forever.
+
 ## Re-run migration 4 whenever the workflow changes
 
 `0004` seeds `workflow_statuses` from `src/config/workflow.config.ts`, and the

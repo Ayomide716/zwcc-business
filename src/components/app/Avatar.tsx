@@ -50,7 +50,10 @@ export function Avatar({ path, name, size = 76, style }: AvatarProps) {
   if (path && signed.data) {
     return (
       <Image
-        source={{ uri: signed.data }}
+        // Keyed on the storage path, not the signed URL: a URL that changes
+        // every time it is minted would miss the disk cache on every launch and
+        // re-download a picture the phone already has.
+        source={{ uri: signed.data, cacheKey: path }}
         // The picture and the monogram are different element types with
         // incompatible style unions; only layout properties are ever passed.
         style={[styles.image, dimensions, style as StyleProp<ImageStyle>]}

@@ -7,7 +7,6 @@
  * adds a button here with no change to this screen.
  */
 import { Ionicons } from '@expo/vector-icons';
-import * as WebBrowser from 'expo-web-browser';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -15,6 +14,7 @@ import { StyleSheet, View } from 'react-native';
 import {
   ApplicationTimeline,
   CommitteeScoreSummary,
+  DocumentViewer,
   ScoreSheetCard,
   StatusBadge,
 } from '@/components/app';
@@ -49,7 +49,6 @@ import { agreementService } from '@/services/agreement.service';
 import { documentService } from '@/services/document.service';
 import { monitoringService } from '@/services/monitoring.service';
 import { reviewService } from '@/services/review.service';
-import { storageService } from '@/services/storage.service';
 import { applicationService } from '@/services/application.service';
 import { colors, spacing, type Tone } from '@/theme';
 import type { DocumentRow } from '@/types/database';
@@ -245,14 +244,12 @@ export default function ApplicationDetailScreen() {
     }
   }
 
-  async function openDocument(document: DocumentRow) {
-    try {
-      const url = await storageService.getDocumentUrl(document.storage_path);
-      await WebBrowser.openBrowserAsync(url);
-    } catch (error) {
-      toast.error(error, 'Could not open the document');
-    }
-  }
+  /**
+   * Opened in the app's own viewer, which blocks screenshots and screen
+   * recording. Staff read these documents to verify an applicant, not to keep
+   * a copy of their ID in a personal camera roll.
+   */
+  const [previewing, setPreviewing] = useState<DocumentRow | null>(null);
 
   if (context.isLoading) {
     return (
@@ -393,7 +390,7 @@ export default function ApplicationDetailScreen() {
                   variant="ghost"
                   size="sm"
                   icon="eye-outline"
-                  onPress={() => void openDocument(document)}
+                  onPress={() => setPreviewing(document)}
                 />
                 {!isOwnApplication && document.status !== 'verified' ? (
                   <Button
@@ -601,6 +598,14 @@ export default function ApplicationDetailScreen() {
           fullWidth
         />
       </Sheet>
+
+      <DocumentViewer
+        visible={Boolean(previewing)}
+        onClose={() => setPreviewing(null)}
+        document={previewing}
+        subtitle={previewing?.document_type_id.replace(/_/g, ' ')}
+        actor={actor}
+      />
     </Screen>
   );
 }

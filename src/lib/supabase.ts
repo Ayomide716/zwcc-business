@@ -191,6 +191,7 @@ export const SUPABASE_URL = supabaseUrl ?? '';
 /** Storage buckets. All private — see migration 0003. */
 export const BUCKETS = {
   documents: 'application-documents',
+  documentPages: 'document-pages',
   progressMedia: 'progress-media',
   agreements: 'agreements',
   avatars: 'avatars',

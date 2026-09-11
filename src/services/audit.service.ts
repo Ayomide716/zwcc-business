@@ -26,6 +26,8 @@ export type AuditAction =
   | 'document.deleted'
   | 'document.verified'
   | 'document.rejected'
+  | 'document.viewed'
+  | 'document.capture_attempted'
   | 'review.created'
   | 'review.note_added'
   | 'review.scored'

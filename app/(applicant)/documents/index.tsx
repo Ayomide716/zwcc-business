@@ -8,9 +8,8 @@
 import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
-import * as WebBrowser from 'expo-web-browser';
 
-import { DocumentSlotCard } from '@/components/app';
+import { DocumentSlotCard, DocumentViewer } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Banner, LoadingState } from '@/components/ui/Feedback';
 import { ScreenHeader } from '@/components/ui/Header';
@@ -29,7 +28,7 @@ import { useFilePicker, type PickSource } from '@/hooks/useFilePicker';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { documentService } from '@/services/document.service';
-import { storageService } from '@/services/storage.service';
+import type { DocumentRow } from '@/types/database';
 import { spacing } from '@/theme';
 import { areDocumentsEditable } from '@/workflow/engine';
 
@@ -100,19 +99,12 @@ export default function DocumentsScreen() {
     [application, user, pick, invalidate, toast],
   );
 
-  const handlePreview = useCallback(
-    async (storagePath: string) => {
-      try {
-        const url = await storageService.getDocumentUrl(storagePath);
-        // Opened in the in-app browser so the signed URL never leaves the app
-        // into a shared browser history.
-        await WebBrowser.openBrowserAsync(url);
-      } catch (error) {
-        toast.error(error, 'Could not open the document');
-      }
-    },
-    [toast],
-  );
+  /**
+   * Shown in the app's own viewer rather than a browser tab. Not secured
+   * against screenshots — these are this person's own documents, and stopping
+   * someone photographing their own ID would be an obstacle, not a protection.
+   */
+  const [previewing, setPreviewing] = useState<DocumentRow | null>(null);
 
   const handleRemove = useCallback(
     (documentId: string, label: string) => {
@@ -222,9 +214,7 @@ export default function DocumentsScreen() {
               uploadProgress={uploadProgress}
               onUpload={() => setSourceSheetFor(slot.typeId)}
               onPreview={
-                slot.document
-                  ? () => void handlePreview(slot.document!.storage_path)
-                  : undefined
+                slot.document ? () => setPreviewing(slot.document!) : undefined
               }
               onRemove={
                 slot.document
@@ -275,6 +265,14 @@ export default function DocumentsScreen() {
           </Text>
         ) : null}
       </Sheet>
+
+      <DocumentViewer
+        visible={Boolean(previewing)}
+        onClose={() => setPreviewing(null)}
+        document={previewing}
+        subtitle={previewing ? getDocumentType(previewing.document_type_id)?.label : undefined}
+        secure={false}
+      />
     </Screen>
   );
 }

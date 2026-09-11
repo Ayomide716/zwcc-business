@@ -21,3 +21,5 @@ export { ScoreSheetCard } from './ScoreSheetCard';
 export { CommitteeScoreSummary } from './CommitteeScoreSummary';
 export { Avatar } from './Avatar';
 export { StatusHero } from './StatusHero';
+export { DocumentViewer } from './DocumentViewer';
+export type { DocumentViewerProps } from './DocumentViewer';

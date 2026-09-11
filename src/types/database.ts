@@ -133,6 +133,14 @@ export interface DocumentRow extends Timestamps {
   rejection_note: string | null;
   /** Incremented when a document is replaced, so re-uploads are traceable. */
   version: number;
+  /**
+   * Rendered page images available in the `document-pages` bucket. 1 for a
+   * photograph, null for a PDF that has not been rasterised yet.
+   */
+  page_count: number | null;
+  pages_rendered_at: string | null;
+  /** Set when rasterising failed, so the app stops retrying a broken file. */
+  pages_error: string | null;
   deleted_at: string | null;
 }
 

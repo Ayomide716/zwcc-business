@@ -26,6 +26,22 @@ import { formatFileSize } from '@/lib/format';
 import { logger } from '@/lib/logger';
 import { BUCKETS, SUPABASE_URL, supabase } from '@/lib/supabase';
 
+/**
+ * Short, because the viewer caches each page on disk under its storage path
+ * rather than its URL. A link only has to survive long enough to be fetched
+ * once, and a leaked one is then useless within minutes rather than an hour.
+ */
+export const PAGE_URL_TTL_SECONDS = 300;
+
+/** One rendered page: a stable cache key and a short-lived way to fetch it. */
+export interface PageImage {
+  /** Storage path. Stable across signings — use it as the image cache key. */
+  path: string;
+  url: string;
+  /** 1-based. */
+  page: number;
+}
+
 export interface LocalFile {
   uri: string;
   name: string;
@@ -451,6 +467,50 @@ export const storageService = {
       if (entry.path && entry.signedUrl) map[entry.path] = entry.signedUrl;
     }
     return map;
+  },
+
+  /**
+   * The rendered pages of a document, in order, each paired with the storage
+   * path that identifies it.
+   *
+   * The path is what the viewer uses as an image cache key. Signing produces a
+   * different URL every time, so caching on the URL would re-download a page on
+   * every view — expensive on metered data and the whole reason these are
+   * rendered once on the server. The path never changes, so the phone fetches
+   * each page exactly once.
+   */
+  async getDocumentPages(
+    applicantId: string,
+    documentId: string,
+    expiresInSeconds = PAGE_URL_TTL_SECONDS,
+  ): Promise<PageImage[]> {
+    const folder = `${applicantId}/${documentId}`;
+
+    const { data: entries, error } = await supabase.storage
+      .from(BUCKETS.documentPages)
+      .list(folder, { limit: 100, sortBy: { column: 'name', order: 'asc' } });
+
+    if (error) throw error;
+    if (!entries?.length) return [];
+
+    // Names are zero-padded page numbers, so a plain sort is page order. The
+    // sort is repeated here because the listing order is the server's promise,
+    // not a guarantee, and a document shown out of order is worse than useless.
+    const paths = entries
+      .filter((entry) => entry.name && !entry.name.startsWith('.'))
+      .map((entry) => `${folder}/${entry.name}`)
+      .sort();
+
+    const signed = await this.getSignedUrls(
+      BUCKETS.documentPages,
+      paths,
+      expiresInSeconds,
+    );
+
+    return paths.flatMap((path, index) => {
+      const url = signed[path];
+      return url ? [{ path, url, page: index + 1 }] : [];
+    });
   },
 
   /** Remove a stored object. The database row is soft-deleted separately. */
