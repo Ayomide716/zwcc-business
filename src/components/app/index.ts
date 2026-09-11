@@ -19,3 +19,4 @@ export { ProfileUnavailable } from './ProfileUnavailable';
 export { OfflineBanner } from './OfflineBanner';
 export { ScoreSheetCard } from './ScoreSheetCard';
 export { CommitteeScoreSummary } from './CommitteeScoreSummary';
+export { Avatar } from './Avatar';

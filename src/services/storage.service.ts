@@ -78,6 +78,11 @@ export function buildDocumentPath(
   return `${applicantId}/${applicationId}/${documentTypeId}/${unique}.${extensionFor(file)}`;
 }
 
+/** `<user>/<random>.<ext>` — one folder per person, as every bucket does. */
+export function buildAvatarPath(userId: string, file: LocalFile): string {
+  return `${userId}/${Crypto.randomUUID()}.${extensionFor(file)}`;
+}
+
 /** `<applicant>/<report>/<random>.<ext>` */
 export function buildProgressMediaPath(
   applicantId: string,
@@ -337,6 +342,27 @@ export const storageService = {
 
     const path = buildDocumentPath(applicantId, applicationId, documentTypeId, prepared);
     return uploadToBucket(BUCKETS.documents, path, prepared, onProgress);
+  },
+
+  /**
+   * Upload a profile picture.
+   *
+   * Compressed hard — 512px is more than a 76pt avatar needs at any screen
+   * density, and this is one more upload on metered data for something purely
+   * decorative.
+   */
+  async uploadAvatar(userId: string, file: LocalFile): Promise<UploadedFile> {
+    if (!COMPRESSIBLE.includes(file.mimeType)) {
+      throw new AppError(
+        'validation',
+        'Unsupported file',
+        'Please choose a JPG or PNG photo.',
+      );
+    }
+
+    const prepared = await compressImage(file, { maxWidth: 512, quality: 0.8 });
+    const path = buildAvatarPath(userId, prepared);
+    return uploadToBucket(BUCKETS.avatars, path, prepared);
   },
 
   /** Upload one photo or video attached to a monthly progress report. */

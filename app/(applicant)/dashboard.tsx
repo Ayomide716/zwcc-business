@@ -10,9 +10,9 @@ import { useRouter } from 'expo-router';
 import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
-import { Logo } from '@/components/brand/Logo';
 import {
   ApplicationTimeline,
+  Avatar,
   NextActionCard,
   RegistrationCodeCard,
   StatusBadge,
@@ -92,7 +92,7 @@ export default function ApplicantDashboard() {
           eyebrow={greeting()}
           title={firstName(profile?.full_name)}
           subtitle={GRANT_PROGRAM.name}
-          right={<Logo size={36} showWordmark={false} scheme="onDark" />}
+          right={<Avatar path={profile?.avatar_url} name={profile?.full_name} size={40} />}
         />
       }
     >

@@ -193,4 +193,5 @@ export const BUCKETS = {
   documents: 'application-documents',
   progressMedia: 'progress-media',
   agreements: 'agreements',
+  avatars: 'avatars',
 } as const;

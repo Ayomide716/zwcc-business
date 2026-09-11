@@ -12,9 +12,10 @@
  */
 import { useRouter } from 'expo-router';
 import { useEffect, useState } from 'react';
-import { Alert, StyleSheet, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
-import { StatusBadge } from '@/components/app';
+import { Avatar, StatusBadge } from '@/components/app';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { BrandHeader } from '@/components/ui/Header';
@@ -23,11 +24,13 @@ import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { TextField } from '@/components/ui/TextField';
 import { ORGANISATION } from '@/config/program.config';
+import { useFilePicker } from '@/hooks/useFilePicker';
 import { useMyApplicationHistory } from '@/hooks/queries';
-import { formatDateShort, initials } from '@/lib/format';
+import { formatDateShort } from '@/lib/format';
 import { useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { profileService } from '@/services/profile.service';
+import { storageService } from '@/services/storage.service';
 import { colors, radius, spacing } from '@/theme';
 import { ROLE_LABELS } from '@/types/roles';
 
@@ -41,6 +44,32 @@ export default function ProfileScreen() {
   const [fullName, setFullName] = useState('');
   const [phone, setPhone] = useState('');
   const [saving, setSaving] = useState(false);
+  const [changingPhoto, setChangingPhoto] = useState(false);
+  const { pick } = useFilePicker();
+
+  /*
+    The picture is for the applicant's own use. It is never shown to reviewers:
+    a face beside a funding decision invites bias no rubric catches, so the
+    avatars bucket has no staff read policy at all. See migration 0011.
+  */
+  async function handleChangePhoto() {
+    if (!user) return;
+    setChangingPhoto(true);
+    try {
+      const files = await pick('library', { accepts: ['image/jpeg', 'image/png'] });
+      const file = files[0];
+      if (!file) return;
+
+      const uploaded = await storageService.uploadAvatar(user.id, file);
+      await profileService.updateProfile(user.id, { avatar_url: uploaded.storagePath });
+      await refreshProfile();
+      toast.success('Photo updated');
+    } catch (error) {
+      toast.error(error, 'Could not update your photo');
+    } finally {
+      setChangingPhoto(false);
+    }
+  }
 
   // Re-seed the form whenever the profile loads or changes.
   useEffect(() => {
@@ -99,11 +128,22 @@ export default function ProfileScreen() {
       <View style={styles.body}>
         {/* Identity. The one place a face-and-name block belongs. */}
         <View style={styles.identity}>
-          <View style={styles.avatar}>
-            <Text variant="title2" color="brand">
-              {initials(profile?.full_name)}
-            </Text>
-          </View>
+          <Pressable
+            onPress={handleChangePhoto}
+            disabled={changingPhoto}
+            accessibilityRole="button"
+            accessibilityLabel="Change your profile photo"
+            style={({ pressed }) => [styles.avatarWrap, pressed && styles.avatarPressed]}
+          >
+            <Avatar path={profile?.avatar_url} name={profile?.full_name} size={76} />
+            <View style={styles.avatarBadge}>
+              <Ionicons
+                name={changingPhoto ? 'hourglass-outline' : 'camera'}
+                size={13}
+                color={colors.onBrand}
+              />
+            </View>
+          </Pressable>
 
           <Text variant="title3" align="center">
             {profile?.full_name ?? 'Your name'}
@@ -234,14 +274,24 @@ const styles = StyleSheet.create({
     gap: spacing.xxs,
     paddingVertical: spacing.sm,
   },
-  avatar: {
-    width: 76,
-    height: 76,
+  avatarWrap: {
+    marginBottom: spacing.sm,
+  },
+  avatarPressed: {
+    opacity: 0.8,
+  },
+  avatarBadge: {
+    position: 'absolute',
+    right: -2,
+    bottom: -2,
+    width: 26,
+    height: 26,
     borderRadius: radius.pill,
-    backgroundColor: colors.brandSurfaceStrong,
+    backgroundColor: colors.brand,
+    borderWidth: 2,
+    borderColor: colors.background,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.sm,
   },
   rolePill: {
     marginTop: spacing.xs,
