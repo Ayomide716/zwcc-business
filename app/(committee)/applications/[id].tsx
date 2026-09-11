@@ -134,8 +134,12 @@ export default function ApplicationDetailScreen() {
       application.status,
       actor.role,
       context.data.workflowContext,
+      { isOwnApplication: application.applicant_id === actor.id },
     );
-  }, [application, context.data, actor.role]);
+  }, [application, context.data, actor.role, actor.id]);
+
+  /** True when a staff member is looking at their own application. */
+  const isOwnApplication = application?.applicant_id === actor.id;
 
   const runTransition = useCallback(
     async (transitionId: string, options: { reasonCode?: string; reasonNote?: string } = {}) => {
@@ -284,6 +288,14 @@ export default function ApplicationDetailScreen() {
         right={<StatusBadge status={application.status} size="sm" />}
       />
 
+      {isOwnApplication ? (
+        <Banner
+          tone="warning"
+          message="This is your own application. Staff actions are turned off here — another committee member must verify, score and decide it."
+          icon="hand-left-outline"
+        />
+      ) : null}
+
       {/* Summary */}
       <Card style={styles.card}>
         <View style={styles.summaryGrid}>
@@ -383,7 +395,7 @@ export default function ApplicationDetailScreen() {
                   icon="eye-outline"
                   onPress={() => void openDocument(document)}
                 />
-                {document.status !== 'verified' ? (
+                {!isOwnApplication && document.status !== 'verified' ? (
                   <Button
                     label="Verify"
                     variant="ghost"
@@ -393,7 +405,7 @@ export default function ApplicationDetailScreen() {
                     onPress={() => void handleVerifyDocument(document)}
                   />
                 ) : null}
-                {document.status !== 'rejected' ? (
+                {!isOwnApplication && document.status !== 'rejected' ? (
                   <Button
                     label="Reject"
                     variant="ghost"
@@ -434,7 +446,7 @@ export default function ApplicationDetailScreen() {
         value={myScores}
         onSave={handleSaveScores}
         saving={savingScores}
-        readOnly={!SCOREABLE_STATUSES.includes(application.status)}
+        readOnly={isOwnApplication || !SCOREABLE_STATUSES.includes(application.status)}
       />
 
       <CommitteeScoreSummary sheets={scoreRows.map((review) => review.scores)} />

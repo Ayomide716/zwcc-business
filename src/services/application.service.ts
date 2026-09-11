@@ -314,7 +314,11 @@ export const applicationService = {
   ): Promise<ApplicationRow> {
     const { application, workflowContext } = await this.getWithContext(applicationId);
 
-    const check = canTransition(transitionId, application.status, actor.role, workflowContext);
+    const check = canTransition(transitionId, application.status, actor.role, workflowContext, {
+      // Separation of duties: staff powers do not apply to your own file. The
+      // database enforces this too; checking here just makes the message human.
+      isOwnApplication: application.applicant_id === actor.id,
+    });
     if (!check.ok || !check.transition) {
       throw workflowError(check.reason ?? 'That action is not available right now.');
     }

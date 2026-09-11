@@ -99,8 +99,8 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   },
   {
     id: 'monitoring',
-    title: 'After you receive a grant',
-    body: 'You sign a grant agreement, then report on your business once a month for twelve months — a short update with photos or a video. This is how we measure the impact of the programme.',
+    title: 'If your application succeeds',
+    body: 'You sign a grant agreement first — the funds are only released after it is signed. From then on you report on your business once a month for twelve months: a short update with photos or a video. This is how we measure the impact of the programme.',
     art: 'monitoring',
   },
 ];

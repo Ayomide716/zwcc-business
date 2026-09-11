@@ -44,6 +44,35 @@ export const EMPTY_WORKFLOW_CONTEXT: WorkflowContext = {
   agreementSigned: false,
 };
 
+/**
+ * Separation of duties. A staff role is a power over other people's
+ * applications, never over your own — otherwise anyone who is both a committee
+ * member and an applicant could verify, score and approve their own request for
+ * money. This is also enforced by database triggers (migration 0012), which are
+ * the real defence; the engine knows about it only so the app can hide the
+ * button and say why instead of surfacing a database error.
+ */
+export const SELF_ACTION_BLOCKER =
+  'You cannot act on your own application. Another committee member must handle this one.';
+
+/** Facts about the actor relative to the record, beyond their role. */
+export interface ActorContext {
+  /** The signed-in user is the applicant on this application. */
+  isOwnApplication?: boolean;
+}
+
+/** A transition no applicant may ever perform is, by definition, a staff act. */
+function isStaffAction(transition: TransitionDefinition): boolean {
+  return !transition.allowedRoles.includes('applicant');
+}
+
+function selfActionBlocked(
+  transition: TransitionDefinition,
+  actor: ActorContext,
+): boolean {
+  return Boolean(actor.isOwnApplication) && isStaffAction(transition);
+}
+
 function isTransitionEnabled(transition: TransitionDefinition): boolean {
   if (!transition.featureFlag) return true;
   return WORKFLOW_FEATURES[transition.featureFlag] === true;
@@ -82,11 +111,17 @@ export function getAvailableTransitions(
   status: string,
   role: Role,
   context: WorkflowContext = EMPTY_WORKFLOW_CONTEXT,
+  actor: ActorContext = {},
 ): AvailableTransition[] {
-  return getTransitionsFor(status, role).map((transition) => {
-    const blockers = evaluateGuards(transition, context);
-    return { transition, allowed: blockers.length === 0, blockers };
-  });
+  return getTransitionsFor(status, role)
+    // A staff action on your own application is not shown as blocked, it is not
+    // offered at all. A greyed-out "Approve" on your own file invites the
+    // question of how to un-grey it.
+    .filter((transition) => !selfActionBlocked(transition, actor))
+    .map((transition) => {
+      const blockers = evaluateGuards(transition, context);
+      return { transition, allowed: blockers.length === 0, blockers };
+    });
 }
 
 /** Look up one transition by id and check it is legal from `status`. */
@@ -119,6 +154,7 @@ export function canTransition(
   status: string,
   role: Role,
   context: WorkflowContext = EMPTY_WORKFLOW_CONTEXT,
+  actor: ActorContext = {},
 ): TransitionCheck {
   const transition = TRANSITIONS.find((t) => t.id === transitionId);
 
@@ -137,6 +173,9 @@ export function canTransition(
   }
   if (!transition.allowedRoles.includes(role)) {
     return { ok: false, reason: 'You do not have permission to perform that action.', transition };
+  }
+  if (selfActionBlocked(transition, actor)) {
+    return { ok: false, reason: SELF_ACTION_BLOCKER, transition };
   }
 
   const blockers = evaluateGuards(transition, context);
