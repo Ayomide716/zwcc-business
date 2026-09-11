@@ -66,9 +66,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     profileRef.current = profile;
   }, [profile]);
 
-  const loadProfile = useCallback(async (user: User) => {
+  /**
+   * `background` is what keeps a refresh from throwing the user off the screen
+   * they are on.
+   *
+   * Every role layout renders nothing while `loadingProfile` is true, so that a
+   * staff member never flashes the applicant shell before their role arrives.
+   * Rendering nothing unmounts the tab navigator, and a navigator that remounts
+   * comes back on its first tab with no history. So a re-read after the user
+   * changed their name or their picture would bounce them to the home screen,
+   * and the success message would land there instead of under their thumb.
+   *
+   * The flag exists for the first load, when there is genuinely nothing to
+   * show. A refresh already has a profile on screen and should replace it
+   * without anyone noticing.
+   */
+  const loadProfile = useCallback(async (user: User, background = false) => {
     activeUserId.current = user.id;
-    setLoadingProfile(true);
+    if (!background) setLoadingProfile(true);
     setProfileError(null);
 
     try {
@@ -80,12 +95,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
     } catch (error) {
       logger.error('Failed to load profile', error, { userId: user.id });
-      if (activeUserId.current === user.id) {
+      // A refresh that fails keeps whatever is already on screen. Clearing it
+      // would turn a dropped request — ordinary on a Nigerian mobile network —
+      // into the "profile unavailable" screen on top of work in progress.
+      if (activeUserId.current === user.id && !background) {
         setProfile(null);
         setProfileError(toUserError(error));
       }
     } finally {
-      if (activeUserId.current === user.id) setLoadingProfile(false);
+      if (!background && activeUserId.current === user.id) setLoadingProfile(false);
     }
   }, []);
 
@@ -140,7 +158,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const refreshProfile = useCallback(async () => {
     const user = session?.user;
     if (!user) return;
-    await loadProfile(user);
+    // Silent: the caller is updating something the user is looking at.
+    await loadProfile(user, true);
   }, [session, loadProfile]);
 
   const signOut = useCallback(async () => {

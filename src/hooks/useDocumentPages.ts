@@ -14,7 +14,11 @@ import { useEffect } from 'react';
 
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
-import { storageService, type PageImage } from '@/services/storage.service';
+import {
+  PAGE_URL_TTL_SECONDS,
+  storageService,
+  type PageImage,
+} from '@/services/storage.service';
 
 export interface DocumentPagesInput {
   id: string;
@@ -66,9 +70,11 @@ export function useDocumentPages(
 
       return storageService.getDocumentPages(document.applicant_id, document.id);
     },
-    // Signed URLs are short-lived and cheap to re-mint; the images behind them
-    // are cached on disk by path, so a refetch costs one small request.
-    staleTime: 2 * 60 * 1000,
+    // Comfortably inside the link lifetime, so a re-signed batch is always
+    // fetched before the previous one expires. The images behind the links are
+    // cached on disk by path, so a refetch costs one small request, not a
+    // re-download of the document.
+    staleTime: (PAGE_URL_TTL_SECONDS - 120) * 1000,
     retry: 1,
   });
 

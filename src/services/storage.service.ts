@@ -27,11 +27,24 @@ import { logger } from '@/lib/logger';
 import { BUCKETS, SUPABASE_URL, supabase } from '@/lib/supabase';
 
 /**
- * Short, because the viewer caches each page on disk under its storage path
- * rather than its URL. A link only has to survive long enough to be fetched
- * once, and a leaked one is then useless within minutes rather than an hour.
+ * How long a link to a private file stays valid.
+ *
+ * These used to last an hour, which made sense when a preview meant handing the
+ * URL to a browser tab: the tab owned the file from then on. Now the app fetches
+ * once and caches the result on disk under the storage path, so a link only has
+ * to survive the download. Three minutes is long enough for that on a slow
+ * connection and short enough that a URL captured from a shared phone or a
+ * screen recording is dead before anyone can use it.
  */
-export const PAGE_URL_TTL_SECONDS = 300;
+export const VIEW_URL_TTL_SECONDS = 180;
+
+/**
+ * Longer, because a document is read a page at a time. Pages the reader has not
+ * reached yet are fetched minutes after the URLs were minted, and a link that
+ * expired mid-document would show a broken page rather than re-sign silently.
+ * Still a tenth of the hour these used to live.
+ */
+export const PAGE_URL_TTL_SECONDS = 360;
 
 /** One rendered page: a stable cache key and a short-lived way to fetch it. */
 export interface PageImage {
@@ -421,11 +434,14 @@ export const storageService = {
   /**
    * A short-lived URL for viewing a private file.
    *
-   * Buckets are private, so this is the only way to read one. The default hour
-   * is long enough to open a PDF and short enough that a leaked URL expires
-   * before it is useful.
+   * Buckets are private, so this is the only way to read one. See
+   * `VIEW_URL_TTL_SECONDS` for why the default is measured in minutes.
    */
-  async getSignedUrl(bucket: string, path: string, expiresInSeconds = 3600): Promise<string> {
+  async getSignedUrl(
+    bucket: string,
+    path: string,
+    expiresInSeconds = VIEW_URL_TTL_SECONDS,
+  ): Promise<string> {
     const { data, error } = await supabase.storage
       .from(bucket)
       .createSignedUrl(path, expiresInSeconds);
@@ -437,11 +453,11 @@ export const storageService = {
     return data.signedUrl;
   },
 
-  getDocumentUrl(path: string, expiresInSeconds = 3600): Promise<string> {
+  getDocumentUrl(path: string, expiresInSeconds = VIEW_URL_TTL_SECONDS): Promise<string> {
     return this.getSignedUrl(BUCKETS.documents, path, expiresInSeconds);
   },
 
-  getProgressMediaUrl(path: string, expiresInSeconds = 3600): Promise<string> {
+  getProgressMediaUrl(path: string, expiresInSeconds = VIEW_URL_TTL_SECONDS): Promise<string> {
     return this.getSignedUrl(BUCKETS.progressMedia, path, expiresInSeconds);
   },
 
@@ -452,7 +468,7 @@ export const storageService = {
   async getSignedUrls(
     bucket: string,
     paths: string[],
-    expiresInSeconds = 3600,
+    expiresInSeconds = VIEW_URL_TTL_SECONDS,
   ): Promise<Record<string, string>> {
     if (paths.length === 0) return {};
 

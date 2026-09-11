@@ -17,14 +17,17 @@ import type { ImageStyle } from 'expo-image';
 
 import { initials } from '@/lib/format';
 import { BUCKETS } from '@/lib/supabase';
-import { storageService } from '@/services/storage.service';
+import { VIEW_URL_TTL_SECONDS, storageService } from '@/services/storage.service';
 import { colors, radius } from '@/theme';
 
 import { Text } from '../ui/Text';
 
-/** Signed URLs last an hour; re-mint well before that. */
-const SIGNED_URL_TTL_SECONDS = 3600;
-const REFRESH_BEFORE_MS = 45 * 60 * 1000;
+/**
+ * The picture itself is cached on disk under its storage path, so re-minting a
+ * link costs one small request and never a re-download. That makes a short
+ * lifetime free, and a link that leaks from a shared phone useless in minutes.
+ */
+const REFRESH_BEFORE_MS = (VIEW_URL_TTL_SECONDS - 30) * 1000;
 
 export interface AvatarProps {
   /** Storage path held in `profiles.avatar_url`. Null shows initials. */
@@ -37,7 +40,7 @@ export interface AvatarProps {
 export function Avatar({ path, name, size = 76, style }: AvatarProps) {
   const signed = useQuery({
     queryKey: ['avatar-url', path],
-    queryFn: () => storageService.getSignedUrl(BUCKETS.avatars, path!, SIGNED_URL_TTL_SECONDS),
+    queryFn: () => storageService.getSignedUrl(BUCKETS.avatars, path!, VIEW_URL_TTL_SECONDS),
     enabled: Boolean(path),
     staleTime: REFRESH_BEFORE_MS,
     gcTime: REFRESH_BEFORE_MS,
