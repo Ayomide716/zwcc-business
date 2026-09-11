@@ -124,7 +124,12 @@ export class InAppNotificationService implements NotificationTransport {
  */
 export class EmailNotificationService implements NotificationTransport {
   readonly channel = 'email' as const;
-  readonly provider = 'pending-configuration';
+  /*
+    Named for the record, not used to reach anything from here. The key lives
+    in the `send-email` Edge Function; swapping providers is a change there and
+    to this string, never to the app's sending path.
+  */
+  readonly provider = 'resend';
 
   isAvailable(message: NotificationMessage): boolean {
     return Boolean(message.email);

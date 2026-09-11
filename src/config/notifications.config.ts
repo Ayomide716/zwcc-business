@@ -11,13 +11,20 @@ export const NOTIFICATION_CHANNELS = ['in_app', 'email', 'sms', 'whatsapp'] as c
 export type NotificationChannel = (typeof NOTIFICATION_CHANNELS)[number];
 
 /**
- * Only in-app is live for the MVP (brief §20). The other transports have real
- * service classes with a documented contract, disabled here until the client
- * chooses providers.
+ * Which transports actually run.
+ *
+ * Email is on: the app queues a `notification_deliveries` row and the
+ * `send-email` Edge Function drains it through Resend. Turning it on before
+ * that function is deployed is harmless — rows queue and go out as soon as it
+ * is, which is why this does not wait on the deployment.
+ *
+ * SMS and WhatsApp stay off. Both have real transports with the same contract;
+ * both need a provider chosen and a sender function written. SMS in Nigeria is
+ * charged per message, so it should be switched on deliberately, not inherited.
  */
 export const ENABLED_CHANNELS: Record<NotificationChannel, boolean> = {
   in_app: true,
-  email: false,
+  email: true,
   sms: false,
   whatsapp: false,
 };

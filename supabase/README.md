@@ -32,6 +32,38 @@ idempotent, so re-running is safe.
 | 7 | `migrations/0007_review_scores.sql` | Committee scoring rubric |
 | 8 | `migrations/0008_push_tokens.sql` | Device tokens for push notifications |
 | 9 | `migrations/0009_push_dispatch.sql` | Trigger that sends a push per notification |
+| 10 | `migrations/0010_email_queue.sql` | Retry counter and index behind email delivery |
+
+## Turning email on
+
+The app already queues an email for every notification whose template lists the
+email channel. It cannot send one: an API key shipped in a mobile bundle is
+readable by anyone who installs the app, and would let a stranger send mail at
+the church's expense. The `send-email` function holds the key and drains the
+queue.
+
+```bash
+supabase functions deploy send-email --no-verify-jwt
+supabase secrets set RESEND_API_KEY=re_xxxxxxxx
+supabase secrets set MAIL_FROM="ZWCC Business Grant <grants@yourdomain.org>"
+```
+
+The sending domain must be verified in Resend first, or mail lands in spam.
+
+Then enable `pg_cron` (Database → Extensions) and schedule the drain, using the
+snippet at the bottom of `migrations/0010_email_queue.sql`. It runs every
+minute, does nothing when the queue is empty, and stops retrying an address
+after three failures so one bad entry cannot block the rest.
+
+To check it is working:
+
+```sql
+select status, count(*) from public.notification_deliveries
+where channel = 'email' group by status;
+```
+
+Rows stay `pending` until the function is deployed and the secrets are set, at
+which point the backlog goes out. Nothing is lost in the meantime.
 
 ## Turning push notifications on
 
