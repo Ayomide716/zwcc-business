@@ -197,10 +197,16 @@ export const MIN_TOUCH_TARGET = 48;
  * with a camera cutout reports a larger inset and that wins.
  */
 export const rhythm = {
-  /** Minimum gap between the top edge of the screen and the first element. */
-  screenTop: spacing.xl,
+  /**
+   * Minimum gap between the top edge of the screen and the first element.
+   *
+   * Larger than it looks on paper because the status bar is hidden: there is no
+   * system chrome above this, so the title sits directly against the glass
+   * without it.
+   */
+  screenTop: spacing.xxxl,
   /** Gap between the top edge and a full-bleed navy header's content. */
-  headerTop: spacing.md,
+  headerTop: spacing.lg,
   /** Between major blocks on a page — a header and the first card. */
   section: spacing.lg,
   /** Between sibling cards in a list. */
@@ -225,14 +231,18 @@ export const rhythm = {
  * Three weights, not the family's nine. Each file is about 340 KB and this app
  * is used on metered Nigerian data, so every weight has to earn its place.
  *
+ * The heaviest is 600. Inter at 700 on a phone screen reads as shouting, and a
+ * grant platform should look composed rather than loud — titles carry weight
+ * through size and spacing instead.
+ *
  * `fontWeight` is deliberately absent from the scale below. With a named font
  * file, Android will synthesise a fake bold on top of an already-bold file if
  * both are set, which smears the letterforms. The file name is the weight.
  */
 export const FONT_FAMILY = {
   regular: 'Inter_400Regular',
+  medium: 'Inter_500Medium',
   semibold: 'Inter_600SemiBold',
-  bold: 'Inter_700Bold',
 } as const;
 
 /**
@@ -253,13 +263,13 @@ export const typography = {
     fontSize: 30,
     lineHeight: 36,
     letterSpacing: -0.6,
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.semibold,
   },
   title1: {
     fontSize: 24,
     lineHeight: 30,
     letterSpacing: -0.4,
-    fontFamily: fontFamily.bold,
+    fontFamily: fontFamily.semibold,
   },
   title2: {
     fontSize: 20,
@@ -274,13 +284,13 @@ export const typography = {
     fontFamily: fontFamily.semibold,
   },
   body: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.regular },
-  bodyMedium: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.semibold },
+  bodyMedium: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.medium },
   callout: { fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular },
   label: {
     fontSize: 13,
     lineHeight: 18,
     letterSpacing: 0.1,
-    fontFamily: fontFamily.semibold,
+    fontFamily: fontFamily.medium,
   },
   caption: { fontSize: 12, lineHeight: 17, fontFamily: fontFamily.regular },
   overline: {

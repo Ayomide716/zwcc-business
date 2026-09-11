@@ -135,6 +135,7 @@ export default function ApplicationOverview() {
           <Button label="Start a new application" onPress={handleReapply} fullWidth size="lg" />
         ) : undefined
       }
+      contentContainerStyle={styles.page}
     >
       <ScreenHeader
         title="Your application"
@@ -164,7 +165,7 @@ export default function ApplicationOverview() {
         />
       ) : null}
 
-      <Card style={styles.progressCard}>
+      <Card>
         <ProgressBar
           value={totalCount === 0 ? 0 : completedCount / totalCount}
           label={`${completedCount} of ${totalCount} sections complete`}
@@ -249,11 +250,17 @@ export default function ApplicationOverview() {
 }
 
 const styles = StyleSheet.create({
-  progressCard: {
-    marginBottom: spacing.base,
+  /*
+    Every block on this page is the same distance from its neighbour, including
+    the pair the eye notices most: the "Submitted" banner and the progress card
+    had no gap at all between them, because the banner carried no margin and the
+    spacing came from the card below it.
+  */
+  page: {
+    gap: spacing.md,
   },
   steps: {
-    gap: spacing.sm,
+    gap: spacing.md,
   },
   stepCard: {
     flexDirection: 'row',
