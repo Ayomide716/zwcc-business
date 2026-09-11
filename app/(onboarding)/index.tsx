@@ -23,7 +23,7 @@ import { Text } from '@/components/ui/Text';
 import { ONBOARDING_SLIDES, type OnboardingSlide } from '@/config/program.config';
 import { useAuth } from '@/providers/AuthProvider';
 import { profileService } from '@/services/profile.service';
-import { colors, radius, spacing } from '@/theme';
+import { colors, radius, rhythm, spacing } from '@/theme';
 
 const { width: SCREEN_WIDTH } = Dimensions.get('window');
 
@@ -61,7 +61,7 @@ export default function OnboardingScreen() {
   }
 
   return (
-    <View style={[styles.container, { paddingTop: Math.max(insets.top, spacing.md) }]}>
+    <View style={[styles.container, { paddingTop: Math.max(insets.top, rhythm.headerTop) }]}>
       <View style={styles.topBar}>
         <Logo size={32} showWordmark={false} />
         {!isLast ? (

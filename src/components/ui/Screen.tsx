@@ -11,8 +11,8 @@
  *
  * Top spacing is the second. The status bar is hidden app-wide, so there is no
  * clock to collide with — but content still must not sit flush against the top
- * edge of the glass, and a device with a camera cutout still reports an inset.
- * `TOP_BREATHING_ROOM` is the floor.
+ * edge of the glass, and most phones then report no top inset at all.
+ * `rhythm.screenTop` is the floor; a camera cutout reporting more wins.
  *
  * That padding is applied to the scroll container and the children are wrapped
  * separately, so a screen passing its own `paddingTop` adds to it rather than
@@ -32,13 +32,7 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors, spacing } from '@/theme';
-
-/**
- * Never let content touch the top edge, even with the status bar hidden and no
- * cutout inset to fall back on.
- */
-const TOP_BREATHING_ROOM = spacing.lg;
+import { colors, rhythm, spacing } from '@/theme';
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -91,7 +85,7 @@ export function Screen({
   const paddingBottom = edgeToEdgeBottom ? 0 : Math.max(insets.bottom, spacing.base);
   const paddingTop = stickyHeader
     ? headerHeight
-    : Math.max(insets.top, TOP_BREATHING_ROOM);
+    : Math.max(insets.top, rhythm.screenTop);
 
   const content = scrollable ? (
     <ScrollView

@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { MIN_TOUCH_TARGET, colors, radius, shadows, spacing } from '@/theme';
+import { MIN_TOUCH_TARGET, colors, radius, rhythm, shadows, spacing } from '@/theme';
 
 import { Text } from './Text';
 
@@ -108,7 +108,7 @@ export function BrandHeader({
       style={[
         styles.brandHeader,
         pinned && styles.brandHeaderPinned,
-        { paddingTop: Math.max(insets.top, spacing.md) + spacing.base },
+        { paddingTop: Math.max(insets.top, rhythm.headerTop) + spacing.base },
         style,
       ]}
     >

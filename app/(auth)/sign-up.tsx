@@ -219,7 +219,6 @@ export default function SignUpScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
     gap: spacing.xl,
   },
   header: {

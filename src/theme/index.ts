@@ -180,68 +180,112 @@ export const radius = {
 export const MIN_TOUCH_TARGET = 48;
 
 /* -------------------------------------------------------------------------- */
+/* Vertical rhythm                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * How far content sits from the top of the screen, and how far apart the pieces
+ * of a page stand.
+ *
+ * Material and Apple both fix the side margin at 16 and both decline to give a
+ * top number, because both assume a status bar is there to push content down.
+ * This app hides the status bar, so most phones report no top inset at all and
+ * something has to take its place — otherwise the first line of every screen
+ * sits on the glass.
+ *
+ * These are that something. `screenTop` is a floor, not a replacement: a phone
+ * with a camera cutout reports a larger inset and that wins.
+ */
+export const rhythm = {
+  /** Minimum gap between the top edge of the screen and the first element. */
+  screenTop: spacing.xl,
+  /** Gap between the top edge and a full-bleed navy header's content. */
+  headerTop: spacing.md,
+  /** Between major blocks on a page — a header and the first card. */
+  section: spacing.lg,
+  /** Between sibling cards in a list. */
+  stack: spacing.base,
+  /** Between a label and the thing it labels. */
+  tight: spacing.xs,
+} as const;
+
+/* -------------------------------------------------------------------------- */
 /* Typography                                                                  */
 /* -------------------------------------------------------------------------- */
 
-const fontFamily = Platform.select({
-  ios: { regular: 'System', medium: 'System', semibold: 'System', bold: 'System' },
-  default: {
-    regular: 'sans-serif',
-    medium: 'sans-serif-medium',
-    semibold: 'sans-serif-medium',
-    bold: 'sans-serif',
-  },
-}) as Record<'regular' | 'medium' | 'semibold' | 'bold', string>;
+/**
+ * Inter, loaded from files bundled in the app rather than fetched at runtime —
+ * nothing here should depend on a connection.
+ *
+ * The system font was Roboto on Android, which is what every stock Android app
+ * uses; it reads as a default rather than a decision. Inter is close enough to
+ * a neutral grotesque to stay out of the way, and it carries true tabular
+ * figures, which is what makes a column of naira amounts line up.
+ *
+ * Three weights, not the family's nine. Each file is about 340 KB and this app
+ * is used on metered Nigerian data, so every weight has to earn its place.
+ *
+ * `fontWeight` is deliberately absent from the scale below. With a named font
+ * file, Android will synthesise a fake bold on top of an already-bold file if
+ * both are set, which smears the letterforms. The file name is the weight.
+ */
+export const FONT_FAMILY = {
+  regular: 'Inter_400Regular',
+  semibold: 'Inter_600SemiBold',
+  bold: 'Inter_700Bold',
+} as const;
+
+/**
+ * Applied to anything numeric that sits in a column — money, dates, counts.
+ * Without it each digit has its own width and the column jitters.
+ */
+export const TABULAR_NUMBERS: TextStyle = { fontVariant: ['tabular-nums'] };
+
+const fontFamily = FONT_FAMILY;
 
 type TypeStyle = Pick<
   TextStyle,
-  'fontSize' | 'lineHeight' | 'fontWeight' | 'letterSpacing' | 'fontFamily'
+  'fontSize' | 'lineHeight' | 'letterSpacing' | 'fontFamily'
 >;
 
 export const typography = {
   display: {
     fontSize: 30,
     lineHeight: 36,
-    fontWeight: '700',
     letterSpacing: -0.6,
     fontFamily: fontFamily.bold,
   },
   title1: {
     fontSize: 24,
     lineHeight: 30,
-    fontWeight: '700',
     letterSpacing: -0.4,
     fontFamily: fontFamily.bold,
   },
   title2: {
     fontSize: 20,
     lineHeight: 26,
-    fontWeight: '700',
     letterSpacing: -0.2,
     fontFamily: fontFamily.semibold,
   },
   title3: {
     fontSize: 17,
     lineHeight: 23,
-    fontWeight: '600',
     letterSpacing: -0.1,
     fontFamily: fontFamily.semibold,
   },
-  body: { fontSize: 15, lineHeight: 22, fontWeight: '400', fontFamily: fontFamily.regular },
-  bodyMedium: { fontSize: 15, lineHeight: 22, fontWeight: '600', fontFamily: fontFamily.semibold },
-  callout: { fontSize: 14, lineHeight: 20, fontWeight: '400', fontFamily: fontFamily.regular },
+  body: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.regular },
+  bodyMedium: { fontSize: 15, lineHeight: 22, fontFamily: fontFamily.semibold },
+  callout: { fontSize: 14, lineHeight: 20, fontFamily: fontFamily.regular },
   label: {
     fontSize: 13,
     lineHeight: 18,
-    fontWeight: '600',
     letterSpacing: 0.1,
     fontFamily: fontFamily.semibold,
   },
-  caption: { fontSize: 12, lineHeight: 17, fontWeight: '400', fontFamily: fontFamily.regular },
+  caption: { fontSize: 12, lineHeight: 17, fontFamily: fontFamily.regular },
   overline: {
     fontSize: 11,
     lineHeight: 15,
-    fontWeight: '700',
     letterSpacing: 0.9,
     fontFamily: fontFamily.semibold,
   },

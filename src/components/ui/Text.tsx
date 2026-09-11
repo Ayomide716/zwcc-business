@@ -4,7 +4,7 @@
  */
 import { Text as RNText, type TextProps as RNTextProps, type TextStyle } from 'react-native';
 
-import { colors, typography, type TypographyToken } from '@/theme';
+import { TABULAR_NUMBERS, colors, typography, type TypographyToken } from '@/theme';
 
 export interface TextProps extends RNTextProps {
   variant?: TypographyToken;
@@ -14,6 +14,12 @@ export interface TextProps extends RNTextProps {
   /** Convenience for muted secondary copy. */
   muted?: boolean;
   weight?: TextStyle['fontWeight'];
+  /**
+   * Fixed-width digits, for anything that sits in a column: money, dates,
+   * counts, percentages. Without it every digit has its own width and a list of
+   * amounts visibly jitters from row to row.
+   */
+  numeric?: boolean;
 }
 
 export function Text({
@@ -22,6 +28,7 @@ export function Text({
   align,
   muted,
   weight,
+  numeric,
   style,
   ...rest
 }: TextProps) {
@@ -36,6 +43,7 @@ export function Text({
         { color: resolvedColor ?? (muted ? colors.textSecondary : colors.text) },
         align ? { textAlign: align } : null,
         weight ? { fontWeight: weight } : null,
+        numeric ? TABULAR_NUMBERS : null,
         style,
       ]}
       // Respect the user's font-size setting, but stop very large settings

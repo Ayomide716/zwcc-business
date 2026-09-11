@@ -147,7 +147,6 @@ export default function EligibilityScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
     gap: spacing.lg,
   },
   criteria: {

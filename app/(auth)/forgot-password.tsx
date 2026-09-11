@@ -100,7 +100,6 @@ export default function ForgotPasswordScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xl,
   },
   form: {
     gap: spacing.base,

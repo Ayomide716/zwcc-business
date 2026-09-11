@@ -140,7 +140,6 @@ export default function SignInScreen() {
 const styles = StyleSheet.create({
   content: {
     paddingHorizontal: spacing.lg,
-    paddingTop: spacing.xxl,
     gap: spacing.xl,
   },
   header: {

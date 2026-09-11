@@ -276,7 +276,7 @@ function MetaItem({
         <Text variant="caption" muted>
           {label}
         </Text>
-        <Text variant="callout" numberOfLines={1}>
+        <Text variant="callout" numberOfLines={1} numeric>
           {value}
         </Text>
       </View>

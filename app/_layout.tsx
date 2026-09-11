@@ -5,6 +5,18 @@
  * does not use it but toasts and screens do; Toast wraps Auth so an auth error
  * can be surfaced.
  */
+/*
+  Imported from the per-weight subpaths, not the family barrel.
+
+  `from '@expo-google-fonts/inter'` re-exports all eighteen weights, and each is
+  a `require()` of a TTF that Metro cannot tree-shake — it bundled 6 MB of fonts
+  for the three actually used. Naming the subpaths brings that down to about
+  1 MB, which on Nigerian mobile data is the difference worth caring about.
+*/
+import { Inter_400Regular } from '@expo-google-fonts/inter/400Regular';
+import { Inter_600SemiBold } from '@expo-google-fonts/inter/600SemiBold';
+import { Inter_700Bold } from '@expo-google-fonts/inter/700Bold';
+import { useFonts } from 'expo-font';
 import { NavigationBar } from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
@@ -28,11 +40,28 @@ void SplashScreen.preventAutoHideAsync();
 function RootNavigator() {
   const { initialising } = useAuth();
 
-  useEffect(() => {
-    if (!initialising) void SplashScreen.hideAsync();
-  }, [initialising]);
+  /*
+    Fonts are bundled in the app, so this resolves in milliseconds and never
+    touches the network. It is still awaited before the splash lifts, because
+    rendering in the system font and then swapping to Inter makes the first
+    screen visibly reflow.
 
-  if (initialising) return null;
+    `error` is handled the same as success on purpose: a font that fails to
+    load must fall back to the system face, not leave the splash up forever.
+  */
+  const [fontsLoaded, fontError] = useFonts({
+    Inter_400Regular,
+    Inter_600SemiBold,
+    Inter_700Bold,
+  });
+
+  const ready = !initialising && (fontsLoaded || Boolean(fontError));
+
+  useEffect(() => {
+    if (ready) void SplashScreen.hideAsync();
+  }, [ready]);
+
+  if (!ready) return null;
 
   return (
     <Stack

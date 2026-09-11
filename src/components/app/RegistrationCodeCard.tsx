@@ -49,6 +49,7 @@ export function RegistrationCodeCard({
         <Text
           variant="title1"
           color="onBrand"
+          numeric
           style={styles.code}
           selectable
           // The code must read as one unbroken string. Wrapping split it mid-code
