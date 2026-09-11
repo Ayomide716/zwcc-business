@@ -21,12 +21,13 @@ import { NavigationBar } from 'expo-navigation-bar';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
-import { useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Platform } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { OfflineBanner } from '@/components/app';
+import { AppSplash } from '@/components/brand/AppSplash';
 import { AuthProvider, useAuth } from '@/providers/AuthProvider';
 import { NetworkProvider } from '@/providers/NetworkProvider';
 import { QueryProvider } from '@/providers/QueryProvider';
@@ -57,12 +58,40 @@ function RootNavigator() {
 
   const ready = !initialising && (fontsLoaded || Boolean(fontError));
 
+  // Our own splash replaces the native one, so it can animate and can know
+  // when the app is actually ready. Two separate flags: `ready` says the work
+  // is done, `splashGone` says the animation has finished playing out.
+  const [splashGone, setSplashGone] = useState(false);
+  const handleSplashFinished = useCallback(() => setSplashGone(true), []);
+
+  /*
+    The native splash is dismissed as soon as there is something of ours to
+    show, not when the app is ready. Waiting would mean the static image stays
+    up for the whole load and our splash never appears; dismissing earlier
+    would flash the bare background between the two.
+  */
+  const [handedOver, setHandedOver] = useState(false);
   useEffect(() => {
-    if (ready) void SplashScreen.hideAsync();
-  }, [ready]);
+    if (handedOver) return;
+    setHandedOver(true);
+    void SplashScreen.hideAsync();
+  }, [handedOver]);
 
-  if (!ready) return null;
+  return (
+    <>
+      {/*
+        Rendered over the navigator rather than instead of it, so the app
+        behind has already mounted and laid out by the time the splash fades.
+        Returning null until ready meant the first screen appeared mid-render.
+      */}
+      {!splashGone ? <AppSplash ready={ready} onFinished={handleSplashFinished} /> : null}
 
+      {ready ? <RootStack /> : null}
+    </>
+  );
+}
+
+function RootStack() {
   return (
     <Stack
       screenOptions={{
