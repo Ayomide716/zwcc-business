@@ -183,6 +183,7 @@ export default function DocumentsScreen() {
       }
     >
       <ScreenHeader
+        eyebrow="Your application"
         title="Documents"
         subtitle="Upload clear photos or PDFs. Files are private and only visible to you and the review team."
         showBack

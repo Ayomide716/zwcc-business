@@ -16,6 +16,7 @@ import {
   NextActionCard,
   RegistrationCodeCard,
   StatusBadge,
+  StatusHero,
 } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -34,7 +35,7 @@ import {
 import { firstName, formatCurrency, formatDateShort } from '@/lib/format';
 import { useAuth } from '@/providers/AuthProvider';
 import { colors, radius, spacing } from '@/theme';
-import { canReapply, describeStatus, getProgress, getStatusDefinition } from '@/workflow/engine';
+import { canReapply, getStatusDefinition } from '@/workflow/engine';
 
 function greeting(now = new Date()): string {
   const hour = now.getHours();
@@ -120,61 +121,19 @@ export default function ApplicantDashboard() {
               <RegistrationCodeCard code={app.registration_code} />
             ) : null}
 
-            {/* Status summary. */}
-            <Card style={styles.card}>
-              <View style={styles.cardHeader}>
-                <Text variant="title3">Your application</Text>
-                <StatusBadge status={app.status} />
-              </View>
-
-              <Text variant="callout" muted>
-                {describeStatus(app.status, 'applicant')}
-              </Text>
-
-              {/*
-                Labelled "grant process", not "progress": the Application tab
-                shows how much of the FORM is filled, and at 100% there against
-                35% here the two read as contradicting each other. This bar
-                tracks the journey from applying to completing the grant.
-              */}
-              <ProgressBar
-                value={getProgress(app.status)}
-                label="Grant process"
-                showPercentage
-                tone={statusDefinition?.tone === 'danger' ? 'warning' : 'brand'}
-              />
-              <Text variant="caption" muted>
-                This tracks your whole journey, from applying through to the end
-                of monitoring. Filling in the form is the first part of it.
-              </Text>
-
-              <View style={styles.metaGrid}>
-                <MetaItem
-                  icon="cash-outline"
-                  label="Requested"
-                  value={formatCurrency(app.requested_amount)}
-                />
-                <MetaItem
-                  icon="briefcase-outline"
-                  label="Business"
-                  value={app.business_name ?? 'Not yet provided'}
-                />
-                {app.submitted_at ? (
-                  <MetaItem
-                    icon="calendar-outline"
-                    label="Submitted"
-                    value={formatDateShort(app.submitted_at)}
-                  />
-                ) : null}
-                {app.attempt_number > 1 ? (
-                  <MetaItem
-                    icon="refresh-outline"
-                    label="Attempt"
-                    value={`Application ${app.attempt_number}`}
-                  />
-                ) : null}
-              </View>
-            </Card>
+            {/*
+              Status leads. It is the one thing someone opens this app to find
+              out, and it used to be a small pill beside a heading.
+            */}
+            <StatusHero
+              status={app.status}
+              meta={[
+                { label: 'Requested', value: formatCurrency(app.requested_amount) },
+                app.submitted_at
+                  ? { label: 'Submitted', value: formatDateShort(app.submitted_at) }
+                  : { label: 'Business', value: app.business_name ?? 'Not yet set' },
+              ]}
+            />
 
             {/* Documents, while they still matter. */}
             {statusDefinition?.documentsEditable || documentProgress < 1 ? (

@@ -10,6 +10,7 @@ import { Redirect, Tabs } from 'expo-router';
 import { Platform, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BrandIcon } from '@/components/brand/Icon';
 import { Text } from '@/components/ui/Text';
 import { useUnreadCount } from '@/hooks/queries';
 import { ProfileUnavailable } from '@/components/app';
@@ -73,7 +74,7 @@ export default function ApplicantLayout() {
         name="dashboard"
         options={{
           title: 'Home',
-          tabBarIcon: ({ color, size }) => <Ionicons name="home-outline" size={size} color={color} />,
+          tabBarIcon: ({ color, size }) => <BrandIcon name="home" size={size} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -81,7 +82,7 @@ export default function ApplicantLayout() {
         options={{
           title: 'Application',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="document-text-outline" size={size} color={color} />
+            <BrandIcon name="application" size={size} color={color} />
           ),
         }}
       />
@@ -90,7 +91,7 @@ export default function ApplicantLayout() {
         options={{
           title: 'Reports',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="bar-chart-outline" size={size} color={color} />
+            <BrandIcon name="reports" size={size} color={color} />
           ),
         }}
       />
@@ -100,7 +101,7 @@ export default function ApplicantLayout() {
           title: 'Updates',
           tabBarIcon: ({ color, size }) => (
             <View>
-              <Ionicons name="notifications-outline" size={size} color={color} />
+              <BrandIcon name="updates" size={size} color={color} />
               <UnreadBadge count={unreadCount} />
             </View>
           ),
@@ -111,7 +112,7 @@ export default function ApplicantLayout() {
         options={{
           title: 'Profile',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <BrandIcon name="person" size={size} color={color} />
           ),
         }}
       />

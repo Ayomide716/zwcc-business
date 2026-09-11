@@ -16,6 +16,14 @@ import { Text } from './Text';
 /* -------------------------------------------------------------------------- */
 
 export interface ScreenHeaderProps {
+  /**
+   * The area this screen belongs to, set above the title in small caps.
+   *
+   * Every screen used to look like every other screen. This is the cheapest
+   * thing that gives each part of the app a sense of place, and it costs one
+   * line of type rather than a different layout per section.
+   */
+  eyebrow?: string;
   title: string;
   subtitle?: string;
   /** Shows a back chevron. Defaults to router.back(). */
@@ -26,6 +34,7 @@ export interface ScreenHeaderProps {
 }
 
 export function ScreenHeader({
+  eyebrow,
   title,
   subtitle,
   showBack,
@@ -50,6 +59,11 @@ export function ScreenHeader({
       ) : null}
 
       <View style={styles.headerText}>
+        {eyebrow ? (
+          <Text variant="overline" muted>
+            {eyebrow.toUpperCase()}
+          </Text>
+        ) : null}
         <Text variant="title1" accessibilityRole="header">
           {title}
         </Text>

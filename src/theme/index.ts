@@ -216,6 +216,28 @@ export const rhythm = {
 } as const;
 
 /* -------------------------------------------------------------------------- */
+/* Density                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * How much air a surface gets, which is how the eye is told what matters.
+ *
+ * Everything used to carry the same 16px padding, so a summary that answers
+ * "where is my application?" looked exactly as important as one row of a
+ * checklist. Three levels, used deliberately:
+ *
+ *   feature — the one thing a screen exists to say. Rare; often one per screen.
+ *   card    — a normal grouped surface.
+ *   row     — a line in a list. Tighter, because a list earns its rhythm from
+ *             repetition rather than from space.
+ */
+export const density = {
+  feature: spacing.lg,
+  card: spacing.base,
+  row: spacing.md,
+} as const;
+
+/* -------------------------------------------------------------------------- */
 /* Typography                                                                  */
 /* -------------------------------------------------------------------------- */
 

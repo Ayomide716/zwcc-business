@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileUnavailable } from '@/components/app';
 import { usePushNotifications } from '@/hooks/usePushNotifications';
+import { BrandIcon } from '@/components/brand/Icon';
 import { useAuth } from '@/providers/AuthProvider';
 import { isStaff } from '@/config/permissions.config';
 import { colors, spacing, typography } from '@/theme';
@@ -57,7 +58,7 @@ export default function CommitteeLayout() {
         options={{
           title: 'Overview',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="grid-outline" size={size} color={color} />
+            <BrandIcon name="home" size={size} color={color} />
           ),
         }}
       />
@@ -66,7 +67,7 @@ export default function CommitteeLayout() {
         options={{
           title: 'Applications',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="documents-outline" size={size} color={color} />
+            <BrandIcon name="application" size={size} color={color} />
           ),
         }}
       />
@@ -75,7 +76,7 @@ export default function CommitteeLayout() {
         options={{
           title: 'Beneficiaries',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="people-outline" size={size} color={color} />
+            <BrandIcon name="committee" size={size} color={color} />
           ),
         }}
       />
@@ -84,7 +85,7 @@ export default function CommitteeLayout() {
         options={{
           title: 'Account',
           tabBarIcon: ({ color, size }) => (
-            <Ionicons name="person-outline" size={size} color={color} />
+            <BrandIcon name="person" size={size} color={color} />
           ),
         }}
       />

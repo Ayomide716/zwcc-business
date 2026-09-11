@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Children, Fragment, isValidElement } from 'react';
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { MIN_TOUCH_TARGET, colors, radius, shadows, spacing } from '@/theme';
+import { MIN_TOUCH_TARGET, colors, density, radius, shadows, spacing } from '@/theme';
 
 import { Text } from './Text';
 
@@ -64,6 +64,8 @@ export function ListGroup({ title, action, caption, children, style }: ListGroup
 
 export interface ListRowProps {
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Replaces the icon well entirely, e.g. a numbered step or an avatar. */
+  left?: React.ReactNode;
   label: string;
   /** Right-hand text, e.g. a phone number. */
   value?: string;
@@ -80,6 +82,7 @@ export interface ListRowProps {
 
 export function ListRow({
   icon,
+  left,
   label,
   value,
   right,
@@ -95,11 +98,11 @@ export function ListRow({
 
   const body = (
     <>
-      {icon ? (
+      {left ?? (icon ? (
         <View style={[styles.iconWell, danger && styles.iconWellDanger]}>
           <Ionicons name={icon} size={17} color={iconColor} />
         </View>
-      ) : null}
+      ) : null)}
 
       <View style={styles.labelColumn}>
         <Text variant="body" color={danger ? 'dangerStrong' : undefined}>
@@ -173,7 +176,9 @@ const styles = StyleSheet.create({
     gap: spacing.md,
     minHeight: MIN_TOUCH_TARGET,
     paddingHorizontal: spacing.base,
-    paddingVertical: spacing.md,
+    // A list earns its rhythm from repetition rather than from air, so rows sit
+    // tighter than a standalone card.
+    paddingVertical: density.row,
   },
   rowPressed: {
     backgroundColor: colors.surfaceMuted,

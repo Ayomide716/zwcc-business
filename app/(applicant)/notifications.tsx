@@ -51,6 +51,7 @@ export default function NotificationsScreen() {
   return (
     <Screen onRefresh={() => void refetch()} refreshing={isRefetching}>
       <ScreenHeader
+        eyebrow="Your application"
         title="Updates"
         subtitle={
           unreadCount > 0

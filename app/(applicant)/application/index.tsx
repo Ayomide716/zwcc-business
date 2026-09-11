@@ -15,6 +15,7 @@ import { Card } from '@/components/ui/Card';
 import { Banner, EmptyState, LoadingState } from '@/components/ui/Feedback';
 import { ScreenHeader } from '@/components/ui/Header';
 import { ProgressBar } from '@/components/ui/Progress';
+import { ListGroup, ListRow } from '@/components/ui/ListRow';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { APPLICATION_STEPS, getRequiredDocumentTypes } from '@/config';
@@ -138,6 +139,7 @@ export default function ApplicationOverview() {
       contentContainerStyle={styles.page}
     >
       <ScreenHeader
+        eyebrow="2026 Grant"
         title="Your application"
         subtitle={
           editable
@@ -174,15 +176,21 @@ export default function ApplicationOverview() {
         />
       </Card>
 
-      <View style={styles.steps}>
+      {/*
+        One surface with dividers, not six floating cards. Six identical rounded
+        rectangles read as six unrelated things; a single grouped list reads as
+        one journey with steps in it, and removes six borders from the screen.
+      */}
+      <ListGroup title="Sections">
         {steps.map((step, index) => {
           const isReview = step.kind === 'review';
           const locked = isReview && !readyToReview;
 
           return (
-            <Card
+            <ListRow
               key={step.id}
-              variant="outlined"
+              label={step.title}
+              description={step.description}
               onPress={
                 locked
                   ? undefined
@@ -192,50 +200,31 @@ export default function ApplicationOverview() {
                       else router.push(`/(applicant)/application/${step.id}`);
                     }
               }
-              accessibilityLabel={`${step.title}, ${step.complete ? 'complete' : 'incomplete'}${
-                editable ? '' : ', view only'
-              }`}
+              chevron={!locked && editable}
               accessibilityHint={locked ? 'Complete every section first' : undefined}
-              style={[styles.stepCard, locked && styles.stepCardLocked]}
-            >
-              <View
-                style={[
-                  styles.stepNumber,
-                  step.complete && styles.stepNumberComplete,
-                ]}
-              >
-                {step.complete ? (
-                  <Ionicons name="checkmark" size={16} color={colors.onBrand} />
-                ) : (
-                  <Text variant="label" muted>
-                    {index + 1}
-                  </Text>
-                )}
-              </View>
-
-              <View style={styles.stepText}>
-                <Text variant="bodyMedium">{step.title}</Text>
-                <Text variant="caption" muted numberOfLines={2}>
-                  {step.description}
-                </Text>
-              </View>
-
-              {/*
-                Once submitted the sections are still worth opening, but a
-                chevron promises editing. An eye says "look", which is what it
-                actually does now.
-              */}
-              <Ionicons
-                name={
-                  locked ? 'lock-closed-outline' : editable ? 'chevron-forward' : 'eye-outline'
-                }
-                size={18}
-                color={colors.textMuted}
-              />
-            </Card>
+              left={
+                <View style={[styles.stepNumber, step.complete && styles.stepNumberComplete]}>
+                  {step.complete ? (
+                    <Ionicons name="checkmark" size={15} color={colors.onBrand} />
+                  ) : (
+                    <Text variant="label" muted numeric>
+                      {index + 1}
+                    </Text>
+                  )}
+                </View>
+              }
+              right={
+                locked ? (
+                  <Ionicons name="lock-closed-outline" size={17} color={colors.textMuted} />
+                ) : !editable ? (
+                  // Still worth opening, but a chevron would promise editing.
+                  <Ionicons name="eye-outline" size={17} color={colors.textMuted} />
+                ) : undefined
+              }
+            />
           );
         })}
-      </View>
+      </ListGroup>
 
       {documentsOpen && !documentsComplete ? (
         <Banner
@@ -271,8 +260,8 @@ const styles = StyleSheet.create({
     opacity: 0.55,
   },
   stepNumber: {
-    width: 32,
-    height: 32,
+    width: 30,
+    height: 30,
     borderRadius: radius.pill,
     backgroundColor: colors.surfaceMuted,
     alignItems: 'center',

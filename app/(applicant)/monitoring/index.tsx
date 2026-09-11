@@ -43,7 +43,7 @@ export default function MonitoringScreen() {
   if (!beneficiary || !overview) {
     return (
       <Screen>
-        <ScreenHeader title="Monthly reports" />
+        <ScreenHeader eyebrow="Beneficiary" title="Monthly reports" />
         <EmptyState
           illustration={<OnboardingArt name="reports" size={168} />}
           title="Reporting has not started"
