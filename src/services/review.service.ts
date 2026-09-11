@@ -51,24 +51,79 @@ export const reviewService = {
     scores: ScoreSheet,
     stage = 'committee_review',
   ): Promise<ApplicationReviewRow> {
-    const { data, error } = await supabase
-      .from('application_reviews')
-      .upsert(
-        {
-          application_id: applicationId,
-          reviewer_id: reviewer.id,
-          stage,
-          decision: 'score',
-          scores,
-          rubric_version: RUBRIC_VERSION,
-          is_internal: true,
-        },
-        { onConflict: 'application_id,reviewer_id,stage' },
-      )
-      .select()
-      .single();
+    /*
+      Find, then update or insert — deliberately not `.upsert()`.
 
-    if (error) throw error;
+      The one-score-per-reviewer rule is enforced by a PARTIAL unique index
+      (`… where decision = 'score'`), so that a reviewer can still leave several
+      notes on the same application. PostgreSQL will not use a partial index to
+      arbitrate `ON CONFLICT` unless the statement repeats the index's WHERE
+      clause, and supabase-js has no way to send one — an upsert therefore fails
+      outright with "there is no unique or exclusion constraint matching the ON
+      CONFLICT specification", which is exactly what it did.
+    */
+    const row = {
+      application_id: applicationId,
+      reviewer_id: reviewer.id,
+      stage,
+      decision: 'score' as const,
+      scores,
+      rubric_version: RUBRIC_VERSION,
+      is_internal: true,
+    };
+
+    const { data: existing, error: findError } = await supabase
+      .from('application_reviews')
+      .select('id')
+      .eq('application_id', applicationId)
+      .eq('reviewer_id', reviewer.id)
+      .eq('stage', stage)
+      .eq('decision', 'score')
+      .maybeSingle();
+
+    if (findError) throw findError;
+
+    let saved: ApplicationReviewRow;
+
+    if (existing) {
+      const { data, error } = await supabase
+        .from('application_reviews')
+        .update(row)
+        .eq('id', existing.id)
+        .select()
+        .single();
+      if (error) throw error;
+      saved = data;
+    } else {
+      const { data, error } = await supabase
+        .from('application_reviews')
+        .insert(row)
+        .select()
+        .single();
+
+      /*
+        Two devices scoring at once both see no existing row and both insert;
+        the partial index rejects the second. That is the index doing its job,
+        not an error worth showing a reviewer, so the loser re-reads and updates.
+      */
+      if (error?.code === '23505') {
+        const { data: raced, error: raceError } = await supabase
+          .from('application_reviews')
+          .update(row)
+          .eq('application_id', applicationId)
+          .eq('reviewer_id', reviewer.id)
+          .eq('stage', stage)
+          .eq('decision', 'score')
+          .select()
+          .single();
+        if (raceError) throw raceError;
+        saved = raced;
+      } else if (error) {
+        throw error;
+      } else {
+        saved = data;
+      }
+    }
 
     await auditService.record({
       action: 'review.scored',
@@ -78,7 +133,7 @@ export const reviewService = {
       actorRole: reviewer.role,
     });
 
-    return data;
+    return saved;
   },
 
   /** Add an internal note. Never visible to the applicant. */
