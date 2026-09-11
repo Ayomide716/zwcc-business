@@ -1,73 +1,67 @@
 /**
- * ZWCC brand mark.
+ * ZWCC brand mark — the official artwork.
  *
- * Drawn as vector art rather than loaded from a bitmap so it stays crisp at
- * every size and can be recoloured for navy-on-white and white-on-navy
- * contexts.
+ * This used to be vector art standing in for a logo nobody had supplied yet.
+ * The real thing is a raster image, so it is loaded rather than drawn, and
+ * `require` resolves it at build time into the bundle: it is always there, with
+ * no network fetch and nothing to load before the first screen paints.
  *
- * TO USE THE OFFICIAL ARTWORK: drop the supplied logo at
- * `assets/brand/zwcc-logo.png` and swap the `<Svg>` block below for an
- * `<Image source={require('@/../assets/brand/zwcc-logo.png')} />`. Nothing else
- * needs to change — every screen imports this component, never an image path.
- *
- * The mark: an upward chevron (growth, enterprise) inside a shield-like arch
- * (protection, stewardship), with a subtle cross implied by the vertical stem.
- * Faith-adjacent rather than overtly religious, per the brand direction.
+ * The logo is drawn for a light ground. Its sphere is nearly the same navy as
+ * the brand colour and its flame carries a soft pale glow, so cutting it out
+ * and placing it on navy loses the sphere and leaves the glow hanging as a
+ * fuzzy halo. On dark grounds it therefore sits on a white plate, which is how
+ * the artwork is meant to be shown, rather than being recoloured to fit.
  */
+import { Image } from 'expo-image';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
-import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
-import { colors, spacing } from '@/theme';
+import { colors, radius, spacing } from '@/theme';
 
 import { Text } from '@/components/ui/Text';
 
+const ARTWORK = require('../../../assets/brand/zwcc-logo.png');
+
+/** The artwork is taller than it is wide; `size` is its height. */
+const ASPECT = 394 / 528;
+
 export interface LogoMarkProps {
   size?: number;
-  /** `onLight` draws navy on white; `onDark` draws white on navy. */
+  /** `onLight` places the logo directly; `onDark` puts it on a white plate. */
   scheme?: 'onLight' | 'onDark';
   style?: StyleProp<ViewStyle>;
 }
 
 export function LogoMark({ size = 48, scheme = 'onLight', style }: LogoMarkProps) {
-  const primary = scheme === 'onDark' ? colors.onBrand : colors.brand;
-  const accent = colors.accent;
-  const plate = scheme === 'onDark' ? 'rgba(255,255,255,0.10)' : colors.brandSurfaceStrong;
+  const onDark = scheme === 'onDark';
+
+  // The plate has to be bigger than the artwork or the flame touches its edge.
+  const plateSize = size;
+  const artHeight = onDark ? size * 0.74 : size;
 
   return (
-    <View style={style} accessible accessibilityRole="image" accessibilityLabel="Zion World Christian Center">
-      {/*
-        Geometry matches scripts/generate-brand-assets.js exactly, so the
-        in-app mark and the launcher icon are the same shape.
-      */}
-      <Svg width={size} height={size} viewBox="0 0 64 64" fill="none">
-        {/* Rounded plate */}
-        <Rect x="2" y="2" width="60" height="60" rx="18" fill={plate} />
-
-        {/* Arch — a ring left open at the bottom (stewardship). */}
-        <Path
-          d="M20.83 49.29 A 19 19 0 1 1 43.17 49.29"
-          stroke={primary}
-          strokeWidth={2.9}
-          strokeLinecap="round"
-          fill="none"
-        />
-
-        {/* Ascending chevron — growth. */}
-        <Path
-          d="M21.12 40.32 32 30.08l10.88 10.24"
-          stroke={primary}
-          strokeWidth={3.5}
-          strokeLinecap="round"
-          strokeLinejoin="round"
-          fill="none"
-        />
-
-        {/* Gold stem, implying a cross with the chevron's crossbar. */}
-        <Path d="M32 30.08v16.64" stroke={accent} strokeWidth={2.9} strokeLinecap="round" />
-
-        {/* Keystone dot. */}
-        <Circle cx="32" cy="21.12" r="2.05" fill={accent} />
-      </Svg>
+    <View
+      style={[
+        onDark && {
+          width: plateSize,
+          height: plateSize,
+          borderRadius: radius.lg,
+          backgroundColor: colors.surface,
+          alignItems: 'center',
+          justifyContent: 'center',
+        },
+        style,
+      ]}
+      accessible
+      accessibilityRole="image"
+      accessibilityLabel="Zion World Christian Center"
+    >
+      <Image
+        source={ARTWORK}
+        style={{ width: artHeight * ASPECT, height: artHeight }}
+        contentFit="contain"
+        // Bundled, so there is nothing to fade in from.
+        transition={0}
+      />
     </View>
   );
 }

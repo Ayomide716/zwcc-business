@@ -9,7 +9,6 @@
     "ios": "expo start --ios",
     "doctor": "npx expo-doctor",
     "typecheck": "tsc --noEmit",
-    "assets:brand": "node scripts/generate-brand-assets.js",
     "build:apk": "eas build --platform android --profile preview",
     "build:apk:local": "eas build --platform android --profile preview --local",
     "build:aab": "eas build --platform android --profile production"

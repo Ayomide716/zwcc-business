@@ -227,16 +227,16 @@ religious, as the brief asked.
 
 **The official ZWCC artwork was not available when this was built.** The mark is
 drawn as vector geometry in
-[`src/components/brand/Logo.tsx`](src/components/brand/Logo.tsx), and the app
-icon and splash assets are generated from the same geometry by
-`npm run assets:brand`. This was chosen over checking in a placeholder bitmap,
-because placeholder bitmaps tend to survive into production unnoticed.
+[`src/components/brand/Logo.tsx`](src/components/brand/Logo.tsx), which loads
+the official artwork from `assets/brand/zwcc-logo.png`. Every screen imports
+that component rather than a file path, so replacing the artwork is a one-file
+change.
 
-To use the official logo, see the header comment in
-[`scripts/generate-brand-assets.js`](scripts/generate-brand-assets.js) for the
-required sizes, and swap the `<Svg>` block in `Logo.tsx` for an `<Image>`.
-Nothing else needs to change — every screen imports the component, never a file
-path.
+The launcher icon, adaptive-icon layers and splash mark in `assets/` are all
+derived from the same file. The logo is drawn for a light ground — its sphere is
+nearly the brand navy and its flame carries a pale glow — so the adaptive icon
+sits on white and the splash mark sits on a white plate, rather than being
+recoloured to suit a dark background.
 
 ---
 

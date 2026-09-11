@@ -79,9 +79,10 @@ profile you built with, not just `.env`.
 - **App identity** is `org.zionworldcc.businessgrant`. Change it in `app.json`
   under `android.package` / `ios.bundleIdentifier` before publishing if ZWCC
   wants a different one.
-- **The app icon is a generated placeholder.** Drop the official ZWCC artwork
-  into `assets/` (sizes are listed at the top of
-  `scripts/generate-brand-assets.js`) before a public release.
+- **The app icon is the official ZWCC artwork**, derived from
+  `assets/brand/zwcc-logo.png`. The supplied file is 394x528, so the 1024px
+  launcher icon is an upscale; if a larger original or a vector version turns
+  up, replace that one file and regenerate the icons from it.
 - **Version bumps**: `eas.json` uses `"appVersionSource": "remote"`, so EAS
   manages the Android `versionCode` for you. Bump the user-facing
   `expo.version` in `app.json` for each release.
