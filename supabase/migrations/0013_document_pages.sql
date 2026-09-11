@@ -5,7 +5,7 @@
 -- WebView carrying a JavaScript one. Both cost APK size and both are slow on
 -- the cheap Android phones this app is actually used on. So the rendering
 -- happens once on the server instead: an Edge Function rasterises each page to
--- a WebP image, and the app displays those with the same viewer it uses for
+-- an image, and the app displays those with the same viewer it uses for
 -- photographs.
 --
 -- The rendered pages are a derivative of someone's identity documents, so this
