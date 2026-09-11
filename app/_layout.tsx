@@ -42,12 +42,19 @@ function RootNavigator() {
         animation: 'slide_from_right',
       }}
     >
-      <Stack.Screen name="index" />
-      <Stack.Screen name="(auth)" />
-      <Stack.Screen name="(onboarding)" />
-      <Stack.Screen name="(applicant)" />
-      <Stack.Screen name="(committee)" />
-      <Stack.Screen name="(admin)" />
+      {/*
+        Sliding suits going deeper into a section, which is why it is the
+        default. Moving between the top-level areas is not that: signing in is
+        arriving somewhere new, not stepping forward through a stack, and a
+        sideways slide made it look like a page rather than a destination.
+        Those cross-fade instead.
+      */}
+      <Stack.Screen name="index" options={{ animation: 'fade' }} />
+      <Stack.Screen name="(auth)" options={{ animation: 'fade' }} />
+      <Stack.Screen name="(onboarding)" options={{ animation: 'fade' }} />
+      <Stack.Screen name="(applicant)" options={{ animation: 'fade' }} />
+      <Stack.Screen name="(committee)" options={{ animation: 'fade' }} />
+      <Stack.Screen name="(admin)" options={{ animation: 'fade' }} />
       <Stack.Screen
         name="legal"
         options={{ presentation: 'modal', animation: 'slide_from_bottom' }}
@@ -74,10 +81,12 @@ export default function RootLayout() {
                 */}
                 {Platform.OS === 'android' ? <NavigationBar hidden /> : null}
                 {/*
-                  Light icons, not "auto": every screen is now topped by a navy
-                  band, so dark clock and battery icons would be invisible.
+                  Hidden entirely, like the navigation bar. The app runs full
+                  screen; swiping down from the top edge brings the clock and
+                  battery back transiently, as Android does for any immersive
+                  app.
                 */}
-                <StatusBar style="light" />
+                <StatusBar hidden />
                 <RootNavigator />
                 <OfflineBanner />
               </ToastProvider>

@@ -1,10 +1,10 @@
 /**
  * The strip that says the phone has no connection.
  *
- * Sits directly under the status bar band on every screen, above all content,
- * so the reason a save is not going through is never a mystery. It animates in
- * and out rather than snapping, because a bar that appears instantly during a
- * brief signal dip reads as an error.
+ * Sits across the very top of every screen, above all other content, so the
+ * reason a save is not going through is never a mystery. It animates in and out
+ * rather than snapping, because a bar that appears instantly during a brief
+ * signal dip reads as an error.
  *
  * It says work is safe, not just that the connection is gone — that is the part
  * that stops someone abandoning a half-finished application.
@@ -38,8 +38,8 @@ export function OfflineBanner() {
       style={[
         styles.container,
         {
-          // Clears the navy status-bar band that every screen carries.
-          top: insets.top,
+          top: 0,
+          paddingTop: insets.top,
           opacity: slide,
           transform: [{ translateY: slide.interpolate({ inputRange: [0, 1], outputRange: [-40, 0] }) }],
         },
@@ -62,7 +62,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     right: 0,
-    // Above page content and the status-bar band, below nothing.
+    // Above everything, including a pinned header.
     zIndex: 20,
     elevation: 20,
     backgroundColor: colors.warningSurface,

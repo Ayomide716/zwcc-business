@@ -6,7 +6,6 @@
  */
 import { Redirect } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
-import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ProfileUnavailable } from '@/components/app';
 import { Logo } from '@/components/brand/Logo';
@@ -21,7 +20,6 @@ import { ROLE_HOME_ROUTE } from '@/types/roles';
 export default function Index() {
   const { isAuthenticated, role, loadingProfile, profile, profileError, isSupabaseConfigured } =
     useAuth();
-  const insets = useSafeAreaInsets();
 
   /* Misconfigured build: say so clearly instead of failing with a network error. */
   if (!isSupabaseConfigured) {
@@ -41,11 +39,8 @@ export default function Index() {
   // Signed in, but the profile (and therefore the role) is still loading.
   if (loadingProfile || !role) {
     return (
-      <View style={styles.page}>
-        <StatusBarBand height={insets.top} />
-        <View style={styles.container}>
-          <LoadingState message="Preparing your account…" />
-        </View>
+      <View style={styles.container}>
+        <LoadingState message="Preparing your account…" />
       </View>
     );
   }
@@ -62,11 +57,6 @@ export default function Index() {
  * Shown when `.env` has not been filled in. This is a developer-facing state,
  * but it is written for whoever is holding the phone.
  */
-/** The navy band every other screen carries, so light status icons stay legible. */
-function StatusBarBand({ height }: { height: number }) {
-  return <View style={[styles.statusBarBand, { height }]} />;
-}
-
 function SetupRequired() {
   return (
     <View style={styles.setup}>
@@ -98,13 +88,6 @@ function SetupRequired() {
 }
 
 const styles = StyleSheet.create({
-  page: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  statusBarBand: {
-    backgroundColor: colors.brand,
-  },
   container: {
     flex: 1,
     backgroundColor: colors.background,

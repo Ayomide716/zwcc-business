@@ -9,12 +9,15 @@
  * `keyboardShouldPersistTaps="handled"` the keyboard covers the field being
  * typed into and the first tap on a button only dismisses the keyboard.
  *
- * The status-bar scrim is the second. The app draws edge to edge, so the status
- * bar is transparent and scrolling content passes straight behind the clock and
- * battery, mixing with them. Padding alone only fixes the resting position. An
- * opaque strip pinned over that area is what actually hides scrolled content.
- * It is navy, matching the dashboards' header, so the whole app is topped by the
- * same band. The status bar icons are set light in the root layout to suit it.
+ * Top spacing is the second. The status bar is hidden app-wide, so there is no
+ * clock to collide with — but content still must not sit flush against the top
+ * edge of the glass, and a device with a camera cutout still reports an inset.
+ * `TOP_BREATHING_ROOM` is the floor.
+ *
+ * That padding is applied to the scroll container and the children are wrapped
+ * separately, so a screen passing its own `paddingTop` adds to it rather than
+ * silently replacing it. Getting that wrong is what put the create-account form
+ * too close to the top edge.
  */
 import { useState } from 'react';
 import {
@@ -30,6 +33,12 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { colors, spacing } from '@/theme';
+
+/**
+ * Never let content touch the top edge, even with the status bar hidden and no
+ * cutout inset to fall back on.
+ */
+const TOP_BREATHING_ROOM = spacing.lg;
 
 export interface ScreenProps {
   children: React.ReactNode;
@@ -80,17 +89,20 @@ export function Screen({
   const [headerHeight, setHeaderHeight] = useState(0);
 
   const paddingBottom = edgeToEdgeBottom ? 0 : Math.max(insets.bottom, spacing.base);
-  const paddingTop = stickyHeader ? headerHeight : insets.top;
+  const paddingTop = stickyHeader
+    ? headerHeight
+    : Math.max(insets.top, TOP_BREATHING_ROOM);
 
   const content = scrollable ? (
     <ScrollView
       ref={scrollRef}
       style={styles.flex}
+      // Only the safe area lives here. Anything a screen wants goes on the
+      // wrapper below, so the two cannot overwrite each other.
       contentContainerStyle={[
         padded && styles.padded,
-        { paddingTop: paddingTop + (padded ? spacing.base : 0) },
+        { paddingTop },
         { paddingBottom: paddingBottom + spacing.xxl },
-        contentContainerStyle,
       ]}
       keyboardShouldPersistTaps="handled"
       keyboardDismissMode={Platform.OS === 'ios' ? 'interactive' : 'on-drag'}
@@ -108,18 +120,11 @@ export function Screen({
         ) : undefined
       }
     >
-      {children}
+      <View style={contentContainerStyle}>{children}</View>
     </ScrollView>
   ) : (
-    <View
-      style={[
-        styles.flex,
-        padded && styles.padded,
-        { paddingTop: paddingTop + (padded ? spacing.base : 0) },
-        contentContainerStyle,
-      ]}
-    >
-      {children}
+    <View style={[styles.flex, padded && styles.padded, { paddingTop }]}>
+      <View style={[styles.flex, contentContainerStyle]}>{children}</View>
     </View>
   );
 
@@ -138,14 +143,7 @@ export function Screen({
         >
           {stickyHeader}
         </View>
-      ) : (
-        /*
-          The strip that stops scrolled text running into the clock and battery.
-          Navy rather than the page colour, so every screen is topped by the same
-          band as the dashboards' header and the app reads as one piece.
-        */
-        <View pointerEvents="none" style={[styles.statusBarScrim, { height: insets.top }]} />
-      )}
+      ) : null}
 
       {footer ? (
         <View style={[styles.footer, { paddingBottom: Math.max(insets.bottom, spacing.base) }]}>
@@ -160,16 +158,6 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   padded: {
     paddingHorizontal: spacing.base,
-  },
-  statusBarScrim: {
-    backgroundColor: colors.brand,
-    position: 'absolute',
-    top: 0,
-    left: 0,
-    right: 0,
-    // Android paints by elevation rather than source order, so both are set.
-    zIndex: 10,
-    elevation: 10,
   },
   stickyHeader: {
     position: 'absolute',

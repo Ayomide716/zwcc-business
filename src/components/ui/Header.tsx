@@ -84,8 +84,13 @@ export interface BrandHeaderProps {
 }
 
 /**
- * The navy hero. Extends behind the status bar, which is why it applies the top
- * inset itself rather than sitting inside a SafeAreaView.
+ * The navy hero. Extends to the top edge of the screen, which is why it applies
+ * the inset itself rather than sitting inside a SafeAreaView.
+ *
+ * With the status bar hidden, most phones report no top inset at all, so the
+ * inset alone would leave the greeting almost touching the glass. The floor
+ * below is what keeps it comfortable; a phone with a camera cutout still uses
+ * its real inset when that is larger.
  */
 export function BrandHeader({
   eyebrow,
@@ -103,7 +108,7 @@ export function BrandHeader({
       style={[
         styles.brandHeader,
         pinned && styles.brandHeaderPinned,
-        { paddingTop: insets.top + spacing.base },
+        { paddingTop: Math.max(insets.top, spacing.md) + spacing.base },
         style,
       ]}
     >
