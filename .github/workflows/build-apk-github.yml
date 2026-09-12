@@ -245,7 +245,20 @@ jobs:
         run: |
           tag="build-${{ github.run_number }}"
           notes="${{ inputs.notes }}"
-          [ -z "$notes" ] && notes="Built from ${GITHUB_SHA::7}."
+
+          # The release page is the install page. It is the one URL reachable
+          # on Nigerian mobile data, it is permanent, and it always resolves to
+          # the newest build — so the instructions belong on it rather than on
+          # a separate site a QR code has to point at instead.
+          #
+          # The wording lives in .github/release-notes.md rather than inline,
+          # because indented Markdown inside a YAML block arrives as a code
+          # block and silently mangles the formatting.
+          {
+            if [ -n "$notes" ]; then printf '%s\n\n' "$notes"; fi
+            cat .github/release-notes.md
+            printf '\nBuilt from %s.\n' "${GITHUB_SHA::7}"
+          } > release-notes.md
 
           # A second copy under a name that never changes. The versioned name
           # is what people see on the release page; this one is what the
@@ -260,9 +273,7 @@ jobs:
             "${{ steps.apk.outputs.name }}" \
             zwcc-business-grant.apk \
             --title "ZWCC Business Grant ${{ steps.apk.outputs.version }} (build ${{ github.run_number }})" \
-            --notes "$notes
-
-          Open this page on an Android phone and tap the .apk to install."
+            --notes-file release-notes.md
 
           url=$(gh release view "$tag" --json url --jq .url)
           {
