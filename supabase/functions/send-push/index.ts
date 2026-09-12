@@ -93,7 +93,10 @@ Deno.serve(async (request: Request) => {
     body: record.body,
     sound: record.important ? 'default' : null,
     priority: record.important ? 'high' : 'normal',
-    channelId: 'default',
+    // Only a HIGH-importance channel produces a banner over whatever is on
+    // screen. The app declares both; see ALERT_CHANNEL / UPDATE_CHANNEL in
+    // src/services/push.service.ts.
+    channelId: record.important ? 'alerts' : 'updates',
     // Read by `usePushNotifications` so a tap lands where the in-app list
     // would have gone.
     data: { route: record.route ?? undefined, notificationId: record.id },

@@ -31,6 +31,13 @@ import { Platform } from 'react-native';
 import { logger } from '@/lib/logger';
 import { supabase } from '@/lib/supabase';
 
+/**
+ * Android notification channels. The push sender addresses these by id, so the
+ * names are a contract between this file and `supabase/functions/send-push`.
+ */
+export const ALERT_CHANNEL = 'alerts';
+export const UPDATE_CHANNEL = 'updates';
+
 /** Where a tapped notification should land, mirroring `notifications.config`. */
 export interface PushPayload {
   route?: string;
@@ -82,12 +89,32 @@ export const pushService = {
     try {
       // Android needs a channel or notifications arrive silently and without
       // the brand colour.
+      //
+      // Two of them, because importance is what decides whether a notification
+      // interrupts. Only HIGH and above produce the banner that slides over
+      // whatever is on screen; DEFAULT puts the notification in the shade with
+      // a sound and nothing more, which is easy to miss entirely. A decision on
+      // a grant application should interrupt. A routine update should not.
+      //
+      // The ids are new rather than a raised 'default', because Android ignores
+      // an attempt to increase the importance of a channel that already exists
+      // — only the person holding the phone may do that. A device that already
+      // created the old channel would otherwise keep its quiet behaviour
+      // forever.
       if (Platform.OS === 'android') {
-        await Notifications.setNotificationChannelAsync('default', {
-          name: 'Application updates',
-          importance: Notifications.AndroidImportance.DEFAULT,
+        await Notifications.setNotificationChannelAsync(ALERT_CHANNEL, {
+          name: 'Decisions and actions needed',
+          description: 'Application decisions, documents to re-upload, reports falling due.',
+          importance: Notifications.AndroidImportance.HIGH,
           lightColor: '#0B2545',
           vibrationPattern: [0, 250, 250, 250],
+        });
+
+        await Notifications.setNotificationChannelAsync(UPDATE_CHANNEL, {
+          name: 'Progress updates',
+          description: 'Confirmations and progress on an application already under way.',
+          importance: Notifications.AndroidImportance.DEFAULT,
+          lightColor: '#0B2545',
         });
       }
 
