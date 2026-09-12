@@ -84,6 +84,13 @@ jobs:
 
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v4
+        with:
+          # The action only writes the cache from the repository's default
+          # branch unless told otherwise, so on this branch every build was
+          # restoring nothing and saving nothing. Turning the build cache on
+          # bought us the ability to reuse compiled native code; this is what
+          # lets a later build actually see it.
+          cache-read-only: false
 
       - name: Load the public Supabase keys
         # From eas.json rather than repeated here, so the two workflows cannot
