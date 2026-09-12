@@ -24,13 +24,24 @@ import { rhythm, spacing } from '@/theme';
 export default function MonitoringScreen() {
   const router = useRouter();
 
-  const { data: beneficiary, isLoading } = useMyBeneficiary();
+  const { data: myBeneficiary, isLoading, refetch: refetchBeneficiary } = useMyBeneficiary();
   const {
     data: overview,
     isLoading: loadingOverview,
     refetch,
     isRefetching,
-  } = useMonitoringOverview(beneficiary?.id);
+  } = useMonitoringOverview(myBeneficiary?.id);
+
+  /*
+    The overview's own copy, not the one used to find it.
+
+    `useMyBeneficiary` runs once to get an id and is not refetched when this
+    screen is pulled down, so anything read from it — the status in particular —
+    stays as it was when the screen first loaded. A grant completed by the
+    committee would never show as complete here, however many times someone
+    refreshed. The overview refetches, so read the record from there.
+  */
+  const beneficiary = overview?.beneficiary ?? myBeneficiary;
 
   if (isLoading || loadingOverview) {
     return (
@@ -73,7 +84,10 @@ export default function MonitoringScreen() {
 
   return (
     <Screen
-      onRefresh={() => void refetch()}
+      onRefresh={() => {
+        void refetchBeneficiary();
+        void refetch();
+      }}
       refreshing={isRefetching}
       footer={
         actionablePeriod && !finished ? (
@@ -159,9 +173,13 @@ export default function MonitoringScreen() {
 
           <MonitoringTimeline
             periods={periods}
-            onSelectPeriod={(period) =>
-              router.push(`/(applicant)/monitoring/${period.periodNumber}`)
-            }
+            onSelectPeriod={(period) => {
+              // Once the year is closed out, a month with no report has nothing
+              // to open: the database refuses new reports on a completed grant,
+              // so offering the form would only produce an error.
+              if (finished && !period.report) return;
+              router.push(`/(applicant)/monitoring/${period.periodNumber}`);
+            }}
           />
         </View>
       </View>
