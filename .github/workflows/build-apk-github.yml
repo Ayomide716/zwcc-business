@@ -147,14 +147,35 @@ jobs:
 
       - name: Confirm it is signed with the right key
         # A debug-signed APK builds and installs perfectly on a clean phone and
-        # only fails on the one that already has the app. Worth one check.
+        # fails only on one that already has the app — after the build has
+        # reported success. So the certificate in the APK is compared against
+        # the certificate in the keystore, and a mismatch fails the build.
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
         run: |
           apksigner=$(find "$ANDROID_HOME" -name apksigner -type f | sort | tail -1)
-          if [ -n "$apksigner" ]; then
-            "$apksigner" verify --print-certs "${{ steps.apk.outputs.name }}" | grep -i "SHA-256 digest" || true
-          else
-            echo "apksigner not found on the runner; skipping the check."
+          if [ -z "$apksigner" ]; then
+            echo "::error::apksigner was not found on the runner, so the signature could not be verified."
+            exit 1
           fi
+
+          normalise() { tr -d ': ' | tr 'A-Z' 'a-z'; }
+
+          expected=$(keytool -list -v -keystore android/app/zwcc-release.jks \
+                       -storepass "$KEYSTORE_PASSWORD" \
+                     | grep -m1 'SHA256:' | cut -d' ' -f3- | normalise)
+
+          actual=$("$apksigner" verify --print-certs "${{ steps.apk.outputs.name }}" \
+                   | grep -m1 -i 'SHA-256 digest' | cut -d':' -f2- | normalise)
+
+          echo "keystore certificate: $expected"
+          echo "APK certificate:      $actual"
+
+          if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
+            echo "::error::The APK is not signed with the project keystore. It would fail to install over an existing copy of the app."
+            exit 1
+          fi
+          echo "Signed with the project keystore."
 
       - name: Publish the APK
         env:

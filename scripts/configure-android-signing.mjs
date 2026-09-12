@@ -28,12 +28,21 @@ const DEBUG_SIGNING_CONFIG = `        debug {
             keyPassword 'android'
         }`;
 
+/*
+ * `project.property(...)` rather than the bare names the React Native template
+ * uses. Inside a signing config block Groovy resolves an unknown name against
+ * the signing config object first, and Android Gradle Plugin's decorated
+ * version throws on one it does not recognise instead of letting the lookup
+ * fall through to the project. Naming the project explicitly sidesteps that,
+ * and fails with the missing property's name if the workflow ever stops
+ * writing them.
+ */
 const RELEASE_SIGNING_CONFIG = `${DEBUG_SIGNING_CONFIG}
         release {
-            storeFile file(ZWCC_KEYSTORE_FILE)
-            storePassword ZWCC_KEYSTORE_PASSWORD
-            keyAlias ZWCC_KEY_ALIAS
-            keyPassword ZWCC_KEY_PASSWORD
+            storeFile file(project.property('ZWCC_KEYSTORE_FILE'))
+            storePassword project.property('ZWCC_KEYSTORE_PASSWORD')
+            keyAlias project.property('ZWCC_KEY_ALIAS')
+            keyPassword project.property('ZWCC_KEY_PASSWORD')
         }`;
 
 const RELEASE_USES_DEBUG_KEY = `            // see https://reactnative.dev/docs/signed-apk-android.
