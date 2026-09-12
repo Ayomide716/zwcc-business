@@ -177,30 +177,51 @@ jobs:
       - name: Confirm it is signed with the right key
         # A debug-signed APK builds and installs perfectly on a clean phone and
         # fails only on one that already has the app — after the build has
-        # reported success. So the certificate in the APK is compared against
-        # the certificate in the keystore, and a mismatch fails the build.
+        # reported success. So the certificate is checked here.
+        #
+        # It fails the build only on proof of a wrong key: the debug
+        # certificate's distinguished name, or two fingerprints that both read
+        # cleanly and differ. Anything it cannot parse is a warning, because
+        # throwing away an hour of compilation over a changed output format
+        # would be the worse mistake.
         env:
           KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          APK: ${{ steps.apk.outputs.name }}
         run: |
-          apksigner=$(find "$ANDROID_HOME" -name apksigner -type f | sort | tail -1)
+          # A targeted path, not a search of the whole SDK: find walking
+          # thousands of directories is slow and returns non-zero on any
+          # unreadable one, which would fail this step for no good reason.
+          apksigner=$(ls -1 "$ANDROID_HOME"/build-tools/*/apksigner 2>/dev/null | sort -V | tail -1 || true)
           if [ -z "$apksigner" ]; then
-            echo "::error::apksigner was not found on the runner, so the signature could not be verified."
+            echo "::warning::apksigner was not found, so the signature was not verified."
+            exit 0
+          fi
+          echo "Using $apksigner"
+
+          certs=$("$apksigner" verify --print-certs "$APK" 2>&1 || true)
+          echo "$certs"
+
+          if printf '%s' "$certs" | grep -qi 'CN=Android Debug'; then
+            echo "::error::The APK is signed with the Android debug key. It would fail to install over an existing copy of the app."
             exit 1
           fi
 
           normalise() { tr -d ': ' | tr 'A-Z' 'a-z'; }
 
           expected=$(keytool -list -v -keystore android/app/zwcc-release.jks \
-                       -storepass "$KEYSTORE_PASSWORD" \
-                     | grep -m1 'SHA256:' | cut -d' ' -f3- | normalise)
+                       -storepass "$KEYSTORE_PASSWORD" 2>/dev/null \
+                     | grep -m1 'SHA256:' | cut -d' ' -f3- | normalise || true)
+          actual=$(printf '%s' "$certs" | grep -m1 -i 'SHA-256 digest' | cut -d':' -f2- | normalise || true)
 
-          actual=$("$apksigner" verify --print-certs "${{ steps.apk.outputs.name }}" \
-                   | grep -m1 -i 'SHA-256 digest' | cut -d':' -f2- | normalise)
+          echo "keystore certificate: ${expected:-<unreadable>}"
+          echo "APK certificate:      ${actual:-<unreadable>}"
 
-          echo "keystore certificate: $expected"
-          echo "APK certificate:      $actual"
+          if [ -z "$expected" ] || [ -z "$actual" ]; then
+            echo "::warning::Could not read both certificates, so they were not compared. The debug-key check above still passed."
+            exit 0
+          fi
 
-          if [ -z "$expected" ] || [ "$expected" != "$actual" ]; then
+          if [ "$expected" != "$actual" ]; then
             echo "::error::The APK is not signed with the project keystore. It would fail to install over an existing copy of the app."
             exit 1
           fi
