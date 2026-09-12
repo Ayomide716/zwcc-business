@@ -124,12 +124,27 @@ jobs:
 
           # Gradle properties rather than -P flags: command lines are echoed
           # into the log, and this file is on a runner that is thrown away.
+          #
+          # The leading newline matters. The generated file does not end with
+          # one, so appending without it joins the first property onto the last
+          # existing line and the property silently does not exist.
           {
+            printf '\n'
             echo "ZWCC_KEYSTORE_FILE=zwcc-release.jks"
             echo "ZWCC_KEYSTORE_PASSWORD=$KEYSTORE_PASSWORD"
             echo "ZWCC_KEY_ALIAS=$KEY_ALIAS"
             echo "ZWCC_KEY_PASSWORD=$KEY_PASSWORD"
           } >> android/gradle.properties
+
+          # Confirm all four are readable as properties, rather than finding out
+          # from Gradle two minutes later.
+          for property in ZWCC_KEYSTORE_FILE ZWCC_KEYSTORE_PASSWORD ZWCC_KEY_ALIAS ZWCC_KEY_PASSWORD; do
+            if ! grep -q "^${property}=" android/gradle.properties; then
+              echo "::error::${property} was not written to android/gradle.properties."
+              exit 1
+            fi
+          done
+          echo "Signing properties written."
 
       - name: Build the APK
         working-directory: android
