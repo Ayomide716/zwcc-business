@@ -15,7 +15,7 @@
 import { Image } from 'expo-image';
 import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, radius, spacing } from '@/theme';
+import { colors, spacing } from '@/theme';
 
 import { Text } from '@/components/ui/Text';
 
@@ -34,9 +34,15 @@ export interface LogoMarkProps {
 export function LogoMark({ size = 48, scheme = 'onLight', style }: LogoMarkProps) {
   const onDark = scheme === 'onDark';
 
-  // The plate has to be bigger than the artwork or the flame touches its edge.
+  /*
+    A circle rather than a rounded square, and the artwork a little smaller
+    inside it. The logo is itself a disc with a flame above it, so a rounded
+    square around it read as a second, competing shape; a circle follows the
+    mark it contains. The artwork sits in past the edge because the flame is
+    the tallest part and looked pinned to the rim.
+  */
   const plateSize = size;
-  const artHeight = onDark ? size * 0.74 : size;
+  const artHeight = onDark ? size * 0.66 : size;
 
   return (
     <View
@@ -44,7 +50,7 @@ export function LogoMark({ size = 48, scheme = 'onLight', style }: LogoMarkProps
         onDark && {
           width: plateSize,
           height: plateSize,
-          borderRadius: radius.lg,
+          borderRadius: plateSize / 2,
           backgroundColor: colors.surface,
           alignItems: 'center',
           justifyContent: 'center',

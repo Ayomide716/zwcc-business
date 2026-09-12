@@ -133,11 +133,11 @@ export function BrandHeader({
               {eyebrow.toUpperCase()}
             </Text>
           ) : null}
-          <Text variant="title1" color="onBrand" accessibilityRole="header">
+          <Text variant="title1" color="onBrand" accessibilityRole="header" numberOfLines={2}>
             {title}
           </Text>
           {subtitle ? (
-            <Text variant="callout" color="textOnBrandMuted">
+            <Text variant="callout" color="textOnBrandMuted" numberOfLines={2}>
               {subtitle}
             </Text>
           ) : null}
@@ -160,6 +160,9 @@ const styles = StyleSheet.create({
   },
   headerText: {
     flex: 1,
+    // Without this a flex child refuses to shrink below its content width, so
+    // a long name pushes the logo off the row instead of wrapping under it.
+    minWidth: 0,
     gap: spacing.xxs,
   },
   backButton: {

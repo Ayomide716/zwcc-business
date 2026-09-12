@@ -73,6 +73,12 @@ export interface ListRowProps {
   right?: React.ReactNode;
   /** Second line under the label. */
   description?: string;
+  /**
+   * Cap the label's height. A registration code is one unbreakable string and
+   * wrapped mid-code on narrower phones, which invites someone to copy down
+   * half of it — pass 1 and it shrinks to fit instead.
+   */
+  labelNumberOfLines?: number;
   onPress?: () => void;
   /** Shows the chevron. Defaults to true when `onPress` is given. */
   chevron?: boolean;
@@ -87,6 +93,7 @@ export function ListRow({
   value,
   right,
   description,
+  labelNumberOfLines,
   onPress,
   chevron,
   tone = 'default',
@@ -105,7 +112,13 @@ export function ListRow({
       ) : null)}
 
       <View style={styles.labelColumn}>
-        <Text variant="body" color={danger ? 'dangerStrong' : undefined}>
+        <Text
+          variant="body"
+          color={danger ? 'dangerStrong' : undefined}
+          numberOfLines={labelNumberOfLines}
+          adjustsFontSizeToFit={labelNumberOfLines === 1}
+          minimumFontScale={0.75}
+        >
           {label}
         </Text>
         {description ? (
@@ -196,6 +209,8 @@ const styles = StyleSheet.create({
   },
   labelColumn: {
     flex: 1,
+    // Lets the column shrink instead of shoving the value or badge off the row.
+    minWidth: 0,
     gap: spacing.xxs,
   },
   value: {

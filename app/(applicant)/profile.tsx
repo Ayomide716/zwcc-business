@@ -219,6 +219,8 @@ export default function ProfileScreen() {
                 label={
                   application.registration_code ?? `Draft · attempt ${application.attempt_number}`
                 }
+                // A registration code must read as one unbroken string.
+                labelNumberOfLines={1}
                 description={`Started ${formatDateShort(application.created_at)}`}
                 right={<StatusBadge status={application.status} size="sm" />}
               />

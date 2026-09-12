@@ -34,6 +34,16 @@ export interface StatusHeroProps {
   status: string;
   /** Shown under the status, e.g. the requested amount. */
   meta?: { label: string; value: string }[];
+  /**
+   * Why a decision went the way it did.
+   *
+   * The committee is required to pick a reason before declining or returning an
+   * application, and it was recorded and then shown to nobody — the applicant
+   * saw "Not approved" and no more. Being told why is the difference between a
+   * decision and a rebuff, and it is the only way someone knows what to change
+   * before applying again.
+   */
+  reason?: { label: string; explanation?: string | null; note?: string | null } | null;
 }
 
 /** Tone to the colour the ring and the status word take. */
@@ -46,7 +56,7 @@ const TONE_COLOUR: Record<string, string> = {
   neutral: colors.brandMuted,
 };
 
-export function StatusHero({ status, meta = [] }: StatusHeroProps) {
+export function StatusHero({ status, meta = [], reason }: StatusHeroProps) {
   const definition = getStatusDefinition(status);
   const accent = TONE_COLOUR[definition.tone] ?? colors.brand;
 
@@ -118,6 +128,22 @@ export function StatusHero({ status, meta = [] }: StatusHeroProps) {
         {describeStatus(status, 'applicant')}
       </Text>
 
+      {reason ? (
+        <View style={styles.reason}>
+          <Text variant="label">{reason.label}</Text>
+          {reason.explanation ? (
+            <Text variant="callout" muted>
+              {reason.explanation}
+            </Text>
+          ) : null}
+          {reason.note ? (
+            <Text variant="callout" muted>
+              {reason.note}
+            </Text>
+          ) : null}
+        </View>
+      ) : null}
+
       {expectation ? (
         <View style={styles.expectation}>
           <BrandIcon name="clock" size={15} color={colors.brand} />
@@ -171,6 +197,12 @@ const styles = StyleSheet.create({
   headline: {
     flex: 1,
     gap: spacing.xxs,
+  },
+  reason: {
+    gap: spacing.xxs,
+    padding: density.card,
+    borderRadius: radius.md,
+    backgroundColor: colors.surfaceMuted,
   },
   expectation: {
     flexDirection: 'row',

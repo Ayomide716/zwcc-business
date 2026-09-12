@@ -112,7 +112,7 @@ export function AppSplash({ ready, onFinished }: AppSplashProps) {
             ],
           }}
         >
-          <LogoMark size={84} scheme="onDark" />
+          <LogoMark size={76} scheme="onDark" />
         </Animated.View>
 
         <Animated.View

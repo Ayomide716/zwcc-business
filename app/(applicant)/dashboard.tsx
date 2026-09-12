@@ -36,6 +36,7 @@ import { firstName, formatCurrency, formatDateShort } from '@/lib/format';
 import { useAuth } from '@/providers/AuthProvider';
 import { colors, radius, spacing } from '@/theme';
 import { canReapply, getNextActionFor, getStatusDefinition } from '@/workflow/engine';
+import { describeReason, getReason } from '@/config/rejection-reasons.config';
 
 function greeting(now = new Date()): string {
   const hour = now.getHours();
@@ -89,6 +90,26 @@ export default function ApplicantDashboard() {
     past the point where anyone will ask for it unprompted.
   */
   const isFresh = !status || status === 'draft' || status === 'submitted';
+
+  /*
+    Why a decision went the way it did.
+
+    The committee must pick a reason before declining or returning an
+    application, and until now it was recorded and shown to nobody. Someone who
+    is told only "Not approved" has no idea what to change before applying
+    again, which the app then invites them to do.
+  */
+  const decisionReason = useMemo(() => {
+    if (!app?.decision_reason_code) return null;
+    if (status !== 'rejected' && status !== 'changes_requested') return null;
+
+    const reason = getReason('application_rejection', app.decision_reason_code);
+    return {
+      label: reason?.label ?? describeReason('application_rejection', app.decision_reason_code),
+      explanation: reason?.applicantExplanation ?? null,
+      note: app.decision_reason_note,
+    };
+  }, [app?.decision_reason_code, app?.decision_reason_note, status]);
 
   return (
     <Screen
@@ -150,6 +171,7 @@ export default function ApplicantDashboard() {
                   ? { label: 'Submitted', value: formatDateShort(app.submitted_at) }
                   : { label: 'Business', value: app.business_name ?? 'Not yet set' },
               ]}
+              reason={decisionReason}
             />
 
             {/*

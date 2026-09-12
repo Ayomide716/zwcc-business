@@ -19,7 +19,7 @@ import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
 import { useMonitoringOverview, useMyBeneficiary } from '@/hooks/queries';
 import { formatDateShort } from '@/lib/format';
-import { spacing } from '@/theme';
+import { rhythm, spacing } from '@/theme';
 
 export default function MonitoringScreen() {
   const router = useRouter();
@@ -56,6 +56,9 @@ export default function MonitoringScreen() {
   const { periods, submittedCount, totalPeriods, actionablePeriod } = overview;
   const overdue = periods.filter((period) => period.status === 'overdue');
 
+  /* The earliest period still waiting for its window to open. */
+  const nextToOpen = periods.find((period) => !period.report && period.status === 'upcoming');
+
   return (
     <Screen
       onRefresh={() => void refetch()}
@@ -79,55 +82,71 @@ export default function MonitoringScreen() {
         subtitle={`Your monitoring year runs to ${formatDateShort(beneficiary.monitoring_ends_at)}.`}
       />
 
-      <FirstRunHint
-        id="monitoring.v1"
-        title="A short update, once a month"
-        body="A few sentences on how the business is going, with a photo or a short video. It does not need to be polished — this is how the church sees the grant working."
-        icon="chatbubble-ellipses-outline"
-      />
-
-      {overdue.length > 0 ? (
-        <Banner
-          tone="danger"
-          title={overdue.length === 1 ? 'A report is overdue' : `${overdue.length} reports are overdue`}
-          message="Please submit as soon as you can. Missing reports affect the assessment of your grant."
-        />
-      ) : null}
-
-      <Card style={styles.summary}>
-        <ProgressBar
-          value={totalPeriods === 0 ? 0 : submittedCount / totalPeriods}
-          label={`${submittedCount} of ${totalPeriods} reports submitted`}
-          showPercentage
-          tone={submittedCount === totalPeriods ? 'success' : 'brand'}
+      {/* One gap for the page rather than a margin on one card and none on the rest. */}
+      <View style={styles.stack}>
+        <FirstRunHint
+          id="monitoring.v1"
+          title="A short update, once a month"
+          body="A few sentences on how the business is going, with a photo or a short video. It does not need to be polished — this is how the church sees the grant working."
+          icon="chatbubble-ellipses-outline"
         />
 
-        <Text variant="callout" muted>
-          Each report takes a few minutes. Tell us how the business is going, what went well, what
-          was difficult, and attach a few photos or a short video.
-        </Text>
-      </Card>
+        {overdue.length > 0 ? (
+          <Banner
+            tone="danger"
+            title={overdue.length === 1 ? 'A report is overdue' : `${overdue.length} reports are overdue`}
+            message="Please submit as soon as you can. Missing reports affect the assessment of your grant."
+          />
+        ) : null}
 
-      <View style={styles.timeline}>
-        <Text variant="label" muted style={styles.timelineHeading}>
-          YOUR TWELVE MONTHS
-        </Text>
+        <Card style={styles.summary}>
+          <ProgressBar
+            value={totalPeriods === 0 ? 0 : submittedCount / totalPeriods}
+            label={`${submittedCount} of ${totalPeriods} reports submitted`}
+            showPercentage
+            tone={submittedCount === totalPeriods ? 'success' : 'brand'}
+          />
 
-        <MonitoringTimeline
-          periods={periods}
-          onSelectPeriod={(period) =>
-            router.push(`/(applicant)/monitoring/${period.periodNumber}`)
-          }
-        />
+          <Text variant="callout" muted>
+            Each report takes a few minutes. Tell us how the business is going, what went well, what
+            was difficult, and attach a few photos or a short video.
+          </Text>
+
+          {/*
+            Nothing to submit yet is the normal state for a new beneficiary, and
+            without this the screen is twelve rows marked "Upcoming" and no
+            button, which reads as broken rather than as early.
+          */}
+          {!actionablePeriod && nextToOpen ? (
+            <Text variant="callout" color="brand">
+              {`Your first report opens on ${formatDateShort(nextToOpen.opensAt)}. There is nothing to do until then.`}
+            </Text>
+          ) : null}
+        </Card>
+
+        <View style={styles.timeline}>
+          <Text variant="label" muted style={styles.timelineHeading}>
+            YOUR TWELVE MONTHS
+          </Text>
+
+          <MonitoringTimeline
+            periods={periods}
+            onSelectPeriod={(period) =>
+              router.push(`/(applicant)/monitoring/${period.periodNumber}`)
+            }
+          />
+        </View>
       </View>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  stack: {
+    gap: rhythm.section,
+  },
   summary: {
     gap: spacing.md,
-    marginBottom: spacing.lg,
   },
   timeline: {
     gap: spacing.md,

@@ -462,6 +462,25 @@ export interface Database {
        * re-checks ownership, the agreement's state and the workflow itself —
        * see migration 0014. Called through `agreementService.sign()`.
        */
+      /**
+       * Inserts a notification for one person. SECURITY DEFINER because the
+       * caller is usually staff acting for an applicant, and RETURNING a row
+       * addressed to someone else fails the select policy — see migration
+       * 0016. Called through `notifications.raise()`.
+       */
+      raise_notification: {
+        Args: {
+          p_user_id: string;
+          p_event_id: string;
+          p_category: string;
+          p_title: string;
+          p_body: string;
+          p_route: string | null;
+          p_payload: Json;
+          p_important: boolean;
+        };
+        Returns: NotificationRow;
+      };
       sign_grant_agreement: {
         Args: {
           p_application_id: string;

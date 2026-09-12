@@ -47,21 +47,32 @@ export const notifications = {
       const title = renderTemplate(template.title, payload);
       const body = renderTemplate(template.body, payload);
 
+      /*
+        Through a function rather than a plain insert.
+
+        Most notifications are raised by a committee member on the applicant's
+        behalf, and this needs the new row back to hand to the delivery step.
+        PostgreSQL applies the SELECT policy to what RETURNING gives back, and
+        that policy is `user_id = auth.uid()` — so inserting for someone else
+        and asking for the row was refused, and the whole insert rolled back.
+        Applicants saw "Submitted" and then silence for the rest of the process.
+
+        Widening the select policy would trade one person's privacy for a
+        RETURNING clause, so the insert happens inside a function that checks
+        the caller instead. See migration 0016.
+      */
       const { data: notification, error } = await supabase
-        .from('notifications')
-        .insert({
-          user_id: userId,
-          event_id: template.id,
-          category: template.category,
-          title,
-          body,
-          route: template.route ?? null,
-          payload: payload as Json,
-          important: template.important ?? false,
-          is_read: false,
+        .rpc('raise_notification', {
+          p_user_id: userId,
+          p_event_id: template.id,
+          p_category: template.category,
+          p_title: title,
+          p_body: body,
+          p_route: template.route ?? null,
+          p_payload: payload as Json,
+          p_important: template.important ?? false,
         })
-        .select()
-        .single();
+        .single<NotificationRow>();
 
       if (error) throw error;
       if (!notification) return;
