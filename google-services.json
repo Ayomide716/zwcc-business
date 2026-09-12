@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "997546934804",
+    "project_id": "zwcc-business-grant-5f077",
+    "storage_bucket": "zwcc-business-grant-5f077.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:997546934804:android:ce43a3206d9490bc8f5d01",
+        "android_client_info": {
+          "package_name": "org.zionworldcc.businessgrant"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCaSvNPIdToCuJeplvIxJo5W8PPnY_F2gI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
