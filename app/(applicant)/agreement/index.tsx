@@ -8,7 +8,7 @@
  * The content is placeholder and says so, prominently and repeatedly.
  */
 import { useRouter } from 'expo-router';
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { StatusBadge } from '@/components/app';
@@ -27,7 +27,7 @@ import { formatDateTime } from '@/lib/format';
 import { useActor, useAuth } from '@/providers/AuthProvider';
 import { useToast } from '@/providers/ToastProvider';
 import { agreementService } from '@/services/agreement.service';
-import { colors, spacing } from '@/theme';
+import { colors, rhythm, spacing } from '@/theme';
 
 export default function AgreementScreen() {
   const router = useRouter();
@@ -58,6 +58,32 @@ export default function AgreementScreen() {
 
   const allAcknowledged = AGREEMENT_ACKNOWLEDGEMENTS.every((item) => acknowledged[item.id]);
   const isSigned = agreement?.status === 'signed';
+
+  /*
+    Signed, but the application never moved.
+
+    Before the workflow was fixed, signing wrote the signature and then failed
+    to advance the application, which left people in a loop: the home screen
+    asks them to sign, this screen says they already have. Repairing it takes
+    one call, so this does it rather than showing them the contradiction and
+    leaving them to find a way out.
+  */
+  const stranded = isSigned && application?.status === 'agreement_pending';
+  const repairing = useRef(false);
+
+  useEffect(() => {
+    if (!stranded || !application || repairing.current) return;
+    repairing.current = true;
+
+    void agreementService
+      .sign(application.id, actor, { method: 'typed_name', signatureData: '', expectedName })
+      .then(() => invalidate(application.id))
+      .catch(() => {
+        // Nothing to tell the applicant: they signed, and the record of that is
+        // safe. The next open tries again.
+        repairing.current = false;
+      });
+  }, [stranded, application, actor, expectedName, invalidate]);
 
   async function handleSign() {
     if (!application) return;
@@ -147,53 +173,60 @@ export default function AgreementScreen() {
         right={<StatusBadge status={application.status} size="sm" />}
       />
 
-      {/* The placeholder warning is not dismissible and is shown first. */}
-      <Banner
-        tone="warning"
-        title="Draft agreement"
-        message={content.notice}
-        icon="construct-outline"
-      />
-
-      {isSigned ? (
+      {/*
+        One gap for the page rather than a margin here and there. The draft
+        warning and the signed confirmation are adjacent banners and sat flush
+        against each other, which read as one block with two headings.
+      */}
+      <View style={styles.stack}>
+        {/* The placeholder warning is not dismissible and is shown first. */}
         <Banner
-          tone="success"
-          title="Signed"
-          message={`You signed this agreement on ${formatDateTime(agreement.signed_at)}${
-            agreement.signer_name ? ` as ${agreement.signer_name}` : ''
-          }.`}
+          tone="warning"
+          title="Draft agreement"
+          message={content.notice}
+          icon="construct-outline"
         />
-      ) : null}
 
-      <Card style={styles.document}>
-        {content.clauses.map((clause) => (
-          <View key={clause.id} style={styles.clause}>
-            <Text variant="title3" accessibilityRole="header">
-              {clause.heading}
-            </Text>
-            <Text variant="body" color="textSecondary">
-              {clause.body}
-            </Text>
-          </View>
-        ))}
-      </Card>
+        {isSigned ? (
+          <Banner
+            tone="success"
+            title="Signed"
+            message={`You signed this agreement on ${formatDateTime(agreement.signed_at)}${
+              agreement.signer_name ? ` as ${agreement.signer_name}` : ''
+            }.`}
+          />
+        ) : null}
 
-      {!isSigned ? (
-        <View style={styles.acknowledgements}>
-          <Text variant="label">Before you sign</Text>
-
-          {AGREEMENT_ACKNOWLEDGEMENTS.map((item) => (
-            <Checkbox
-              key={item.id}
-              label={item.label}
-              checked={acknowledged[item.id] ?? false}
-              onChange={(checked) =>
-                setAcknowledged((current) => ({ ...current, [item.id]: checked }))
-              }
-            />
+        <Card style={styles.document}>
+          {content.clauses.map((clause) => (
+            <View key={clause.id} style={styles.clause}>
+              <Text variant="title3" accessibilityRole="header">
+                {clause.heading}
+              </Text>
+              <Text variant="body" color="textSecondary">
+                {clause.body}
+              </Text>
+            </View>
           ))}
-        </View>
-      ) : null}
+        </Card>
+
+        {!isSigned ? (
+          <View style={styles.acknowledgements}>
+            <Text variant="label">Before you sign</Text>
+
+            {AGREEMENT_ACKNOWLEDGEMENTS.map((item) => (
+              <Checkbox
+                key={item.id}
+                label={item.label}
+                checked={acknowledged[item.id] ?? false}
+                onChange={(checked) =>
+                  setAcknowledged((current) => ({ ...current, [item.id]: checked }))
+                }
+              />
+            ))}
+          </View>
+        ) : null}
+      </View>
 
       <Sheet
         visible={signing}
@@ -236,16 +269,17 @@ export default function AgreementScreen() {
 }
 
 const styles = StyleSheet.create({
+  stack: {
+    gap: rhythm.section,
+  },
   document: {
     gap: spacing.lg,
-    marginTop: spacing.base,
   },
   clause: {
     gap: spacing.xs,
   },
   acknowledgements: {
     gap: spacing.sm,
-    marginTop: spacing.lg,
     paddingTop: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.divider,

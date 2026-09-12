@@ -116,17 +116,19 @@ export const agreementService = {
     const agreement = await this.getByApplication(applicationId);
     if (!agreement) throw notFoundError('your agreement');
 
-    if (agreement.status === 'signed') {
-      throw new AppError(
-        'conflict',
-        'Already signed',
-        'This agreement has already been signed.',
-      );
-    }
+    /*
+      An already-signed agreement is not an error to report back — it is very
+      likely someone stuck. Before the workflow was fixed, signing wrote the
+      signature and then failed to move the application, leaving people in a
+      loop: the home screen asks them to sign, this screen says they already
+      did. Calling through lets the database finish the half that did not
+      happen. The name is not re-checked, because they are not signing again.
+    */
+    const alreadySigned = agreement.status === 'signed';
 
     const typed = input.signatureData.trim();
 
-    if (input.method === 'typed_name') {
+    if (!alreadySigned && input.method === 'typed_name') {
       if (!namesMatch(typed, input.expectedName)) {
         throw new AppError(
           'validation',
@@ -134,7 +136,7 @@ export const agreementService = {
           'Please type your full name exactly as it appears on your application.',
         );
       }
-    } else if (!typed) {
+    } else if (!alreadySigned && !typed) {
       throw new AppError('validation', 'Signature required', 'Please provide your signature.');
     }
 
