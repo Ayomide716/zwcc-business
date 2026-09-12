@@ -13,6 +13,8 @@
 
 insert into public.workflow_statuses
   (id, label, phase, tone, sort_order, is_terminal, is_applicant_editable, is_documents_editable, occupies_slot)
+  -- is_documents_reviewable is set after this insert, so that re-running this
+  -- migration on a database that has not reached 17 yet still works.
 values
   ('draft',                   'Draft',                   'preparation',  'neutral',  10, false, true,  true,  true),
   ('submitted',               'Submitted',               'verification', 'info',     20, false, false, false, true),
@@ -38,6 +40,21 @@ on conflict (id) do update
       is_applicant_editable = excluded.is_applicant_editable,
       is_documents_editable = excluded.is_documents_editable,
       occupies_slot         = excluded.occupies_slot;
+
+-- Which statuses allow staff to verify or reject documents. Separate from the
+-- insert above so this migration still runs on a database that has not reached
+-- migration 17 yet. Source: documentsReviewable in workflow.config.ts.
+do $$
+begin
+  if exists (
+    select 1 from information_schema.columns
+     where table_schema = 'public' and table_name = 'workflow_statuses'
+       and column_name = 'is_documents_reviewable'
+  ) then
+    update public.workflow_statuses
+       set is_documents_reviewable = (id in ('submitted', 'verification', 'changes_requested'));
+  end if;
+end $$;
 
 -- ---------------------------------------------------------------------------
 -- Document types  (source: src/config/documents.config.ts)

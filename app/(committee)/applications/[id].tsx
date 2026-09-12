@@ -52,7 +52,7 @@ import { reviewService } from '@/services/review.service';
 import { applicationService } from '@/services/application.service';
 import { colors, rhythm, spacing, type Tone } from '@/theme';
 import type { DocumentRow } from '@/types/database';
-import { getAvailableTransitions } from '@/workflow/engine';
+import { getAvailableTransitions, getStatusDefinition } from '@/workflow/engine';
 
 const DOC_TONES: Record<string, Tone> = {
   uploaded: 'info',
@@ -139,6 +139,19 @@ export default function ApplicationDetailScreen() {
 
   /** True when a staff member is looking at their own application. */
   const isOwnApplication = application?.applicant_id === actor.id;
+
+  /*
+    Verifying evidence belongs to the verification stage.
+
+    These buttons used to stay live for the life of the record, so a document
+    could be rejected on an application that had already been approved, signed
+    for and paid out. After a decision has been made, a reviewer who finds a
+    problem should return or decline the application — those carry a reason and
+    an audit trail; changing a verdict underneath a decision does not.
+  */
+  const documentsReviewable = Boolean(
+    application && getStatusDefinition(application.status).documentsReviewable,
+  );
 
   const runTransition = useCallback(
     async (transitionId: string, options: { reasonCode?: string; reasonNote?: string } = {}) => {
@@ -369,7 +382,14 @@ export default function ApplicationDetailScreen() {
         <Card style={styles.card}>
           <Text variant="title3">Documents</Text>
 
-          {documents.length === 0 ? (
+          {!documentsReviewable && documents.length > 0 ? (
+          <Text variant="caption" muted>
+            Verification is closed for this application. To raise a problem with a document now,
+            return the application for corrections or decline it.
+          </Text>
+        ) : null}
+
+        {documents.length === 0 ? (
             <Text variant="callout" muted>
               No documents uploaded yet.
             </Text>
@@ -399,7 +419,7 @@ export default function ApplicationDetailScreen() {
                     icon="eye-outline"
                     onPress={() => setPreviewing(document)}
                   />
-                  {!isOwnApplication && document.status !== 'verified' ? (
+                  {documentsReviewable && !isOwnApplication && document.status !== 'verified' ? (
                     <Button
                       label="Verify"
                       variant="ghost"
@@ -409,7 +429,7 @@ export default function ApplicationDetailScreen() {
                       onPress={() => void handleVerifyDocument(document)}
                     />
                   ) : null}
-                  {!isOwnApplication && document.status !== 'rejected' ? (
+                  {documentsReviewable && !isOwnApplication && document.status !== 'rejected' ? (
                     <Button
                       label="Reject"
                       variant="ghost"

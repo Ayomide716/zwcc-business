@@ -89,6 +89,16 @@ export interface StatusDefinition {
   applicantEditable: boolean;
   /** Whether documents may still be uploaded or replaced. */
   documentsEditable: boolean;
+  /**
+   * Whether staff may still verify or reject documents in this status.
+   *
+   * Distinct from `documentsEditable`, which is about the applicant. Checking
+   * evidence belongs to the verification stage; once the committee is judging
+   * the proposal, or the grant has been approved and signed for, a reviewer
+   * who finds a problem should return or decline the application rather than
+   * quietly change a verdict on a file the decision was already made against.
+   */
+  documentsReviewable: boolean;
   /** 0..1 — how far through the journey this status sits, for progress bars. */
   progress: number;
   /** Terminal statuses never transition onward automatically. */
@@ -113,6 +123,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'neutral',
     applicantEditable: true,
     documentsEditable: true,
+    documentsReviewable: false,
     progress: 0.1,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -135,6 +146,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'info',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: true,
     progress: 0.35,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -157,6 +169,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'progress',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: true,
     progress: 0.45,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -179,6 +192,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'progress',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.6,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -207,6 +221,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'warning',
     applicantEditable: true,
     documentsEditable: true,
+    documentsReviewable: true,
     progress: 0.3,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -229,6 +244,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'success',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.7,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -251,6 +267,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'danger',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 1,
     terminal: true,
     // Frees the slot so a rejected applicant can reapply (brief §15).
@@ -274,6 +291,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'warning',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.78,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -296,6 +314,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'info',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.85,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -319,6 +338,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'success',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.9,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -341,6 +361,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'progress',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.95,
     terminal: false,
     occupiesApplicantSlot: true,
@@ -363,6 +384,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'success',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 1,
     terminal: true,
     occupiesApplicantSlot: false,
@@ -377,6 +399,7 @@ export const APPLICATION_STATUSES: Record<ApplicationStatusId, StatusDefinition>
     tone: 'neutral',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 1,
     terminal: true,
     occupiesApplicantSlot: false,
@@ -718,6 +741,7 @@ export function getStatus(id: string): StatusDefinition {
     tone: 'neutral',
     applicantEditable: false,
     documentsEditable: false,
+    documentsReviewable: false,
     progress: 0.5,
     terminal: false,
     occupiesApplicantSlot: true,
