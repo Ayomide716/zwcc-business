@@ -138,19 +138,27 @@ export const agreementService = {
       throw new AppError('validation', 'Signature required', 'Please provide your signature.');
     }
 
+    /*
+      One database call, not two.
+
+      Signing writes the signature onto the agreement and moves the application
+      to `agreement_signed`. Done as two round trips from the phone, a dropped
+      connection between them leaves a signature on record for a step the system
+      does not believe happened — and the applicant cannot undo it, because
+      their policy allows 'issued' to 'signed' and never the reverse. On a
+      Nigerian mobile network that is not a remote possibility.
+
+      The function re-checks who is calling, the agreement's state and the
+      workflow before writing either row, so nothing here is taken on trust.
+    */
     const { data, error } = await supabase
-      .from('agreements')
-      .update({
-        status: 'signed',
-        signed_at: new Date().toISOString(),
-        signature_method: input.method,
-        signature_data: typed,
-        signer_name: typed,
+      .rpc('sign_grant_agreement', {
+        p_application_id: applicationId,
+        p_method: input.method,
+        p_signature: typed,
+        p_signer_name: typed,
       })
-      .eq('id', agreement.id)
-      .eq('status', 'issued')
-      .select()
-      .maybeSingle();
+      .maybeSingle<AgreementRow>();
 
     if (error) throw error;
     if (!data) {
@@ -161,8 +169,6 @@ export const agreementService = {
         true,
       );
     }
-
-    await applicationService.applyTransition(applicationId, 'sign_agreement', signer);
 
     await auditService.record({
       action: 'agreement.signed',

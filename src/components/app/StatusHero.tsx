@@ -8,9 +8,13 @@
  *
  * The ring shows position in the journey rather than a percentage of work done.
  * A percentage invites the question "percent of what?", and the honest answer
- * on a grant application is "of a process you do not control". Stages answered
- * that better in testing of the copy, so the number inside the ring is
- * "stage 3 of 6".
+ * on a grant application is "of a process you do not control".
+ *
+ * The count is of phases, not statuses. Counting every status made a freshly
+ * submitted application read "2 of 10", which looks barely begun to someone who
+ * has in fact finished their part — and four of the stages left are paperwork
+ * that only happens if the answer is yes. Phases are the same journey at the
+ * grain an applicant thinks in.
  */
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
@@ -18,7 +22,7 @@ import Svg, { Circle } from 'react-native-svg';
 import { STAGE_EXPECTATIONS } from '@/config/program.config';
 import { colors, density, radius, spacing } from '@/theme';
 import { describeStatus, getProgress, getStatusDefinition } from '@/workflow/engine';
-import { WORKFLOW_TIMELINE } from '@/config/workflow.config';
+import { APPLICANT_PHASES, PHASE_LABELS } from '@/config/workflow.config';
 
 import { BrandIcon } from '../brand/Icon';
 import { Text } from '../ui/Text';
@@ -47,9 +51,9 @@ export function StatusHero({ status, meta = [] }: StatusHeroProps) {
   const accent = TONE_COLOUR[definition.tone] ?? colors.brand;
 
   // Position in the journey, not a percentage of effort.
-  const stageIndex = WORKFLOW_TIMELINE.indexOf(definition.id);
-  const stage = stageIndex >= 0 ? stageIndex + 1 : null;
-  const totalStages = WORKFLOW_TIMELINE.length;
+  const phaseIndex = APPLICANT_PHASES.indexOf(definition.phase);
+  const stage = phaseIndex >= 0 ? phaseIndex + 1 : null;
+  const totalStages = APPLICANT_PHASES.length;
 
   const fraction = getProgress(status);
   const radiusInner = (RING_SIZE - RING_STROKE) / 2;
@@ -102,7 +106,7 @@ export function StatusHero({ status, meta = [] }: StatusHeroProps) {
 
         <View style={styles.headline}>
           <Text variant="overline" muted>
-            YOUR APPLICATION
+            {(stage ? PHASE_LABELS[definition.phase] : 'YOUR APPLICATION').toUpperCase()}
           </Text>
           <Text variant="title1" style={{ color: accent }}>
             {definition.label}

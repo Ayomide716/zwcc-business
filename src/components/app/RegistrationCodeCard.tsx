@@ -5,6 +5,12 @@
  * letter-spaced style so characters are unambiguous when read aloud, it is
  * copyable, and it is exposed to screen readers character by character rather
  * than as an unpronounceable word.
+ *
+ * Two sizes, because the code's importance is not constant. In the days after
+ * submitting it is the thing to write down and keep, and it earns a full navy
+ * block. Once the application has moved on it is reference material, and a
+ * permanent navy block competing with the status is the wrong emphasis — so
+ * `compact` reduces it to a copyable line.
  */
 import { Ionicons } from '@expo/vector-icons';
 import * as Clipboard from 'expo-clipboard';
@@ -13,18 +19,21 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Card } from '@/components/ui/Card';
 import { Text } from '@/components/ui/Text';
-import { colors, radius, spacing } from '@/theme';
+import { MIN_TOUCH_TARGET, colors, radius, spacing } from '@/theme';
 
 export interface RegistrationCodeCardProps {
   code: string;
   /** Shows the "keep this safe" guidance. */
   showGuidance?: boolean;
+  /** One quiet line instead of a navy block. */
+  compact?: boolean;
   onCopied?: () => void;
 }
 
 export function RegistrationCodeCard({
   code,
   showGuidance = true,
+  compact = false,
   onCopied,
 }: RegistrationCodeCardProps) {
   const handleCopy = async () => {
@@ -32,6 +41,26 @@ export function RegistrationCodeCard({
     void Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     onCopied?.();
   };
+
+  if (compact) {
+    return (
+      <Pressable
+        onPress={handleCopy}
+        accessibilityRole="button"
+        accessibilityLabel={`Registration code ${code.split('').join(' ')}`}
+        accessibilityHint="Double tap to copy"
+        style={({ pressed }) => [styles.compact, pressed && styles.pressed]}
+      >
+        <Text variant="caption" muted>
+          Registration code
+        </Text>
+        <Text variant="bodyMedium" numeric style={styles.compactCode} numberOfLines={1}>
+          {code}
+        </Text>
+        <Ionicons name="copy-outline" size={16} color={colors.textMuted} />
+      </Pressable>
+    );
+  }
 
   return (
     <Card variant="brand" padding="lg" style={styles.card}>
@@ -78,6 +107,23 @@ export function RegistrationCodeCard({
 const styles = StyleSheet.create({
   card: {
     gap: spacing.sm,
+  },
+  compact: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.md,
+    minHeight: MIN_TOUCH_TARGET,
+    paddingHorizontal: spacing.base,
+    paddingVertical: spacing.md,
+    borderRadius: radius.base,
+    backgroundColor: colors.surface,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+  },
+  compactCode: {
+    flex: 1,
+    textAlign: 'right',
+    letterSpacing: 1,
   },
   codeRow: {
     flexDirection: 'row',

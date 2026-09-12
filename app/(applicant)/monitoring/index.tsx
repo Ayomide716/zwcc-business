@@ -8,7 +8,7 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { MonitoringTimeline } from '@/components/app';
+import { FirstRunHint, MonitoringTimeline } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { OnboardingArt } from '@/components/brand/OnboardingArt';
@@ -77,6 +77,13 @@ export default function MonitoringScreen() {
       <ScreenHeader
         title="Monthly reports"
         subtitle={`Your monitoring year runs to ${formatDateShort(beneficiary.monitoring_ends_at)}.`}
+      />
+
+      <FirstRunHint
+        id="monitoring.v1"
+        title="A short update, once a month"
+        body="A few sentences on how the business is going, with a photo or a short video. It does not need to be polished — this is how the church sees the grant working."
+        icon="chatbubble-ellipses-outline"
       />
 
       {overdue.length > 0 ? (

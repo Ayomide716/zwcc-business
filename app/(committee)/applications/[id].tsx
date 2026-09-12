@@ -50,7 +50,7 @@ import { documentService } from '@/services/document.service';
 import { monitoringService } from '@/services/monitoring.service';
 import { reviewService } from '@/services/review.service';
 import { applicationService } from '@/services/application.service';
-import { colors, spacing, type Tone } from '@/theme';
+import { colors, rhythm, spacing, type Tone } from '@/theme';
 import type { DocumentRow } from '@/types/database';
 import { getAvailableTransitions } from '@/workflow/engine';
 
@@ -285,218 +285,226 @@ export default function ApplicationDetailScreen() {
         right={<StatusBadge status={application.status} size="sm" />}
       />
 
-      {isOwnApplication ? (
-        <Banner
-          tone="warning"
-          message="This is your own application. Staff actions are turned off here — another committee member must verify, score and decide it."
-          icon="hand-left-outline"
-        />
-      ) : null}
-
-      {/* Summary */}
-      <Card style={styles.card}>
-        <View style={styles.summaryGrid}>
-          <SummaryItem label="Business" value={application.business_name ?? '—'} />
-          <SummaryItem label="Requested" value={formatCurrency(application.requested_amount)} />
-          <SummaryItem
-            label="Submitted"
-            value={application.submitted_at ? formatDate(application.submitted_at) : 'Not yet'}
-          />
-          <SummaryItem label="Attempt" value={`#${application.attempt_number}`} />
-        </View>
-
-        {application.previous_application_id ? (
+      {/*
+        One gap for the whole page rather than a margin on each block. Cards
+        carried their own bottom margin and the score sheet, the score summary
+        and the banner did not, so those three sat flush against whatever came
+        next while everything else was spaced.
+      */}
+      <View style={styles.stack}>
+        {isOwnApplication ? (
           <Banner
-            tone="info"
-            message="This is a reapplication. The applicant's previous application is preserved."
-            icon="refresh-outline"
+            tone="warning"
+            message="This is your own application. Staff actions are turned off here — another committee member must verify, score and decide it."
+            icon="hand-left-outline"
           />
         ) : null}
-      </Card>
 
-      {/* Actions, generated from the workflow */}
-      {transitions.length > 0 ? (
+        {/* Summary */}
         <Card style={styles.card}>
-          <Text variant="title3">Actions</Text>
-
-          <View style={styles.actions}>
-            {transitions.map(({ transition, allowed, blockers }) => (
-              <View key={transition.id} style={styles.actionItem}>
-                <Button
-                  label={transition.label}
-                  variant={
-                    transition.id === 'reject_application'
-                      ? 'danger'
-                      : transition.id === 'approve_application'
-                        ? 'primary'
-                        : 'outline'
-                  }
-                  disabled={!allowed || busy}
-                  fullWidth
-                  onPress={() => {
-                    if (transition.requiresReason) setDecisionSheet(transition.id);
-                    else void runTransition(transition.id);
-                  }}
-                  accessibilityHint={allowed ? transition.confirm : blockers[0]}
-                />
-
-                {!allowed && blockers[0] ? (
-                  <Text variant="caption" color="warningStrong">
-                    {blockers[0]}
-                  </Text>
-                ) : null}
-              </View>
-            ))}
-
-            <Button
-              label="Add internal note"
-              variant="ghost"
-              icon="create-outline"
-              onPress={() => setNoteSheet(true)}
+          <View style={styles.summaryGrid}>
+            <SummaryItem label="Business" value={application.business_name ?? '—'} />
+            <SummaryItem label="Requested" value={formatCurrency(application.requested_amount)} />
+            <SummaryItem
+              label="Submitted"
+              value={application.submitted_at ? formatDate(application.submitted_at) : 'Not yet'}
             />
+            <SummaryItem label="Attempt" value={`#${application.attempt_number}`} />
           </View>
+
+          {application.previous_application_id ? (
+            <Banner
+              tone="info"
+              message="This is a reapplication. The applicant's previous application is preserved."
+              icon="refresh-outline"
+            />
+          ) : null}
         </Card>
-      ) : null}
 
-      {/* Documents */}
-      <Card style={styles.card}>
-        <Text variant="title3">Documents</Text>
+        {/* Actions, generated from the workflow */}
+        {transitions.length > 0 ? (
+          <Card style={styles.card}>
+            <Text variant="title3">Actions</Text>
 
-        {documents.length === 0 ? (
-          <Text variant="callout" muted>
-            No documents uploaded yet.
-          </Text>
-        ) : (
-          documents.map((document) => (
-            <View key={document.id} style={styles.documentRow}>
-              <View style={styles.documentText}>
-                <Text variant="bodyMedium" numberOfLines={1}>
-                  {document.document_type_id.replace(/_/g, ' ')}
-                </Text>
-                <Text variant="caption" muted numberOfLines={1}>
-                  {document.file_name}
-                  {document.version > 1 ? ` · version ${document.version}` : ''}
-                </Text>
-                <Badge
-                  label={DOCUMENT_STATUS_LABELS[document.status]}
-                  tone={DOC_TONES[document.status] ?? 'neutral'}
-                  size="sm"
-                />
-              </View>
-
-              <View style={styles.documentActions}>
-                <Button
-                  label="View"
-                  variant="ghost"
-                  size="sm"
-                  icon="eye-outline"
-                  onPress={() => setPreviewing(document)}
-                />
-                {!isOwnApplication && document.status !== 'verified' ? (
+            <View style={styles.actions}>
+              {transitions.map(({ transition, allowed, blockers }) => (
+                <View key={transition.id} style={styles.actionItem}>
                   <Button
-                    label="Verify"
-                    variant="ghost"
-                    size="sm"
-                    icon="checkmark-circle-outline"
-                    disabled={busy}
-                    onPress={() => void handleVerifyDocument(document)}
+                    label={transition.label}
+                    variant={
+                      transition.id === 'reject_application'
+                        ? 'danger'
+                        : transition.id === 'approve_application'
+                          ? 'primary'
+                          : 'outline'
+                    }
+                    disabled={!allowed || busy}
+                    fullWidth
+                    onPress={() => {
+                      if (transition.requiresReason) setDecisionSheet(transition.id);
+                      else void runTransition(transition.id);
+                    }}
+                    accessibilityHint={allowed ? transition.confirm : blockers[0]}
                   />
-                ) : null}
-                {!isOwnApplication && document.status !== 'rejected' ? (
-                  <Button
-                    label="Reject"
-                    variant="ghost"
-                    size="sm"
-                    icon="close-circle-outline"
-                    disabled={busy}
-                    onPress={() => setRejectingDocument(document)}
-                  />
-                ) : null}
-              </View>
+
+                  {!allowed && blockers[0] ? (
+                    <Text variant="caption" color="warningStrong">
+                      {blockers[0]}
+                    </Text>
+                  ) : null}
+                </View>
+              ))}
+
+              <Button
+                label="Add internal note"
+                variant="ghost"
+                icon="create-outline"
+                onPress={() => setNoteSheet(true)}
+              />
             </View>
-          ))
-        )}
-      </Card>
+          </Card>
+        ) : null}
 
-      {/* Answers */}
-      {APPLICATION_STEPS.filter((step) => step.kind === 'form').map((step) => {
-        const fields = getVisibleFields(step, values);
-        if (fields.length === 0) return null;
+        {/* Documents */}
+        <Card style={styles.card}>
+          <Text variant="title3">Documents</Text>
 
-        return (
-          <Card key={step.id} style={styles.card}>
-            <Text variant="title3">{step.title}</Text>
-            {fields.map((field) => (
-              <View key={field.id} style={styles.answerRow}>
-                <Text variant="caption" muted>
-                  {field.label}
+          {documents.length === 0 ? (
+            <Text variant="callout" muted>
+              No documents uploaded yet.
+            </Text>
+          ) : (
+            documents.map((document) => (
+              <View key={document.id} style={styles.documentRow}>
+                <View style={styles.documentText}>
+                  <Text variant="bodyMedium" numberOfLines={1}>
+                    {document.document_type_id.replace(/_/g, ' ')}
+                  </Text>
+                  <Text variant="caption" muted numberOfLines={1}>
+                    {document.file_name}
+                    {document.version > 1 ? ` · version ${document.version}` : ''}
+                  </Text>
+                  <Badge
+                    label={DOCUMENT_STATUS_LABELS[document.status]}
+                    tone={DOC_TONES[document.status] ?? 'neutral'}
+                    size="sm"
+                  />
+                </View>
+
+                <View style={styles.documentActions}>
+                  <Button
+                    label="View"
+                    variant="ghost"
+                    size="sm"
+                    icon="eye-outline"
+                    onPress={() => setPreviewing(document)}
+                  />
+                  {!isOwnApplication && document.status !== 'verified' ? (
+                    <Button
+                      label="Verify"
+                      variant="ghost"
+                      size="sm"
+                      icon="checkmark-circle-outline"
+                      disabled={busy}
+                      onPress={() => void handleVerifyDocument(document)}
+                    />
+                  ) : null}
+                  {!isOwnApplication && document.status !== 'rejected' ? (
+                    <Button
+                      label="Reject"
+                      variant="ghost"
+                      size="sm"
+                      icon="close-circle-outline"
+                      disabled={busy}
+                      onPress={() => setRejectingDocument(document)}
+                    />
+                  ) : null}
+                </View>
+              </View>
+            ))
+          )}
+        </Card>
+
+        {/* Answers */}
+        {APPLICATION_STEPS.filter((step) => step.kind === 'form').map((step) => {
+          const fields = getVisibleFields(step, values);
+          if (fields.length === 0) return null;
+
+          return (
+            <Card key={step.id} style={styles.card}>
+              <Text variant="title3">{step.title}</Text>
+              {fields.map((field) => (
+                <View key={field.id} style={styles.answerRow}>
+                  <Text variant="caption" muted>
+                    {field.label}
+                  </Text>
+                  <Text variant="body">{formatAnswer(field, values[field.id])}</Text>
+                </View>
+              ))}
+            </Card>
+          );
+        })}
+
+        {/* Scoring. Reviewers score before deciding, and the sheet locks after. */}
+        <ScoreSheetCard
+          value={myScores}
+          onSave={handleSaveScores}
+          saving={savingScores}
+          readOnly={isOwnApplication || !SCOREABLE_STATUSES.includes(application.status)}
+        />
+
+        <CommitteeScoreSummary sheets={scoreRows.map((review) => review.scores)} />
+
+        {/* Review notes */}
+        {noteRows.length > 0 ? (
+          <Card style={styles.card}>
+            <Text variant="title3">Review notes</Text>
+            {noteRows.map((review) => (
+              <View key={review.id} style={styles.noteRow}>
+                <View style={styles.noteHeader}>
+                  <Text variant="label">{review.reviewer?.full_name ?? 'Reviewer'}</Text>
+                  <Badge
+                    label={review.is_internal ? 'Internal' : 'Shared with applicant'}
+                    tone={review.is_internal ? 'neutral' : 'info'}
+                    size="sm"
+                  />
+                </View>
+                <Text variant="callout" muted>
+                  {review.notes}
                 </Text>
-                <Text variant="body">{formatAnswer(field, values[field.id])}</Text>
+                <Text variant="caption" muted>
+                  {formatDateTime(review.created_at)}
+                </Text>
               </View>
             ))}
           </Card>
-        );
-      })}
+        ) : null}
 
-      {/* Scoring. Reviewers score before deciding, and the sheet locks after. */}
-      <ScoreSheetCard
-        value={myScores}
-        onSave={handleSaveScores}
-        saving={savingScores}
-        readOnly={isOwnApplication || !SCOREABLE_STATUSES.includes(application.status)}
-      />
-
-      <CommitteeScoreSummary sheets={scoreRows.map((review) => review.scores)} />
-
-      {/* Review notes */}
-      {noteRows.length > 0 ? (
+        {/* History */}
         <Card style={styles.card}>
-          <Text variant="title3">Review notes</Text>
-          {noteRows.map((review) => (
-            <View key={review.id} style={styles.noteRow}>
-              <View style={styles.noteHeader}>
-                <Text variant="label">{review.reviewer?.full_name ?? 'Reviewer'}</Text>
-                <Badge
-                  label={review.is_internal ? 'Internal' : 'Shared with applicant'}
-                  tone={review.is_internal ? 'neutral' : 'info'}
-                  size="sm"
-                />
+          <Text variant="title3">Status history</Text>
+          {history.map((entry) => (
+            <View key={entry.id} style={styles.historyRow}>
+              <Ionicons name="ellipse" size={7} color={colors.brandMuted} />
+              <View style={styles.historyText}>
+                <Text variant="callout">
+                  {entry.from_status ? `${entry.from_status} → ` : ''}
+                  {entry.to_status}
+                </Text>
+                <Text variant="caption" muted>
+                  {formatDateTime(entry.created_at)}
+                  {entry.reason_code ? ` · ${entry.reason_code.replace(/_/g, ' ')}` : ''}
+                </Text>
               </View>
-              <Text variant="callout" muted>
-                {review.notes}
-              </Text>
-              <Text variant="caption" muted>
-                {formatDateTime(review.created_at)}
-              </Text>
             </View>
           ))}
         </Card>
-      ) : null}
 
-      {/* History */}
-      <Card style={styles.card}>
-        <Text variant="title3">Status history</Text>
-        {history.map((entry) => (
-          <View key={entry.id} style={styles.historyRow}>
-            <Ionicons name="ellipse" size={7} color={colors.brandMuted} />
-            <View style={styles.historyText}>
-              <Text variant="callout">
-                {entry.from_status ? `${entry.from_status} → ` : ''}
-                {entry.to_status}
-              </Text>
-              <Text variant="caption" muted>
-                {formatDateTime(entry.created_at)}
-                {entry.reason_code ? ` · ${entry.reason_code.replace(/_/g, ' ')}` : ''}
-              </Text>
-            </View>
-          </View>
-        ))}
-      </Card>
-
-      <Card style={styles.card}>
-        <Text variant="title3">Journey</Text>
-        <ApplicationTimeline status={application.status} />
-      </Card>
+        <Card style={styles.card}>
+          <Text variant="title3">Journey</Text>
+          <ApplicationTimeline status={application.status} />
+        </Card>
+      </View>
 
       {/* ------------------------------ Sheets ----------------------------- */}
 
@@ -643,9 +651,11 @@ function formatAnswer(field: FieldDefinition, value: unknown): string {
 }
 
 const styles = StyleSheet.create({
+  stack: {
+    gap: rhythm.section,
+  },
   card: {
     gap: spacing.md,
-    marginBottom: spacing.base,
   },
   summaryGrid: {
     flexDirection: 'row',

@@ -455,6 +455,22 @@ export interface Database {
         /** Number of staff notified. */
         Returns: number;
       };
+      /**
+       * Signs a grant agreement and advances the application in one
+       * transaction, so a dropped connection cannot leave a signature on
+       * record for a step the workflow never took. SECURITY DEFINER, and it
+       * re-checks ownership, the agreement's state and the workflow itself —
+       * see migration 0014. Called through `agreementService.sign()`.
+       */
+      sign_grant_agreement: {
+        Args: {
+          p_application_id: string;
+          p_method: string;
+          p_signature: string;
+          p_signer_name: string;
+        };
+        Returns: AgreementRow;
+      };
     };
     Enums: { [_ in never]: never };
     CompositeTypes: { [_ in never]: never };

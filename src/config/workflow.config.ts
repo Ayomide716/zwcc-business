@@ -667,6 +667,41 @@ export const WORKFLOW_TIMELINE: ApplicationStatusId[] = [
   'completed',
 ];
 
+/**
+ * The journey as an applicant experiences it.
+ *
+ * `WORKFLOW_TIMELINE` lists every status, which is right for staff but reads
+ * badly to the person waiting: a freshly submitted application showing "stage 2
+ * of 10" looks barely begun, when in truth the applicant has finished their
+ * part and four of the remaining stages are paperwork after a decision has
+ * already gone their way.
+ *
+ * Phases are the same journey at the grain an applicant actually thinks in.
+ * Each status already declares its phase, so this list is an ordering rather
+ * than a second source of truth, and a status added to a phase needs no change
+ * here.
+ *
+ * 'closed' is deliberately absent: it is where the journey ends, not a stage
+ * along it.
+ */
+export const APPLICANT_PHASES: WorkflowPhase[] = [
+  'preparation',
+  'verification',
+  'decision',
+  'agreement',
+  'monitoring',
+];
+
+/** Applicant-facing name for each phase. Staff screens use status labels. */
+export const PHASE_LABELS: Record<WorkflowPhase, string> = {
+  preparation: 'Preparing your application',
+  verification: 'Checking your details',
+  decision: 'Committee decision',
+  agreement: 'Agreement and funds',
+  monitoring: 'Your reporting year',
+  closed: 'Closed',
+};
+
 export const DEFAULT_STATUS: ApplicationStatusId = 'draft';
 
 export function getStatus(id: string): StatusDefinition {

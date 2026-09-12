@@ -35,7 +35,7 @@ import {
 import { firstName, formatCurrency, formatDateShort } from '@/lib/format';
 import { useAuth } from '@/providers/AuthProvider';
 import { colors, radius, spacing } from '@/theme';
-import { canReapply, getStatusDefinition } from '@/workflow/engine';
+import { canReapply, getNextActionFor, getStatusDefinition } from '@/workflow/engine';
 
 function greeting(now = new Date()): string {
   const hour = now.getHours();
@@ -78,6 +78,18 @@ export default function ApplicantDashboard() {
   const status = app?.status;
   const statusDefinition = status ? getStatusDefinition(status) : null;
 
+  /* Something is actually being asked of the applicant right now. */
+  const needsAction =
+    Boolean(status && getNextActionFor(status, 'applicant')) ||
+    Boolean(status && canReapply(status));
+
+  /*
+    Freshly submitted, or not submitted at all. The registration code is loud
+    while it is the thing to write down and quiet once the application has moved
+    past the point where anyone will ask for it unprompted.
+  */
+  const isFresh = !status || status === 'draft' || status === 'submitted';
+
   return (
     <Screen
       scrollable
@@ -104,21 +116,26 @@ export default function ApplicantDashboard() {
           <NoApplicationYet onStart={() => router.push('/(onboarding)/eligibility')} />
         ) : (
           <>
-            {/* The question this screen exists to answer. */}
-            <NextActionCard
-              status={app.status}
-              role="applicant"
-              actionLabel={canReapply(app.status) ? 'Start a new application' : undefined}
-              onAction={
-                canReapply(app.status)
-                  ? () => router.push('/(applicant)/application')
-                  : undefined
-              }
-            />
+            {/*
+              Only when there is genuinely something to do.
 
-            {/* Registration code, once issued. */}
-            {app.registration_code && WORKFLOW_FEATURES.showRegistrationCode ? (
-              <RegistrationCodeCard code={app.registration_code} />
+              With nothing pending, this card said "Nothing needed from you"
+              directly above a status card saying "Submitted", using the same
+              description and the same waiting time — two cards answering one
+              question and appearing to disagree. The status card already says
+              where things stand, so the empty state of this one is noise.
+            */}
+            {needsAction ? (
+              <NextActionCard
+                status={app.status}
+                role="applicant"
+                actionLabel={canReapply(app.status) ? 'Start a new application' : undefined}
+                onAction={
+                  canReapply(app.status)
+                    ? () => router.push('/(applicant)/application')
+                    : undefined
+                }
+              />
             ) : null}
 
             {/*
@@ -134,6 +151,20 @@ export default function ApplicantDashboard() {
                   : { label: 'Business', value: app.business_name ?? 'Not yet set' },
               ]}
             />
+
+            {/*
+              The code matters most in the days right after submitting, when it
+              is the thing to write down. After that it is reference material,
+              and a permanent navy block competing with the status card is the
+              wrong emphasis.
+            */}
+            {app.registration_code && WORKFLOW_FEATURES.showRegistrationCode ? (
+              <RegistrationCodeCard
+                code={app.registration_code}
+                compact={!isFresh}
+                showGuidance={isFresh}
+              />
+            ) : null}
 
             {/* Documents, while they still matter. */}
             {statusDefinition?.documentsEditable || documentProgress < 1 ? (

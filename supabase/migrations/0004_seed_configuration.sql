@@ -133,6 +133,40 @@ values
 on conflict (key) do nothing;
 
 -- ---------------------------------------------------------------------------
+-- Transitions an applicant may perform  (source: src/config/workflow.config.ts)
+-- ---------------------------------------------------------------------------
+-- Every transition whose `allowedRoles` include 'applicant', expanded to one
+-- row per from/to pair. The applicant's update policy and the separation-of-
+-- duties trigger both read this, so an applicant step added to the workflow
+-- takes effect by re-running this migration rather than by editing policies.
+--
+-- Skipped when the table is absent so this migration still runs on a database
+-- that has not reached migration 14 yet.
+
+do $$
+begin
+  if to_regclass('public.applicant_transitions') is null then
+    return;
+  end if;
+
+  delete from public.applicant_transitions;
+
+  insert into public.applicant_transitions (from_status, to_status) values
+    -- submit_application
+    ('draft',             'submitted'),
+    ('changes_requested', 'submitted'),
+    -- sign_agreement
+    ('agreement_pending', 'agreement_signed'),
+    -- withdraw_application
+    ('draft',             'withdrawn'),
+    ('submitted',         'withdrawn'),
+    ('verification',      'withdrawn'),
+    ('committee_review',  'withdrawn'),
+    ('changes_requested', 'withdrawn')
+  on conflict do nothing;
+end $$;
+
+-- ---------------------------------------------------------------------------
 -- Promoting a user to staff
 -- ---------------------------------------------------------------------------
 -- Roles are never self-assigned. After the person has registered through the

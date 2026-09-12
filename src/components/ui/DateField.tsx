@@ -148,9 +148,18 @@ export function DateField({
           <DateTimePicker
             value={draft ?? initial}
             mode="date"
-            // The calendar view makes reaching a birth year decades back a long
-            // scroll; the spinner lets the year be dialled directly.
-            display="spinner"
+            /*
+              Android gets its own standard dialog, iOS the inline spinner.
+
+              Both platforms used to get the spinner, chosen so a birth year
+              decades back could be dialled rather than scrolled to. On Android
+              that renders a dialog this app draws no part of, and under the
+              edge-to-edge theme its confirm button came out invisible — an
+              unusable date field, which is worse than a longer path to 1985.
+              The platform dialog is the well-trodden one, and its header year
+              is tappable, so a distant year is two taps rather than a scroll.
+            */
+            display={Platform.OS === 'ios' ? 'spinner' : 'default'}
             minimumDate={minimumDate}
             maximumDate={maximumDate}
             onChange={handleChange}

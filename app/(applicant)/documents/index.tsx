@@ -9,7 +9,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useMemo, useState } from 'react';
 import { Alert, StyleSheet, View } from 'react-native';
 
-import { DocumentSlotCard, DocumentViewer } from '@/components/app';
+import { DocumentSlotCard, DocumentViewer, FirstRunHint } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Banner, LoadingState } from '@/components/ui/Feedback';
 import { ScreenHeader } from '@/components/ui/Header';
@@ -179,6 +179,13 @@ export default function DocumentsScreen() {
         title="Documents"
         subtitle="Upload clear photos or PDFs. Files are private and only visible to you and the review team."
         showBack
+      />
+
+      <FirstRunHint
+        id="documents.v1"
+        title="Photographs are fine"
+        body="You do not need a scanner. Lay the document flat in good light and take a photo — we shrink it before it uploads, so it will not eat your data."
+        icon="camera-outline"
       />
 
       {!editable ? (
