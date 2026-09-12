@@ -59,12 +59,24 @@ export default function MonitoringScreen() {
   /* The earliest period still waiting for its window to open. */
   const nextToOpen = periods.find((period) => !period.report && period.status === 'upcoming');
 
+  /*
+    The year is over.
+
+    Reaching the end of twelve months of reporting is the last thing this app
+    asks of someone, and it used to pass without comment: a green bar at 100%
+    and the same "each report takes a few minutes" copy underneath. Saying so,
+    and thanking them, costs nothing and is the difference between finishing
+    and simply running out of rows.
+  */
+  const finished = beneficiary.status === 'completed';
+  const allSubmitted = submittedCount >= totalPeriods;
+
   return (
     <Screen
       onRefresh={() => void refetch()}
       refreshing={isRefetching}
       footer={
-        actionablePeriod ? (
+        actionablePeriod && !finished ? (
           <Button
             label={`Submit ${actionablePeriod.label.toLowerCase()} report`}
             onPress={() =>
@@ -84,6 +96,20 @@ export default function MonitoringScreen() {
 
       {/* One gap for the page rather than a margin on one card and none on the rest. */}
       <View style={styles.stack}>
+        {finished ? (
+          <Banner
+            tone="success"
+            title="Your monitoring year is complete"
+            message="Thank you for reporting on your business through the year. Your reports stay here as the record of it."
+          />
+        ) : allSubmitted ? (
+          <Banner
+            tone="success"
+            title="All twelve reports submitted"
+            message="Nothing more is needed from you. The committee will close out your grant."
+          />
+        ) : null}
+
         <FirstRunHint
           id="monitoring.v1"
           title="A short update, once a month"
@@ -107,17 +133,19 @@ export default function MonitoringScreen() {
             tone={submittedCount === totalPeriods ? 'success' : 'brand'}
           />
 
-          <Text variant="callout" muted>
-            Each report takes a few minutes. Tell us how the business is going, what went well, what
-            was difficult, and attach a few photos or a short video.
-          </Text>
+          {!allSubmitted ? (
+            <Text variant="callout" muted>
+              Each report takes a few minutes. Tell us how the business is going, what went well,
+              what was difficult, and attach a few photos or a short video.
+            </Text>
+          ) : null}
 
           {/*
             Nothing to submit yet is the normal state for a new beneficiary, and
             without this the screen is twelve rows marked "Upcoming" and no
             button, which reads as broken rather than as early.
           */}
-          {!actionablePeriod && nextToOpen ? (
+          {!actionablePeriod && !allSubmitted && nextToOpen ? (
             <Text variant="callout" color="brand">
               {`Your first report opens on ${formatDateShort(nextToOpen.opensAt)}. There is nothing to do until then.`}
             </Text>

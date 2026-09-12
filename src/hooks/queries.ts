@@ -210,6 +210,14 @@ export function useBeneficiaries(status: 'active' | 'completed' | 'paused' = 'ac
   });
 }
 
+export function useBeneficiary(beneficiaryId: string | null | undefined) {
+  return useQuery({
+    queryKey: [...queryKeys.beneficiaries('active'), beneficiaryId ?? 'none'],
+    queryFn: () => monitoringService.getBeneficiary(beneficiaryId!),
+    enabled: Boolean(beneficiaryId),
+  });
+}
+
 export function useReportsForReview() {
   return useQuery({
     queryKey: queryKeys.reportsForReview(),

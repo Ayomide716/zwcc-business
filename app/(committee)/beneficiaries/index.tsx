@@ -137,7 +137,10 @@ export default function BeneficiariesScreen() {
                 key={beneficiary.id}
                 variant="outlined"
                 onPress={() =>
-                  router.push(`/(committee)/applications/${beneficiary.application_id}`)
+                  // The beneficiary's own screen, not the application: during
+                  // the monitoring year the reports are what a reviewer wants,
+                  // and the application is one tap further in.
+                  router.push(`/(committee)/beneficiaries/${beneficiary.id}`)
                 }
                 accessibilityLabel={application?.applicant_name ?? 'Beneficiary'}
                 style={styles.beneficiaryCard}

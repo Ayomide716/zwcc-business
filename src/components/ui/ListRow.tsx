@@ -130,7 +130,7 @@ export function ListRow({
 
       {right ??
         (value ? (
-          <Text variant="callout" muted numberOfLines={1} style={styles.value}>
+          <Text variant="callout" muted numberOfLines={2} style={styles.value}>
             {value}
           </Text>
         ) : null)}
@@ -208,13 +208,24 @@ const styles = StyleSheet.create({
     backgroundColor: colors.dangerSurface,
   },
   labelColumn: {
-    flex: 1,
-    // Lets the column shrink instead of shoving the value or badge off the row.
-    minWidth: 0,
+    /*
+      `flexBasis: 'auto'` rather than `flex: 1`.
+
+      With a basis of zero the label started from nothing and took only what
+      the value left over, so a long value squeezed "Organisation" down to a
+      column narrow enough to break it mid-word. Starting both from their
+      natural widths means they give up space in proportion when the row is
+      tight, and a two-word label is never the thing that breaks.
+    */
+    flexGrow: 1,
+    flexShrink: 1,
+    flexBasis: 'auto',
     gap: spacing.xxs,
   },
   value: {
+    flexGrow: 1,
     flexShrink: 1,
+    flexBasis: 'auto',
     textAlign: 'right',
   },
   caption: {

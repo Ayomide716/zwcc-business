@@ -87,9 +87,29 @@ export default function StaffProfileScreen() {
         ) : null}
 
         <ListGroup title="Programme">
-          <ListRow icon="ribbon-outline" label="Grant" value={GRANT_PROGRAM.name} />
-          <ListRow icon="business-outline" label="Organisation" value={ORGANISATION.name} />
-          <ListRow icon="location-outline" label="Location" value={ORGANISATION.location} />
+          {/*
+            One-line labels. These three sit beside the longest values in the
+            app — the programme and organisation names — and "Organisation" was
+            being squeezed until it broke across two lines mid-word.
+          */}
+          <ListRow
+            icon="ribbon-outline"
+            label="Grant"
+            value={GRANT_PROGRAM.name}
+            labelNumberOfLines={1}
+          />
+          <ListRow
+            icon="business-outline"
+            label="Organisation"
+            value={ORGANISATION.name}
+            labelNumberOfLines={1}
+          />
+          <ListRow
+            icon="location-outline"
+            label="Location"
+            value={ORGANISATION.location}
+            labelNumberOfLines={1}
+          />
         </ListGroup>
 
         <ListGroup title="Legal">

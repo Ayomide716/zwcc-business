@@ -442,6 +442,21 @@ export const monitoringService = {
     return data ?? [];
   },
 
+  /** One beneficiary with the application details staff need beside it. */
+  async getBeneficiary(beneficiaryId: string) {
+    const { data, error } = await supabase
+      .from('beneficiaries')
+      .select(
+        '*, application:applications(id, applicant_name, business_name, registration_code, requested_amount, status)',
+      )
+      .eq('id', beneficiaryId)
+      .maybeSingle();
+
+    if (error) throw error;
+    if (!data) throw notFoundError('that beneficiary record');
+    return data;
+  },
+
   /** Reports awaiting a reviewer, newest first. */
   async listReportsForReview(limit = 50) {
     const { data, error } = await supabase
