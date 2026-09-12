@@ -1,0 +1,55 @@
+name: Refresh release notes
+
+# Rewrites a published release's description from .github/release-notes.md.
+#
+# The release page is the install page — it is the URL a printed QR code points
+# at — so its wording is worth being able to correct without spending half an
+# hour rebuilding an APK that has not changed.
+#
+# Run it from the GitHub website or mobile app:
+#   Actions -> Refresh release notes -> Run workflow
+#
+# Leave the tag blank to update the newest release, which is what the permanent
+# download link resolves to and therefore what people actually see.
+
+on:
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: 'Release tag to update (blank = the newest release)'
+        required: false
+
+permissions:
+  contents: write
+
+jobs:
+  refresh:
+    name: Rewrite the description
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Rewrite the notes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ inputs.tag }}
+        run: |
+          if [ -z "$TAG" ]; then
+            TAG=$(gh release view --json tagName --jq .tagName)
+            echo "No tag given, using the newest release: $TAG"
+          fi
+
+          if [ ! -s .github/release-notes.md ]; then
+            echo "::error::.github/release-notes.md is missing or empty."
+            exit 1
+          fi
+
+          gh release edit "$TAG" --notes-file .github/release-notes.md
+
+          {
+            echo "### Notes rewritten on \`$TAG\`"
+            echo ""
+            echo "$(gh release view "$TAG" --json url --jq .url)"
+          } >> "$GITHUB_STEP_SUMMARY"
