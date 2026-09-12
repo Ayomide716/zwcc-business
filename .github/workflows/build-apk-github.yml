@@ -247,7 +247,18 @@ jobs:
           notes="${{ inputs.notes }}"
           [ -z "$notes" ] && notes="Built from ${GITHUB_SHA::7}."
 
-          gh release create "$tag" "${{ steps.apk.outputs.name }}" \
+          # A second copy under a name that never changes. The versioned name
+          # is what people see on the release page; this one is what the
+          # install page and every printed QR code point at, through
+          #   /releases/latest/download/zwcc-business-grant.apk
+          # which GitHub redirects to the newest release. Without it the
+          # download URL carries a build number and a commit hash, so every
+          # build would invalidate every poster already on a noticeboard.
+          cp "${{ steps.apk.outputs.name }}" zwcc-business-grant.apk
+
+          gh release create "$tag" \
+            "${{ steps.apk.outputs.name }}" \
+            zwcc-business-grant.apk \
             --title "ZWCC Business Grant ${{ steps.apk.outputs.version }} (build ${{ github.run_number }})" \
             --notes "$notes
 
@@ -260,6 +271,10 @@ jobs:
             echo "**Open this on the phone to install:**"
             echo ""
             echo "$url"
+            echo ""
+            echo "Permanent link, safe to print in a QR code:"
+            echo ""
+            echo "\`${{ github.server_url }}/${{ github.repository }}/releases/latest/download/zwcc-business-grant.apk\`"
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Keep a copy on the run
