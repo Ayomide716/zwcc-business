@@ -142,12 +142,28 @@ export default function MonitoringScreen() {
         <Card style={styles.summary}>
           <ProgressBar
             value={totalPeriods === 0 ? 0 : submittedCount / totalPeriods}
-            label={`${submittedCount} of ${totalPeriods} reports submitted`}
+            label={
+              finished
+                ? `${submittedCount} of ${totalPeriods} reports submitted over the year`
+                : `${submittedCount} of ${totalPeriods} reports submitted`
+            }
             showPercentage
             tone={submittedCount === totalPeriods ? 'success' : 'brand'}
           />
 
-          {!allSubmitted ? (
+          {finished && submittedCount === 0 ? (
+            <Text variant="callout" muted>
+              This grant was closed without any reports being submitted.
+            </Text>
+          ) : null}
+
+          {/*
+            Instructions, and only while they are instructions. On a year that
+            has been closed out this card was still explaining how to write a
+            report and promising the first one would open next month, directly
+            under a banner saying the year was over.
+          */}
+          {!finished && !allSubmitted ? (
             <Text variant="callout" muted>
               Each report takes a few minutes. Tell us how the business is going, what went well,
               what was difficult, and attach a few photos or a short video.
@@ -159,7 +175,7 @@ export default function MonitoringScreen() {
             without this the screen is twelve rows marked "Upcoming" and no
             button, which reads as broken rather than as early.
           */}
-          {!actionablePeriod && !allSubmitted && nextToOpen ? (
+          {!finished && !actionablePeriod && !allSubmitted && nextToOpen ? (
             <Text variant="callout" color="brand">
               {`Your first report opens on ${formatDateShort(nextToOpen.opensAt)}. There is nothing to do until then.`}
             </Text>
