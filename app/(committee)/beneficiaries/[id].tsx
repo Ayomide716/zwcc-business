@@ -74,9 +74,15 @@ export default function BeneficiaryDetailScreen() {
   const missing = totalPeriods - submittedCount;
   const finished = record.status === 'completed';
 
-  // The year has run its course. Reports may still be missing — that is the
-  // reviewer's judgement to make, and the sheet tells them what they are
-  // signing off on.
+  /*
+    Whether the year has actually run its course.
+
+    This does not gate the action — a business can fail, or a beneficiary move
+    away, and the committee needs a way to close that. It decides what the
+    confirmation warns about, and the same action is generated on the
+    application screen with no date check at all, so hiding it here would only
+    hide it from the screen built for it.
+  */
   const yearElapsed = new Date(record.monitoring_ends_at).getTime() <= Date.now();
 
   async function handleComplete() {
@@ -84,7 +90,7 @@ export default function BeneficiaryDetailScreen() {
 
     setBusy(true);
     try {
-      await monitoringService.complete(record, { id: user.id, role: profile.role });
+      await monitoringService.complete(record.application_id, { id: user.id, role: profile.role });
       await Promise.all([beneficiary.refetch(), overview.refetch()]);
       setConfirming(false);
       toast.success('Grant completed', 'The beneficiary has been thanked and notified.');
@@ -103,7 +109,7 @@ export default function BeneficiaryDetailScreen() {
       }}
       refreshing={beneficiary.isRefetching}
       footer={
-        finished || !yearElapsed ? undefined : (
+        finished ? undefined : (
           <Button
             label="Complete this grant"
             onPress={() => setConfirming(true)}
@@ -197,6 +203,14 @@ export default function BeneficiaryDetailScreen() {
         title="Complete this grant?"
         subtitle="This closes the monitoring year and is not undone from inside the app."
       >
+        {!yearElapsed ? (
+          <Banner
+            tone="warning"
+            title="The monitoring year is not over yet"
+            message={`This year runs to ${formatDateShort(record.monitoring_ends_at)}. Closing it now ends the reporting schedule early.`}
+          />
+        ) : null}
+
         {missing > 0 ? (
           <Banner
             tone="warning"

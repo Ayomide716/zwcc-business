@@ -169,6 +169,10 @@ export default function ApplicationDetailScreen() {
             application.applicant_id,
             actor,
           );
+        } else if (transitionId === 'complete_grant') {
+          // Through the monitoring service so the audit trail records a closed
+          // monitoring year, not just another status change.
+          await monitoringService.complete(application.id, actor);
         } else if (transitionId === 'begin_verification') {
           await applicationService.applyTransition(application.id, transitionId, actor);
           // Uploaded documents become "under review" so the applicant can see

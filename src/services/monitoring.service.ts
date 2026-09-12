@@ -397,28 +397,24 @@ export const monitoringService = {
     return data;
   },
 
-  /** Close out a completed monitoring year. */
-  async complete(
-    beneficiary: BeneficiaryRow,
-    actor: { id: string; role: Role },
-  ): Promise<void> {
-    const { error } = await supabase
-      .from('beneficiaries')
-      .update({ status: 'completed' })
-      .eq('id', beneficiary.id);
-
-    if (error) throw error;
-
-    await applicationService.applyTransition(
-      beneficiary.application_id,
-      'complete_grant',
-      actor,
-    );
+  /**
+   * Close out a monitoring year.
+   *
+   * Takes an application id rather than a beneficiary row, because the
+   * committee's application screen can reach this too and does not have the
+   * row. It used to mark the beneficiary here and then move the application,
+   * which meant the other route — the generated "Complete grant" action on the
+   * application screen — moved the application and left the beneficiary marked
+   * active. Closing the beneficiary is now a database trigger on the
+   * application's status, so no caller can do half the job; see migration 0018.
+   */
+  async complete(applicationId: string, actor: { id: string; role: Role }): Promise<void> {
+    await applicationService.applyTransition(applicationId, 'complete_grant', actor);
 
     await auditService.record({
       action: 'monitoring.completed',
-      entityType: 'beneficiary',
-      entityId: beneficiary.id,
+      entityType: 'application',
+      entityId: applicationId,
       actorId: actor.id,
       actorRole: actor.role,
     });
