@@ -136,6 +136,20 @@ jobs:
             echo "ZWCC_KEY_PASSWORD=$KEY_PASSWORD"
           } >> android/gradle.properties
 
+          # Reuse compiled output between runs. Without this Gradle recompiles
+          # everything every time — around an hour on a two-core runner, most
+          # of it native code that has not changed. The build cache lives under
+          # ~/.gradle, which the cache step above already persists, so turning
+          # it on is what makes a second build fast rather than merely a second
+          # build that downloads less.
+          #
+          # The heap is the template's 2GB, which is tight for a project this
+          # size on a runner with 7GB going spare.
+          {
+            echo "org.gradle.caching=true"
+            echo "org.gradle.jvmargs=-Xmx5120m -XX:MaxMetaspaceSize=1024m"
+          } >> android/gradle.properties
+
           # Confirm all four are readable as properties, rather than finding out
           # from Gradle two minutes later.
           for property in ZWCC_KEYSTORE_FILE ZWCC_KEYSTORE_PASSWORD ZWCC_KEY_ALIAS ZWCC_KEY_PASSWORD; do
