@@ -215,10 +215,15 @@ jobs:
 
           normalise() { tr -d ': ' | tr 'A-Z' 'a-z'; }
 
+          # Take everything after the LAST label, not after the first colon.
+          # apksigner prints "V2 Signer: certificate SHA-256 digest: 32f4..." —
+          # three colons, so cutting at the first one kept the label text and
+          # made a correctly signed APK look like a mismatch.
           expected=$(keytool -list -v -keystore android/app/zwcc-release.jks \
                        -storepass "$KEYSTORE_PASSWORD" 2>/dev/null \
-                     | grep -m1 'SHA256:' | cut -d' ' -f3- | normalise || true)
-          actual=$(printf '%s' "$certs" | grep -m1 -i 'SHA-256 digest' | cut -d':' -f2- | normalise || true)
+                     | grep -m1 'SHA256:' | sed 's/.*SHA256:[[:space:]]*//' | normalise || true)
+          actual=$(printf '%s' "$certs" | grep -m1 -i 'SHA-256 digest' \
+                     | sed 's/.*[Dd]igest:[[:space:]]*//' | normalise || true)
 
           echo "keystore certificate: ${expected:-<unreadable>}"
           echo "APK certificate:      ${actual:-<unreadable>}"
@@ -258,7 +263,11 @@ jobs:
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Keep a copy on the run
-        # A second way to the file if a release is ever deleted by accident.
+        # A second way to the file if a release is ever deleted by accident,
+        # and the reason a later step can never again throw away a finished
+        # build: this runs whether or not the verification above passed, so a
+        # compiled APK is always retrievable from the run.
+        if: always() && steps.apk.outputs.name != ''
         uses: actions/upload-artifact@v4
         with:
           name: ${{ steps.apk.outputs.name }}
