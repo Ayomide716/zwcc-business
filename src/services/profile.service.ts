@@ -18,6 +18,8 @@ export interface SignUpInput {
   password: string;
   fullName: string;
   phone: string;
+  /** Deep link a confirmation email should return to, if confirmation is on. */
+  redirectTo?: string;
 }
 
 export interface SignInInput {
@@ -30,13 +32,22 @@ export const profileService = {
   /* Authentication                                                          */
   /* ---------------------------------------------------------------------- */
 
-  async signUp({ email, password, fullName, phone }: SignUpInput) {
+  async signUp({ email, password, fullName, phone, redirectTo }: SignUpInput) {
     const { data, error } = await supabase.auth.signUp({
       email: email.trim().toLowerCase(),
       password,
       options: {
         // Read by the handle_new_user trigger to populate the profile.
         data: { full_name: fullName.trim(), phone: normalisePhone(phone) },
+        /*
+          Where a confirmation email should send someone back to.
+
+          Without this, Supabase falls back to the project's Site URL, which on
+          a new project is http://localhost:3000 — a link that goes nowhere on a
+          phone. It only takes effect once the same value is on the redirect
+          allow-list; see supabase/README.md.
+        */
+        emailRedirectTo: redirectTo,
       },
     });
 

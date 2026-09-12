@@ -1,3 +1,4 @@
+import * as Linking from 'expo-linking';
 import { Link, useRouter } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -57,7 +58,15 @@ export default function SignUpScreen() {
 
     setSubmitting(true);
     try {
-      const result = await profileService.signUp({ email, password, fullName, phone });
+      const result = await profileService.signUp({
+        email,
+        password,
+        fullName,
+        phone,
+        // Sends a confirmation email back into the app rather than to whatever
+        // the project's Site URL happens to be.
+        redirectTo: Linking.createURL('/sign-in'),
+      });
 
       // Supabase returns a user without a session when email confirmation is on.
       if (result.session) {

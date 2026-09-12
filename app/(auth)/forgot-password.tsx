@@ -30,8 +30,15 @@ export default function ForgotPasswordScreen() {
 
     setSubmitting(true);
     try {
-      // Deep link back into the app so the reset completes on the phone.
-      const redirectTo = Linking.createURL('/(auth)/reset-password');
+      /*
+        Deep link back into the app so the reset completes on the phone.
+
+        `/reset-password`, not `/(auth)/reset-password`: the parentheses are an
+        Expo Router grouping that organises files, and they are not part of the
+        URL a link has to match. They also have to survive Supabase's redirect
+        allow-list, which compares the value literally.
+      */
+      const redirectTo = Linking.createURL('/reset-password');
       await profileService.requestPasswordReset(email, redirectTo);
       setSent(true);
     } catch (caught) {

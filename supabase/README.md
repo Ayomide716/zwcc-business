@@ -34,6 +34,37 @@ idempotent, so re-running is safe.
 | 9 | `migrations/0009_push_dispatch.sql` | Trigger that sends a push per notification |
 | 10 | `migrations/0010_email_queue.sql` | Retry counter and index behind email delivery |
 
+## Making the password reset link work
+
+A reset email that lands on `http://localhost:3000` is this setting, not the
+app. The app asks Supabase to send people back to `zwccgrant://reset-password`,
+and when that value is not on the redirect allow-list Supabase silently ignores
+it and falls back to the project's **Site URL** — which on a new project is
+`http://localhost:3000`. No error, no warning in the logs, just a link that goes
+nowhere on a phone.
+
+In **Authentication → URL Configuration**:
+
+- **Site URL**: `zwccgrant://` — the app is the only place these links can
+  usefully land, since there is no website.
+- **Redirect URLs**: add both of these.
+
+```
+zwccgrant://**
+exp://**
+```
+
+The first covers the installed app. The second covers a development build,
+which uses an `exp://` address rather than the app's own scheme — leave it out
+if you only ever test with the APK.
+
+The same setting decides where a sign-up confirmation email goes, so fixing it
+fixes both.
+
+To check: request a reset, and the link in the email should start with
+`zwccgrant://` rather than `http://localhost`. Opening it should open the app on
+the "set a new password" screen.
+
 ## Turning email on
 
 The app already queues an email for every notification whose template lists the
