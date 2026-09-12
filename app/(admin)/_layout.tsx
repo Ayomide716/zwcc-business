@@ -6,12 +6,18 @@
 import { Redirect, Stack } from 'expo-router';
 
 import { ProfileUnavailable } from '@/components/app';
+import { usePushNotifications } from '@/hooks/usePushNotifications';
 import { useAuth } from '@/providers/AuthProvider';
 import { colors } from '@/theme';
 import { ROLE_HOME_ROUTE } from '@/types/roles';
 
 export default function AdminLayout() {
   const { isAuthenticated, role, loadingProfile, profileError } = useAuth();
+
+  // An administrator who never passes through the applicant or committee shell
+  // would otherwise never register a device, so push reached every role except
+  // the one most likely to be watching for it.
+  usePushNotifications();
 
   if (!isAuthenticated) return <Redirect href="/(auth)/sign-in" />;
   // A failed profile fetch would otherwise leave this layout rendering nothing
