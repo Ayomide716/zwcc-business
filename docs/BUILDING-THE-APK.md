@@ -68,6 +68,52 @@ Download the APK to the phone and open it. Android will ask you to allow
 installing from unknown sources — expected for a build distributed outside the
 Play Store.
 
+## Two ways to build, and one way to skip building
+
+**Build APK on GitHub** is the one to use. It runs entirely on a GitHub runner:
+`expo prebuild` generates the native project, Gradle assembles a signed release
+APK, and the result is attached to a GitHub release you can open on a phone.
+Public repositories get unlimited Actions minutes, so there is no monthly cap.
+
+**Build Android APK** is the original, which hands the work to EAS. It is
+capped on the Expo free plan — around fifteen Android builds a month, and the
+build simply refuses once they are used. Kept as a fallback, not the default.
+
+**Publish update (no new APK)** ships a JavaScript change to phones that already
+have the app, with nobody installing anything. Use it whenever the change is
+only under `app/` or `src/`.
+
+A change needs a real build, not an update, when it touches:
+
+- a dependency with native code
+- `android`, `ios` or `plugins` in app.json
+- a permission
+- the Expo SDK version
+- `expo.version` in app.json
+
+That last one matters because the runtime version follows the app version, and
+an update only reaches builds with a matching runtime. Bumping the version is
+how an old APK is stopped from receiving updates it cannot run — so bump it
+deliberately when the native side changes, and leave it alone otherwise.
+
+## Signing
+
+The APK is signed with the keystore EAS generated, held as four repository
+secrets: `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEYSTORE_PASSWORD`,
+`ANDROID_KEY_ALIAS` and `ANDROID_KEY_PASSWORD`.
+
+It has to stay the same keystore. Android refuses to replace an installed app
+with one signed by a different key, so a new keystore would mean everyone
+uninstalling first — and if the app ever reaches the Play Store, the key becomes
+permanent. Keep the backup somewhere that is not this repository.
+
+`android/` is generated on every build and never committed, which keeps app.json
+and the config plugins the single description of the app. The release build in
+that generated project is signed with the debug key by default;
+`scripts/configure-android-signing.mjs` repoints it and fails loudly if the Expo
+template ever changes shape, rather than quietly producing a debug-signed APK
+that only fails on a phone that already has the app.
+
 ## Verifying the build is wired up correctly
 
 Open the app. If you see **"Setup required"** instead of the sign-in screen,

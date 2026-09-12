@@ -1,0 +1,85 @@
+name: Publish update (no new APK)
+
+# Ships a JavaScript change to phones that already have the app. Nobody
+# installs anything: the app fetches the new bundle on launch and runs it the
+# next time it is opened.
+#
+# Run it from the GitHub website or mobile app:
+#   Actions -> Publish update (no new APK) -> Run workflow
+#
+# This CANNOT ship native changes. A new native library, anything under
+# `android` or `plugins` in app.json, a new permission, or an Expo SDK upgrade
+# all need a real build. So does a change to `expo.version`, because the runtime
+# version follows it and an update only reaches builds of the same runtime.
+#
+# When in doubt: if the change is only under app/ or src/, this is enough.
+#
+# Requires one repository secret:
+#   EXPO_TOKEN   expo.dev -> account Settings -> Access tokens
+
+on:
+  workflow_dispatch:
+    inputs:
+      message:
+        description: 'What changed (shown in the Expo dashboard)'
+        required: true
+
+jobs:
+  publish:
+    name: Publish to phones
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v4
+
+      - name: Fail early if EXPO_TOKEN is missing
+        run: |
+          if [ -z "${{ secrets.EXPO_TOKEN }}" ]; then
+            echo "::error::EXPO_TOKEN is not set. Create a token at expo.dev (Settings -> Access tokens), then add it under Settings -> Secrets and variables -> Actions."
+            exit 1
+          fi
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        # An update goes straight to people's phones with no build in between,
+        # so this is the only gate. It is not optional here.
+        run: npm run typecheck
+
+      - name: Set up EAS
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      - name: Load the public Supabase keys
+        run: |
+          node -e "
+            const env = require('./eas.json').build.preview.env;
+            const lines = Object.entries(env).map(([k, v]) => k + '=' + v);
+            require('node:fs').appendFileSync(process.env.GITHUB_ENV, lines.join('\n') + '\n');
+            console.log('Loaded: ' + Object.keys(env).join(', '));
+          "
+
+      - name: Publish
+        run: |
+          eas update \
+            --branch production \
+            --message "${{ inputs.message }}" \
+            --non-interactive
+
+          {
+            echo "### Update published"
+            echo ""
+            echo "${{ inputs.message }}"
+            echo ""
+            echo "Phones on this version will pick it up next time the app is opened."
+          } >> "$GITHUB_STEP_SUMMARY"

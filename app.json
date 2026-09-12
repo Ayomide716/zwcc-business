@@ -6,6 +6,16 @@
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "scheme": "zwccgrant",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/7e77bde5-3c63-4813-bdd2-7149bb4491c3",
+      "fallbackToCacheTimeout": 0,
+      "requestHeaders": {
+        "expo-channel-name": "production"
+      }
+    },
     "userInterfaceStyle": "light",
     "newArchEnabled": true,
     "backgroundColor": "#FFFFFF",
@@ -82,6 +92,11 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "eas": {
+        "projectId": "7e77bde5-3c63-4813-bdd2-7149bb4491c3"
+      }
     }
   }
 }
