@@ -111,10 +111,24 @@ supabase functions deploy send-push --no-verify-jwt
 
 ```sql
 -- 2. Tell the trigger where it lives, and how to authenticate to it.
-alter database postgres set app.push_function_url =
-  'https://<your-project-ref>.supabase.co/functions/v1/send-push';
-alter database postgres set app.service_role_key = '<service role key>';
+insert into public.push_config (function_url, service_role_key)
+values (
+  'https://<your-project-ref>.supabase.co/functions/v1/send-push',
+  '<service role key>'
+)
+on conflict (id) do update
+  set function_url     = excluded.function_url,
+      service_role_key = excluded.service_role_key,
+      updated_at       = now();
 ```
+
+Migration 9 used `alter database postgres set` for this. Supabase refuses that
+now — the `postgres` role on a hosted project is not a superuser, and a
+database-wide parameter needs one — so migration 19 moves the two values into a
+table instead. That table has row-level security on and no policies, and the
+API roles have no grant, so the key cannot be read through the API by anyone:
+not an applicant, not a committee member, not an administrator. Only the
+dispatch trigger reads it, and it is SECURITY DEFINER.
 
 3. Enable the `pg_net` extension if the dashboard has not already
    (Database → Extensions → `pg_net`).
@@ -124,8 +138,12 @@ errors — the trigger checks for its settings and returns quietly when they are
 missing. Verified: with the settings absent, and with them set but `pg_net`
 unavailable, the notification insert still succeeds and only logs a warning.
 
-The service role key is a database setting, readable only by a database
-superuser. It never reaches the app, `.env`, or `eas.json`.
+The service role key never reaches the app, `.env`, or `eas.json`. Check it is
+set without printing it:
+
+```sql
+select function_url, service_role_key is not null as key_set from public.push_config;
+```
 
 With the Supabase CLI instead:
 
