@@ -957,8 +957,8 @@ values
    'church', 'optional',
    array['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'], 10, 5),
   ('believers_form',
-   'Believer''s completed form',
-   'Your completed believer''s form, if you have one.',
+   'Believers Foundation Class',
+   'Evidence that you have completed the Believers Foundation Class, if you have it.',
    'other', 'optional',
    array['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'], 10, 6)
 on conflict (id) do update

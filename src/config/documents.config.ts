@@ -117,9 +117,12 @@ export const DOCUMENT_TYPES: DocumentTypeDefinition[] = [
     hint: 'This applies if you are connected to a ZWCC cell. The grant is open to non-members too.',
   },
   {
+    // The id stays as it is. It is a foreign key on every document ever
+    // uploaded, so renaming it would orphan existing records; only what people
+    // read changes.
     id: 'believers_form',
-    label: 'Believer’s completed form',
-    description: 'Your completed believer’s form, if you have one.',
+    label: 'Believers Foundation Class',
+    description: 'Evidence that you have completed the Believers Foundation Class, if you have it.',
     category: 'other',
     requirement: 'optional',
     accepts: DOCUMENT_FILE_TYPES,

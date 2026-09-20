@@ -8,9 +8,10 @@ export const ORGANISATION = {
   name: 'Zion World Christian Center',
   shortName: 'ZWCC',
   location: 'Lagos, Nigeria',
-  supportEmail: 'grants@zionworldcc.org',
+  supportEmail: 'grants@zionworldchristiancenter.com',
+  /** ⚠️ STILL A PLACEHOLDER. The church has not supplied a real number. */
   supportPhone: '+234 800 000 0000',
-  website: 'https://zionworldcc.org',
+  website: 'https://zionworldchristiancenter.com',
 } as const;
 
 export const GRANT_PROGRAM = {
