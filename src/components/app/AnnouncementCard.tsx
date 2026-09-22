@@ -24,6 +24,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Image } from 'expo-image';
 import { useCallback, useEffect, useState } from 'react';
 import { Modal, Pressable, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import type { Announcement } from '@/config/announcements.config';
 import { getLiveAnnouncement } from '@/config/announcements.config';
@@ -133,6 +134,12 @@ function FullView({
   onDismiss: () => void;
 }) {
   const { width } = useWindowDimensions();
+  // statusBarTranslucent lets the flyer use the whole screen, which also means
+  // this view draws underneath the clock and battery. A fixed gap put the title
+  // in the status bar's lap, and differently so on every notch and punch-hole,
+  // since the strip is not the same height twice. Asking the phone is what the
+  // rest of the app does — the document viewer, the sheets, the toasts.
+  const insets = useSafeAreaInsets();
   // The flyer is 1080 by 763. Held to its own ratio so it is never stretched
   // on a tall phone or cropped on a short one.
   const imageWidth = width - spacing.base * 2;
@@ -145,7 +152,7 @@ function FullView({
       statusBarTranslucent
     >
       <View style={styles.sheet}>
-        <View style={styles.sheetBar}>
+        <View style={[styles.sheetBar, { paddingTop: insets.top + spacing.sm }]}>
           <Text variant="bodyMedium" style={styles.sheetTitle} numberOfLines={1}>
             {announcement.title}
           </Text>
@@ -225,7 +232,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.sm,
     paddingHorizontal: spacing.base,
-    paddingTop: spacing.xl,
+    // paddingTop is applied inline from the safe-area inset.
     paddingBottom: spacing.sm,
     borderBottomWidth: 1,
     borderBottomColor: colors.border,
