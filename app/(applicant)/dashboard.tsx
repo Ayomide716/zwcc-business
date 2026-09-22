@@ -11,6 +11,7 @@ import { useMemo } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
+  AnnouncementCard,
   ApplicationTimeline,
   Avatar,
   NextActionCard,
@@ -131,6 +132,13 @@ export default function ApplicantDashboard() {
       }
     >
       <View style={styles.body}>
+        {/*
+          Above the branches on purpose. A church announcement is for everyone
+          who opens the app, including someone who has not started an
+          application yet — who is arguably the most worth inviting.
+        */}
+        <AnnouncementCard />
+
         {application.isLoading ? (
           <SkeletonList count={3} />
         ) : !app ? (
