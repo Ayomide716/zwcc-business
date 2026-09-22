@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { StatTile } from '@/components/app';
+import { AnnouncementCard, StatTile } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Banner } from '@/components/ui/Feedback';
@@ -60,6 +60,11 @@ export default function AdminDashboard() {
         subtitle="Manage users, review the configuration, and audit activity."
         showBack
       />
+
+      {/* A church announcement is for everyone who opens the app, not only
+          applicants. Staff are church members too, and they are the ones
+          people will ask about it. */}
+      <AnnouncementCard />
 
       <View style={styles.grid}>
         <StatTile

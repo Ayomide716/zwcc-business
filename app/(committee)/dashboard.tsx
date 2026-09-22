@@ -7,7 +7,7 @@
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { ApplicationListItem, StatTile } from '@/components/app';
+import { AnnouncementCard, ApplicationListItem, StatTile } from '@/components/app';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
@@ -61,6 +61,10 @@ export default function CommitteeDashboard() {
       }
     >
       <View style={styles.body}>
+        {/* Same announcement as the applicant dashboard. Committee members are
+            church members too. */}
+        <AnnouncementCard />
+
         <View style={styles.grid}>
           <StatTile
             label="New applications"
