@@ -81,6 +81,13 @@ jobs:
 
       - name: Set up the Android SDK
         uses: android-actions/setup-android@v3
+        with:
+          # The action's own default here is "tools platform-tools". The
+          # "tools" package was retired by Google and no longer exists in the
+          # package list that the runner image's cmdline-tools 16.0 reads, so
+          # sdkmanager exits non-zero and the whole build stops before it
+          # starts. Naming the one package we actually need skips it.
+          packages: platform-tools
 
       - name: Cache Gradle
         uses: gradle/actions/setup-gradle@v4
