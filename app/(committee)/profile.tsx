@@ -8,6 +8,7 @@
 import { useRouter } from 'expo-router';
 import { Alert, StyleSheet, View } from 'react-native';
 
+import { BuildFootprint } from '@/components/app';
 import { Logo } from '@/components/brand/Logo';
 import { BrandHeader } from '@/components/ui/Header';
 import { ListGroup, ListRow } from '@/components/ui/ListRow';
@@ -136,6 +137,10 @@ export default function StaffProfileScreen() {
             chevron={false}
           />
         </ListGroup>
+
+        {/* Which build this phone is on. Staff are the ones who get asked
+            "are you seeing it too?", so they need the answer to hand. */}
+        <BuildFootprint />
       </View>
     </Screen>
   );

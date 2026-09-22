@@ -11,7 +11,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { useRouter } from 'expo-router';
 import { StyleSheet, View } from 'react-native';
 
-import { AnnouncementCard, StatTile } from '@/components/app';
+import { AnnouncementCard, BuildFootprint, StatTile } from '@/components/app';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Banner } from '@/components/ui/Feedback';
@@ -126,6 +126,12 @@ export default function AdminDashboard() {
         fullWidth
         style={styles.back}
       />
+
+      {/* There is no admin profile screen, so this is the only place an
+          administrator can read their own build back. That gap is why a
+          published update and a phone that had not taken it looked identical
+          for an afternoon. */}
+      <BuildFootprint />
     </Screen>
   );
 }

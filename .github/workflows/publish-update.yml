@@ -69,6 +69,35 @@ jobs:
             console.log('Loaded: ' + Object.keys(env).join(', '));
           "
 
+      - name: Make sure the production channel exists and points here
+        # The app asks for updates on the CHANNEL named "production"
+        # (app.json -> updates.requestHeaders.expo-channel-name). Publishing
+        # writes to the BRANCH named "production". Those are two different
+        # things, and the link between them is normally created as a side
+        # effect of `eas build`.
+        #
+        # Every build here comes from a GitHub runner instead, so that side
+        # effect never happened: the dashboard said "No production builds yet"
+        # and the channel was never created. Updates published fine, phones
+        # asked for them, and Expo truthfully answered that there were none —
+        # which is exactly what we spent an afternoon looking at.
+        #
+        # Both commands below are safe to re-run; the guards keep an existing
+        # link from being reported as a failure.
+        run: |
+          if eas channel:view production --non-interactive >/dev/null 2>&1; then
+            echo "Channel 'production' already exists."
+          else
+            echo "Channel 'production' is missing. Creating it."
+            eas channel:create production --non-interactive
+          fi
+
+          # Point it at the branch we publish to. A no-op when it already does.
+          eas channel:edit production --branch production --non-interactive || true
+
+          echo "--- channel state ---"
+          eas channel:view production --non-interactive
+
       - name: Publish
         run: |
           eas update \
