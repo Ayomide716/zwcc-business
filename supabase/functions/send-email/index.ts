@@ -76,7 +76,7 @@ function renderEmail(params: {
         <td style="padding:24px;">
           <p style="margin:0 0 16px;font-size:15px;line-height:22px;">${greeting}</p>
           <h1 style="margin:0 0 12px;font-size:19px;line-height:26px;font-weight:700;">${escapeHtml(params.title)}</h1>
-          <p style="margin:0 0 20px;font-size:15px;line-height:23px;">${escapeHtml(params.body)}</p>
+          ${renderParagraphs(params.body)}
           <p style="margin:0;font-size:13px;line-height:20px;color:#6B7280;">
             You can see the full details in the app.
           </p>
@@ -93,6 +93,34 @@ function renderEmail(params: {
 </html>`;
 
   return { html, text };
+}
+
+/**
+ * The body as HTML, keeping the line breaks the writer put there.
+ *
+ * It used to go into a single <p> after escaping, which meant every newline
+ * vanished: a message with a four-day event schedule in it arrived as one
+ * unbroken paragraph. The plain-text alternative kept its shape, but almost
+ * nobody sees that version.
+ *
+ * A blank line starts a new paragraph; a single newline is a line break within
+ * one. That is what someone typing the message expects, and it is how the same
+ * text already reads in the app.
+ *
+ * Escaping still happens first, so the body remains text and never markup.
+ */
+function renderParagraphs(body: string): string {
+  return body
+    .split(/\n{2,}/)
+    .map((block) => block.trim())
+    .filter((block) => block.length > 0)
+    .map(
+      (block) =>
+        `<p style="margin:0 0 16px;font-size:15px;line-height:23px;">` +
+        escapeHtml(block).replace(/\n/g, '<br />') +
+        `</p>`,
+    )
+    .join('\n          ');
 }
 
 function escapeHtml(value: string): string {
