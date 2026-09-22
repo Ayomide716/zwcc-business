@@ -24,5 +24,6 @@ export { StatusHero } from './StatusHero';
 export { DocumentViewer } from './DocumentViewer';
 export type { DocumentViewerProps } from './DocumentViewer';
 export { AnnouncementCard } from './AnnouncementCard';
+export { BuildFootprint } from './BuildFootprint';
 export { FirstRunHint } from './FirstRunHint';
 export type { FirstRunHintProps } from './FirstRunHint';

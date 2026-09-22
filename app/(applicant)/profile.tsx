@@ -15,7 +15,7 @@ import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
 
-import { Avatar, StatusBadge } from '@/components/app';
+import { Avatar, BuildFootprint, StatusBadge } from '@/components/app';
 import { Logo } from '@/components/brand/Logo';
 import { Button } from '@/components/ui/Button';
 import { BrandHeader } from '@/components/ui/Header';
@@ -261,6 +261,10 @@ export default function ProfileScreen() {
         <Text variant="caption" muted align="center" style={styles.footprint}>
           {ORGANISATION.name} · {ORGANISATION.location}
         </Text>
+
+        {/* Which code this phone is actually running. Without it, "are you on
+            the latest version" has no answer anyone can give. */}
+        <BuildFootprint />
       </View>
     </Screen>
   );
