@@ -18,7 +18,7 @@ import { ProgressBar } from '@/components/ui/Progress';
 import { ListGroup, ListRow } from '@/components/ui/ListRow';
 import { Screen } from '@/components/ui/Screen';
 import { Text } from '@/components/ui/Text';
-import { APPLICATION_STEPS, getRequiredDocumentTypes } from '@/config';
+import { APPLICATION_STEPS, FREE_TO_APPLY_NOTICE, getRequiredDocumentTypes } from '@/config';
 import { useDocuments, useInvalidateApplication, useMyApplication } from '@/hooks/queries';
 import { useApplicationForm } from '@/hooks/useApplicationForm';
 import { useAuth } from '@/providers/AuthProvider';
@@ -98,6 +98,15 @@ export default function ApplicationOverview() {
     return (
       <Screen>
         <ScreenHeader title="Your application" />
+
+        {/* Before they start, not only in the terms. */}
+        <Banner
+          tone="info"
+          title={FREE_TO_APPLY_NOTICE.title}
+          message={FREE_TO_APPLY_NOTICE.message}
+          icon="shield-checkmark-outline"
+        />
+
         <EmptyState
           icon="rocket-outline"
           title="No application yet"
@@ -155,6 +164,15 @@ export default function ApplicationOverview() {
           title="Submitted"
           message="You can still view your answers below, but they cannot be changed."
           icon="lock-closed-outline"
+        />
+      ) : null}
+
+      {editable ? (
+        <Banner
+          tone="info"
+          title={FREE_TO_APPLY_NOTICE.title}
+          message={FREE_TO_APPLY_NOTICE.message}
+          icon="shield-checkmark-outline"
         />
       ) : null}
 

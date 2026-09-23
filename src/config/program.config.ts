@@ -32,6 +32,30 @@ export const GRANT_PROGRAM = {
 } as const;
 
 /* -------------------------------------------------------------------------- */
+/* Applying is free                                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Confirmed by the church, and shown where someone applies rather than only in
+ * the terms.
+ *
+ * It is a term of the programme, but burying it in a document nobody opens
+ * wastes it. A public grant with money attached and a download link anyone can
+ * share is exactly what someone impersonating the church would target, and the
+ * person most at risk is the one least able to lose the money. A sentence on
+ * the screen where they are actually applying is the cheapest protection the
+ * church has, for the applicant and for its own name.
+ */
+export const FREE_TO_APPLY_NOTICE = {
+  title: 'Applying is free',
+  message:
+    'There is no fee to apply for this grant. Nobody from Zion World '
+    + 'Christian Center will ever ask you to pay to apply, or to pay to have '
+    + 'your application approved. If anyone asks you for money, please report '
+    + 'it to the church.',
+} as const;
+
+/* -------------------------------------------------------------------------- */
 /* How long each stage takes                                                   */
 /* -------------------------------------------------------------------------- */
 
@@ -95,7 +119,7 @@ export const ONBOARDING_SLIDES: OnboardingSlide[] = [
   {
     id: 'documents',
     title: 'What you will need',
-    body: 'A passport photograph, a valid means of identification, and your CAC business document. Church verification forms are optional. You can upload photos or PDFs straight from your phone.',
+    body: 'A passport photograph and a valid means of identification. Your CAC document, evidence of business activity and church verification forms are all optional. You can upload photos or PDFs straight from your phone.',
     art: 'documents',
   },
   {
@@ -142,7 +166,11 @@ export const ELIGIBILITY_CRITERIA: EligibilityCriterion[] = [
   },
   {
     id: 'documents',
-    label: 'I can provide a passport photograph, valid ID, and my business documents.',
+    // Business documents came off this list when the church made the CAC
+    // upload optional. Asking someone to promise a document they are not
+    // required to supply, and blocking them when they say no, turned an
+    // optional item back into a mandatory one at the gate.
+    label: 'I can provide a passport photograph and a valid means of identification.',
     blocking: true,
   },
   {

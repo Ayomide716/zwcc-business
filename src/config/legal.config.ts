@@ -45,12 +45,17 @@ export const TERMS_AND_CONDITIONS: LegalDocument = {
       body: [
         'The grant is open to applicants aged 18 and over who operate, or intend to operate, a business. Membership of Zion World Christian Center is not a requirement.',
         'An applicant may hold only one live application at any time. Applicants whose application is not approved may apply again.',
-        '[Placeholder — final eligibility criteria to be confirmed by ZWCC.]',
+        // Confirmed by the church.
+        'Eligibility for the grant is decided solely by the Grant Committee.',
+        '[Placeholder — remaining eligibility criteria to be confirmed by ZWCC.]',
       ],
     },
     {
       heading: '3. Applications',
       body: [
+        // Confirmed by the church. Also shown on the application screen itself,
+        // because a term nobody reads protects nobody.
+        'Applying for the grant is free. Nobody from Zion World Christian Center will ever ask you to pay to apply, or to pay to have an application approved.',
         'Applicants must provide accurate and complete information, together with the supporting documents requested.',
         'Providing information that is knowingly false may result in an application being declined or a grant being withdrawn.',
         '[Placeholder — final wording to be supplied.]',
