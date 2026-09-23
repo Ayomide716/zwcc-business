@@ -84,14 +84,22 @@ export const DOCUMENT_TYPES: DocumentTypeDefinition[] = [
   {
     id: 'cac_document',
     label: 'CAC registration document',
-    description: 'Corporate Affairs Commission certificate or status report for your business.',
+    description:
+      'Corporate Affairs Commission certificate or status report, if your ' +
+      'business is registered.',
     category: 'business',
-    requirement: 'required',
+    // Optional at the church's instruction. It was required, which contradicted
+    // the form: someone answers "Not yet" to "Is the business registered with
+    // the CAC?" and was then still blocked by a mandatory CAC upload. The only
+    // way through was a hint telling them to put a photograph of their shop in
+    // the box marked CAC certificate — which confused the applicant and left
+    // the committee unable to tell at a glance who was actually registered.
+    requirement: 'optional',
     accepts: DOCUMENT_FILE_TYPES,
     maxSizeMb: 10,
     allowCamera: true,
     order: 1,
-    hint: 'If your business is not yet registered, upload any evidence of business activity and tell us in your proposal.',
+    hint: 'Only if your business is registered. If it is not registered yet, leave this out and describe your business in the proposal instead.',
   },
   {
     id: 'business_evidence',

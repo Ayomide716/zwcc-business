@@ -77,8 +77,8 @@ values
 
   ('cac_document',
    'CAC registration document',
-   'Corporate Affairs Commission certificate or status report for your business.',
-   'business', 'required',
+   'Corporate Affairs Commission certificate or status report, if your business is registered.',
+   'business', 'optional',
    array['application/pdf', 'image/jpeg', 'image/jpg', 'image/png'], 10, 3),
 
   ('business_evidence',
