@@ -138,6 +138,19 @@ export default function StaffProfileScreen() {
           />
         </ListGroup>
 
+        {/* The right to delete belongs to everyone with an account, so it sits
+            beside sign-out rather than buried in settings. Whether it is
+            allowed right now is explained on the next screen. */}
+        <ListGroup>
+          <ListRow
+            icon="trash-outline"
+            label="Delete account"
+            tone="danger"
+            onPress={() => router.push('/account/delete')}
+            accessibilityHint="Explains what is removed before anything is deleted"
+          />
+        </ListGroup>
+
         {/* Which build this phone is on. Staff are the ones who get asked
             "are you seeing it too?", so they need the answer to hand. */}
         <BuildFootprint />

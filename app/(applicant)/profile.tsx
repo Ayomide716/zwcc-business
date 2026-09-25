@@ -258,6 +258,19 @@ export default function ProfileScreen() {
           />
         </ListGroup>
 
+        {/* The right to delete belongs to everyone with an account, so it sits
+            beside sign-out rather than buried in settings. Whether it is
+            allowed right now is explained on the next screen. */}
+        <ListGroup>
+          <ListRow
+            icon="trash-outline"
+            label="Delete account"
+            tone="danger"
+            onPress={() => router.push('/account/delete')}
+            accessibilityHint="Explains what is removed before anything is deleted"
+          />
+        </ListGroup>
+
         <Text variant="caption" muted align="center" style={styles.footprint}>
           {ORGANISATION.name} · {ORGANISATION.location}
         </Text>

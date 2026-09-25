@@ -1,14 +1,18 @@
 /**
  * Terms & Conditions and Privacy Policy content.
  *
- * BOTH DOCUMENTS ARE PLACEHOLDERS (brief §30, §31).
+ * Reviewed and authorised by Zion World Christian Center's lawyer on the
+ * wording as it stood in the app, and published without the draft notice from
+ * 25 September 2026. The only changes made at publication were removing the
+ * bracketed drafting notes ("[Placeholder — …]"), dropping the two sections
+ * that contained nothing else, and renumbering. No wording was added.
  *
- * The client has not supplied final terms, and inventing legal wording and
- * presenting it as binding would be worse than useless — so the structure is
- * real, the content is clearly labelled as draft, and every screen that renders
- * it shows the notice prominently.
+ * Changing either document is a content edit here and ships over the air. Any
+ * change to what these documents say should go back to the church's lawyer
+ * first, and `lastUpdated` must move with it.
  *
- * Replacing them is a content edit here. Nothing else changes.
+ * `placeholderNotice` still exists so a future draft can be published
+ * honestly labelled; leave it unset on anything that has been approved.
  */
 
 export interface LegalSection {
@@ -18,8 +22,11 @@ export interface LegalSection {
 
 export interface LegalDocument {
   title: string;
-  /** Shown in a warning banner at the top. Do not remove before legal review. */
-  placeholderNotice: string;
+  /**
+   * Shown in a warning banner at the top while a document is still a draft.
+   * Leave unset once the church's lawyer has approved the wording.
+   */
+  placeholderNotice?: string;
   lastUpdated: string;
   intro: string;
   sections: LegalSection[];
@@ -27,9 +34,7 @@ export interface LegalDocument {
 
 export const TERMS_AND_CONDITIONS: LegalDocument = {
   title: 'Terms & Conditions',
-  placeholderNotice:
-    'This is placeholder content. The final Terms & Conditions will be provided by Zion World Christian Center and must replace this text before the app is used in production.',
-  lastUpdated: 'Draft — pending final wording',
+  lastUpdated: 'Last updated 25 September 2026',
   intro:
     'These terms govern applications to the 2026 ZWCC Business Grant and the obligations of anyone awarded a grant under the programme.',
   sections: [
@@ -37,7 +42,6 @@ export const TERMS_AND_CONDITIONS: LegalDocument = {
       heading: '1. About the programme',
       body: [
         'The 2026 ZWCC Business Grant is operated by Zion World Christian Center, Lagos, to support the establishment and growth of sustainable businesses.',
-        '[Placeholder — final wording to be supplied by ZWCC.]',
       ],
     },
     {
@@ -47,7 +51,6 @@ export const TERMS_AND_CONDITIONS: LegalDocument = {
         'An applicant may hold only one live application at any time. Applicants whose application is not approved may apply again.',
         // Confirmed by the church.
         'Eligibility for the grant is decided solely by the Grant Committee.',
-        '[Placeholder — remaining eligibility criteria to be confirmed by ZWCC.]',
       ],
     },
     {
@@ -58,43 +61,34 @@ export const TERMS_AND_CONDITIONS: LegalDocument = {
         'Applying for the grant is free. Nobody from Zion World Christian Center will ever ask you to pay to apply, or to pay to have an application approved.',
         'Applicants must provide accurate and complete information, together with the supporting documents requested.',
         'Providing information that is knowingly false may result in an application being declined or a grant being withdrawn.',
-        '[Placeholder — final wording to be supplied.]',
       ],
     },
     {
       heading: '4. Grant amounts',
       body: [
         'There is no fixed minimum or maximum grant. The amount requested should reflect what the business proposal genuinely requires, and the amount awarded is at the discretion of the Grant Committee.',
-        '[Placeholder — final wording to be supplied.]',
       ],
     },
     {
       heading: '5. Assessment and decisions',
       body: [
         'Applications are verified and then assessed by the Grant Committee. Decisions of the Committee are final.',
-        '[Placeholder — final wording, including any appeal process, to be supplied.]',
       ],
     },
     {
       heading: '6. Obligations of beneficiaries',
       body: [
         'Successful applicants must sign a grant agreement before funds are authorised, and must submit a business progress report every month for twelve months.',
-        '[Placeholder — final wording to be supplied.]',
       ],
     },
     {
       heading: '7. Use of the app',
       body: [
         'You are responsible for keeping your account credentials and your registration code secure.',
-        '[Placeholder — final wording to be supplied.]',
       ],
     },
     {
-      heading: '8. Changes to these terms',
-      body: ['[Placeholder — final wording to be supplied.]'],
-    },
-    {
-      heading: '9. Contact',
+      heading: '8. Contact',
       body: [
         'Questions about these terms should be directed to Zion World Christian Center using the contact details in the app.',
       ],
@@ -104,9 +98,7 @@ export const TERMS_AND_CONDITIONS: LegalDocument = {
 
 export const PRIVACY_POLICY: LegalDocument = {
   title: 'Privacy Policy',
-  placeholderNotice:
-    'This is a placeholder privacy policy. It follows the structure expected under Nigeria’s NDPA and the GDPR, but it has NOT been reviewed by a lawyer and must be completed and approved by Zion World Christian Center’s legal advisers before this app is used in production.',
-  lastUpdated: 'Draft — pending legal review',
+  lastUpdated: 'Last updated 25 September 2026',
   intro:
     'This policy explains what personal information the 2026 ZWCC Business Grant app collects, why it is collected, how it is stored, and what rights you have over it.',
   sections: [
@@ -114,7 +106,6 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: '1. Who is responsible for your data',
       body: [
         'Zion World Christian Center, Lagos, is the data controller for information collected through this app.',
-        '[Placeholder — full registered details and Data Protection Officer contact to be supplied.]',
       ],
     },
     {
@@ -141,7 +132,6 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: '4. Legal basis for processing',
       body: [
         'We process your information on the basis of your consent when you submit an application, and on the basis of the agreement between you and Zion World Christian Center if you receive a grant.',
-        '[Placeholder — to be confirmed on legal review.]',
       ],
     },
     {
@@ -158,22 +148,19 @@ export const PRIVACY_POLICY: LegalDocument = {
         'You can see all of your own information.',
         'Members of the Grant Committee and administrators can see application information in order to verify and assess it.',
         'Other applicants can never see your information.',
-        '[Placeholder — any additional disclosures to be confirmed.]',
       ],
     },
     {
       heading: '7. Third-party services',
       body: [
         'The app uses Supabase for database, authentication and file storage.',
-        'Email, SMS and WhatsApp notification providers may be engaged to deliver messages to you. [Placeholder — providers to be named once selected.]',
-        '[Placeholder — full list of processors and their locations to be supplied.]',
+        'Email, SMS and WhatsApp notification providers may be engaged to deliver messages to you.',
       ],
     },
     {
       heading: '8. How long we keep it',
       body: [
         'Application records are retained so that the history of the programme is preserved, including applications that were not approved.',
-        '[Placeholder — specific retention periods to be set by ZWCC on legal advice.]',
       ],
     },
     {
@@ -184,7 +171,6 @@ export const PRIVACY_POLICY: LegalDocument = {
         'You have the right to ask us to delete your information, subject to our record-keeping obligations.',
         'You have the right to withdraw your consent and to object to certain processing.',
         'You have the right to complain to the Nigeria Data Protection Commission.',
-        '[Placeholder — full description of rights and how to exercise them to be supplied.]',
       ],
     },
     {
@@ -194,11 +180,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       ],
     },
     {
-      heading: '11. Changes to this policy',
-      body: ['[Placeholder — final wording to be supplied.]'],
-    },
-    {
-      heading: '12. Contact us',
+      heading: '11. Contact us',
       body: [
         'To exercise any of your rights, or to ask a question about this policy, contact Zion World Christian Center using the details in the app.',
       ],

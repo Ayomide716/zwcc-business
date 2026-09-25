@@ -437,6 +437,14 @@ export interface Database {
     Views: { [_ in never]: never };
     Functions: {
       /**
+       * Why the caller may not delete their own account, or null if they may.
+       * Answers only for the caller — see migration 0024.
+       */
+      account_deletion_blocker: {
+        Args: Record<string, never>;
+        Returns: string | null;
+      };
+      /**
        * Inserts a notification for every committee member and administrator.
        * SECURITY DEFINER, guarded by application ownership — see migration
        * 0005. Called through `notifications.notifyStaff()`, never directly.

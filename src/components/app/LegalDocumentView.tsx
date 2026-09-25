@@ -1,6 +1,7 @@
 /**
- * Renders a `LegalDocument`. Shared by the Terms and Privacy screens so the
- * placeholder notice cannot be shown on one and forgotten on the other.
+ * Renders a `LegalDocument`. Shared by the Terms and Privacy screens so a
+ * draft notice, when a document has one, cannot be shown on one and forgotten
+ * on the other.
  */
 import { StyleSheet, View } from 'react-native';
 
@@ -13,12 +14,14 @@ import { colors, spacing } from '@/theme';
 export function LegalDocumentView({ document }: { document: LegalDocument }) {
   return (
     <View style={styles.container}>
-      <Banner
-        tone="warning"
-        title="Draft document"
-        message={document.placeholderNotice}
-        icon="construct-outline"
-      />
+      {document.placeholderNotice ? (
+        <Banner
+          tone="warning"
+          title="Draft document"
+          message={document.placeholderNotice}
+          icon="construct-outline"
+        />
+      ) : null}
 
       <View style={styles.meta}>
         <Text variant="caption" muted>
