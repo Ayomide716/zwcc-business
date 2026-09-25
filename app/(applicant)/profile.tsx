@@ -11,6 +11,7 @@
  * whole chain rather than only their latest attempt.
  */
 import { useRouter } from 'expo-router';
+import { ACCOUNT_DELETION_IN_APP } from '@/config/account.config';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
@@ -260,16 +261,19 @@ export default function ProfileScreen() {
 
         {/* The right to delete belongs to everyone with an account, so it sits
             beside sign-out rather than buried in settings. Whether it is
-            allowed right now is explained on the next screen. */}
-        <ListGroup>
-          <ListRow
-            icon="trash-outline"
-            label="Delete account"
-            tone="danger"
-            onPress={() => router.push('/account/delete')}
-            accessibilityHint="Explains what is removed before anything is deleted"
-          />
-        </ListGroup>
+            allowed right now is explained on the next screen. Hidden until
+            the App Store needs it — see ACCOUNT_DELETION_IN_APP. */}
+        {ACCOUNT_DELETION_IN_APP ? (
+          <ListGroup>
+            <ListRow
+              icon="trash-outline"
+              label="Delete account"
+              tone="danger"
+              onPress={() => router.push('/account/delete')}
+              accessibilityHint="Explains what is removed before anything is deleted"
+            />
+          </ListGroup>
+        ) : null}
 
         <Text variant="caption" muted align="center" style={styles.footprint}>
           {ORGANISATION.name} · {ORGANISATION.location}

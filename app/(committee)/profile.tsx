@@ -6,6 +6,7 @@
  * shape and alignment.
  */
 import { useRouter } from 'expo-router';
+import { ACCOUNT_DELETION_IN_APP } from '@/config/account.config';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import { BuildFootprint } from '@/components/app';
@@ -140,16 +141,19 @@ export default function StaffProfileScreen() {
 
         {/* The right to delete belongs to everyone with an account, so it sits
             beside sign-out rather than buried in settings. Whether it is
-            allowed right now is explained on the next screen. */}
-        <ListGroup>
-          <ListRow
-            icon="trash-outline"
-            label="Delete account"
-            tone="danger"
-            onPress={() => router.push('/account/delete')}
-            accessibilityHint="Explains what is removed before anything is deleted"
-          />
-        </ListGroup>
+            allowed right now is explained on the next screen. Hidden until
+            the App Store needs it — see ACCOUNT_DELETION_IN_APP. */}
+        {ACCOUNT_DELETION_IN_APP ? (
+          <ListGroup>
+            <ListRow
+              icon="trash-outline"
+              label="Delete account"
+              tone="danger"
+              onPress={() => router.push('/account/delete')}
+              accessibilityHint="Explains what is removed before anything is deleted"
+            />
+          </ListGroup>
+        ) : null}
 
         {/* Which build this phone is on. Staff are the ones who get asked
             "are you seeing it too?", so they need the answer to hand. */}

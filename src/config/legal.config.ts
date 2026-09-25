@@ -22,6 +22,19 @@
  * honestly labelled; leave it unset on anything that has been approved.
  */
 
+import { ACCOUNT_DELETION_IN_APP } from './account.config';
+import { ORGANISATION } from './program.config';
+
+/**
+ * How to delete your account, stated to match the app as it actually is.
+ * Follows the same switch as the Delete account button, so the policy never
+ * promises a button that is hidden, or sends people to email about one that
+ * is there.
+ */
+const HOW_TO_DELETE_YOUR_ACCOUNT = ACCOUNT_DELETION_IN_APP
+  ? 'You can delete your account yourself from the Profile screen, using Delete account. This removes your profile, your applications, the documents you uploaded and your progress reports. While a grant you have signed for is still running, your account can be deleted once the grant is completed; if you need to leave the programme before then, contact Zion World Christian Center.'
+  : `To have your account deleted, contact Zion World Christian Center at ${ORGANISATION.supportEmail}. Deleting it removes your profile, your applications, the documents you uploaded and your progress reports. While a grant you have signed for is still running, your account can be deleted once the grant is completed.`;
+
 export interface LegalSection {
   heading: string;
   body: string[];
@@ -187,7 +200,7 @@ export const PRIVACY_POLICY: LegalDocument = {
         'You have the right to ask us to correct information that is inaccurate.',
         'You have the right to ask us to delete your information, subject to our record-keeping obligations.',
         // Added at the lawyer's request, 25 September 2026.
-        'You can delete your account yourself from the Profile screen, using Delete account. This removes your profile, your applications, the documents you uploaded and your progress reports. While a grant you have signed for is still running, your account can be deleted once the grant is completed; if you need to leave the programme before then, contact Zion World Christian Center.',
+        HOW_TO_DELETE_YOUR_ACCOUNT,
         'You have the right to withdraw your consent and to object to certain processing.',
         'You have the right to complain to the Nigeria Data Protection Commission.',
       ],
