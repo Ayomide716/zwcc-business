@@ -62,6 +62,13 @@ export function ListGroup({ title, action, caption, children, style }: ListGroup
 
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Values longer than this sit under the label rather than beside it. Long
+ * enough that a phone number or a date stays on the right, short enough that
+ * an email address never squeezes its label.
+ */
+const STACK_VALUE_AFTER = 24;
+
 export interface ListRowProps {
   icon?: keyof typeof Ionicons.glyphMap;
   /** Replaces the icon well entirely, e.g. a numbered step or an avatar. */
@@ -100,6 +107,18 @@ export function ListRow({
   accessibilityHint,
 }: ListRowProps) {
   const showChevron = chevron ?? Boolean(onPress);
+
+  /*
+    A long value goes under the label instead of beside it.
+
+    Label and value share the row in proportion to their natural widths, which
+    is right for a phone number but not for an email address: the church's
+    support address is 35 characters of unbreakable text, and it squeezed
+    "Email" until it broke mid-word into "Emai / l". There is no split of one
+    line that fits both on a phone, so past this length the value gets its own
+    line at full width, where it can wrap at the "@" or the "." cleanly.
+  */
+  const stackValue = !right && Boolean(value) && value!.length > STACK_VALUE_AFTER;
   const danger = tone === 'danger';
   const iconColor = danger ? colors.danger : colors.brand;
 
@@ -126,10 +145,15 @@ export function ListRow({
             {description}
           </Text>
         ) : null}
+        {stackValue ? (
+          <Text variant="callout" muted selectable>
+            {value}
+          </Text>
+        ) : null}
       </View>
 
       {right ??
-        (value ? (
+        (value && !stackValue ? (
           <Text variant="callout" muted numberOfLines={2} style={styles.value}>
             {value}
           </Text>
