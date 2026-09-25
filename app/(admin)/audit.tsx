@@ -113,15 +113,22 @@ export default function AuditScreen() {
 
               <View style={styles.rowText}>
                 <Text variant="bodyMedium">{humaniseAction(entry.action)}</Text>
-                <Text variant="caption" muted>
-                  {entry.actor_role ? `${entry.actor_role} · ` : ''}
-                  {formatDateTime(entry.created_at)}
+                {/* Who, then what. The whole point of the log is to answer
+                    "who opened whose document", so both are names. */}
+                <Text variant="callout">
+                  {entry.actor_name ?? 'Unknown'}
+                  {entry.actor_role ? (
+                    <Text variant="callout" muted>{` (${entry.actor_role})`}</Text>
+                  ) : null}
                 </Text>
                 {entry.entity_id ? (
-                  <Text variant="caption" muted numberOfLines={1}>
-                    {entry.entity_type} {entry.entity_id.slice(0, 8)}
+                  <Text variant="caption" color="textSecondary" numberOfLines={2}>
+                    {entry.subject ?? describeMissing(entry.entity_type)}
                   </Text>
                 ) : null}
+                <Text variant="caption" muted>
+                  {formatDateTime(entry.created_at)}
+                </Text>
               </View>
             </Card>
           ))}
@@ -129,6 +136,24 @@ export default function AuditScreen() {
       )}
     </Screen>
   );
+}
+
+/**
+ * The record an entry points at has since been removed — an account deleted,
+ * a test application cleared. Say so, rather than show an id nobody can use.
+ */
+function describeMissing(entityType: string): string {
+  switch (entityType) {
+    case 'profile':
+    case 'session':
+      return 'An account that has since been deleted';
+    case 'application':
+      return 'An application that has since been removed';
+    case 'document':
+      return 'A document that has since been removed';
+    default:
+      return 'A record that has since been removed';
+  }
 }
 
 /** "application.submitted" -> "Application submitted". */

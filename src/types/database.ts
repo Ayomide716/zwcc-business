@@ -436,6 +436,20 @@ export interface Database {
     // query result to `never`.
     Views: { [_ in never]: never };
     Functions: {
+      /** The audit log with actor and subject resolved to names. Migration 0026. */
+      audit_log_feed: {
+        Args: { p_limit?: number; p_entity_type?: string | null };
+        Returns: {
+          id: string;
+          created_at: string;
+          action: string;
+          entity_type: string;
+          entity_id: string | null;
+          actor_role: string | null;
+          actor_name: string | null;
+          subject: string | null;
+        }[];
+      };
       /**
        * Why the caller may not delete their own account, or null if they may.
        * Answers only for the caller — see migration 0024.

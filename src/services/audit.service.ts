@@ -93,20 +93,18 @@ export const auditService = {
     }
   },
 
-  /** Recent entries, for the admin audit screen. */
-  async list(options: { limit?: number; entityType?: AuditEntity; entityId?: string } = {}) {
-    const { limit = 50, entityType, entityId } = options;
-
-    let query = supabase
-      .from('audit_logs')
-      .select('*')
-      .order('created_at', { ascending: false })
-      .limit(limit);
-
-    if (entityType) query = query.eq('entity_type', entityType);
-    if (entityId) query = query.eq('entity_id', entityId);
-
-    const { data, error } = await query;
+  /**
+   * Recent entries for the admin audit screen, with the person who acted and
+   * the record they acted on resolved to names by the database (migration
+   * 0026) — "Chi Okafor opened Means of identification · Ada Obi", not
+   * "committee · document 61f0016a".
+   */
+  async list(options: { limit?: number; entityType?: AuditEntity } = {}) {
+    const { limit = 50, entityType } = options;
+    const { data, error } = await supabase.rpc('audit_log_feed', {
+      p_limit: limit,
+      p_entity_type: entityType ?? null,
+    });
     if (error) throw error;
     return data ?? [];
   },
