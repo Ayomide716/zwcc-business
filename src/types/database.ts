@@ -448,6 +448,7 @@ export interface Database {
           actor_role: string | null;
           actor_name: string | null;
           subject: string | null;
+          metadata: Json;
         }[];
       };
       /**

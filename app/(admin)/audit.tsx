@@ -20,6 +20,7 @@ import { auditService, type AuditEntity } from '@/services/audit.service';
 import { toUserError } from '@/lib/errors';
 import { formatDateTime } from '@/lib/format';
 import { colors, radius, spacing } from '@/theme';
+import { describeAuditAction, describeAuditDetail } from '@/lib/auditText';
 
 const ENTITY_FILTERS: { id: AuditEntity | 'all'; label: string }[] = [
   { id: 'all', label: 'Everything' },
@@ -112,7 +113,7 @@ export default function AuditScreen() {
               </View>
 
               <View style={styles.rowText}>
-                <Text variant="bodyMedium">{humaniseAction(entry.action)}</Text>
+                <Text variant="bodyMedium">{describeAuditAction(entry.action)}</Text>
                 {/* Who, then what. The whole point of the log is to answer
                     "who opened whose document", so both are names. */}
                 <Text variant="callout">
@@ -124,6 +125,11 @@ export default function AuditScreen() {
                 {entry.entity_id ? (
                   <Text variant="caption" color="textSecondary" numberOfLines={2}>
                     {entry.subject ?? describeMissing(entry.entity_type)}
+                  </Text>
+                ) : null}
+                {describeAuditDetail(entry.action, entry.metadata) ? (
+                  <Text variant="caption" color="textSecondary">
+                    {describeAuditDetail(entry.action, entry.metadata)}
                   </Text>
                 ) : null}
                 <Text variant="caption" muted>
@@ -154,15 +160,6 @@ function describeMissing(entityType: string): string {
     default:
       return 'A record that has since been removed';
   }
-}
-
-/** "application.submitted" -> "Application submitted". */
-function humaniseAction(action: string): string {
-  const [entity, verb] = action.split('.');
-  if (!verb) return action.replace(/[._]/g, ' ');
-
-  const readable = `${entity?.replace(/_/g, ' ')} ${verb.replace(/_/g, ' ')}`;
-  return readable.charAt(0).toUpperCase() + readable.slice(1);
 }
 
 const styles = StyleSheet.create({

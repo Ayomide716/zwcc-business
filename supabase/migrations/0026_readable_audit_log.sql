@@ -23,6 +23,10 @@
 -- Readable by staff only, mirroring the audit_logs select policy.
 -- ---------------------------------------------------------------------------
 
+-- Dropped first: an earlier draft of this function returned fewer columns,
+-- and Postgres will not change a function's result shape in place.
+drop function if exists public.audit_log_feed(integer, text);
+
 create or replace function public.audit_log_feed(
   p_limit integer default 100,
   p_entity_type text default null
@@ -35,7 +39,11 @@ returns table (
   entity_id   uuid,
   actor_role  text,
   actor_name  text,
-  subject     text
+  subject     text,
+  -- What the entry recorded about the action (new status, reason, role,
+  -- score…). The app turns it into words with its own status and reason
+  -- names, so a renamed status reads correctly without touching this.
+  metadata    jsonb
 )
 language sql
 stable
@@ -108,7 +116,8 @@ as $$
         select dt.label from public.document_types dt where dt.id::text = l.entity_id::text
       )
       else null
-    end as subject
+    end as subject,
+    l.metadata
   from public.audit_logs l
   left join public.profiles actor on actor.id = l.actor_id
   where public.is_staff()
