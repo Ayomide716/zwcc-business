@@ -54,7 +54,13 @@ export default function AdminDashboard() {
   const stats = useCommitteeStats();
 
   return (
-    <Screen onRefresh={() => void stats.refetch()} refreshing={stats.isRefetching}>
+    <Screen
+      onRefresh={() => void stats.refetch()}
+      refreshing={stats.isRefetching}
+      // One gap between every block, rather than a margin under some of them.
+      // The announcement card had none, so it sat flush against the tiles.
+      contentContainerStyle={styles.page}
+    >
       <ScreenHeader
         title="Administration"
         subtitle="Manage users, review the configuration, and audit activity."
@@ -137,14 +143,17 @@ export default function AdminDashboard() {
 }
 
 const styles = StyleSheet.create({
+  page: {
+    // Matches the applicant's application overview. The header carries its
+    // own space underneath, so a full step here would double it.
+    gap: spacing.md,
+  },
   grid: {
     flexDirection: 'row',
     gap: spacing.md,
-    marginBottom: spacing.base,
   },
   links: {
     gap: spacing.sm,
-    marginBottom: spacing.base,
   },
   link: {
     flexDirection: 'row',
@@ -164,6 +173,6 @@ const styles = StyleSheet.create({
     gap: 1,
   },
   back: {
-    marginTop: spacing.base,
+    marginTop: spacing.xs,
   },
 });

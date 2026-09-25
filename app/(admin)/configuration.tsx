@@ -35,7 +35,11 @@ export default function ConfigurationScreen() {
   const notificationCount = Object.keys(NOTIFICATION_TEMPLATES).length;
 
   return (
-    <Screen>
+    <Screen
+      // One gap between every block. The read-only banner had no margin of its
+      // own and sat flush against the first card.
+      contentContainerStyle={styles.page}
+    >
       <ScreenHeader
         title="Workflow & configuration"
         subtitle="What is currently in force across the app."
@@ -214,9 +218,13 @@ function describeFeature(key: string): string {
 }
 
 const styles = StyleSheet.create({
+  page: {
+    // Matches the applicant's application overview. The header carries its
+    // own space underneath, so a full step here would double it.
+    gap: spacing.md,
+  },
   card: {
     gap: spacing.md,
-    marginBottom: spacing.base,
   },
   ruleRow: {
     flexDirection: 'row',
