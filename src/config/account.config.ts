@@ -29,5 +29,8 @@ export const ACCOUNT_DELETION_IN_APP = false;
  * Irrelevant once ACCOUNT_DELETION_IN_APP is true, when everyone sees it.
  */
 export const ACCOUNT_DELETION_PREVIEW_EMAIL_SHA256: readonly string[] = [
-  'bf9fd26d1f8ca751521353af2aa34f290291253f8232c13e193bbf2f1e5ae459',
+  // Empty: the flow was tested end to end on 25 September 2026 — a completed
+  // grant holder deleted their account and could no longer sign in — and the
+  // tester has been removed. Nobody sees the button until the switch above
+  // is turned on.
 ];
