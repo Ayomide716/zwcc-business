@@ -6,10 +6,11 @@
  * administrator.
  */
 import { Ionicons } from '@expo/vector-icons';
-import { useQuery } from '@tanstack/react-query';
-import { useState } from 'react';
+import { keepPreviousData, useQuery } from '@tanstack/react-query';
+import { useMemo, useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { Banner, EmptyState, ErrorState, SkeletonList } from '@/components/ui/Feedback';
 import { ScreenHeader } from '@/components/ui/Header';
@@ -18,8 +19,13 @@ import { Text } from '@/components/ui/Text';
 import { queryKeys } from '@/providers/QueryProvider';
 import { auditService, type AuditEntity } from '@/services/audit.service';
 import { toUserError } from '@/lib/errors';
-import { formatDateTime } from '@/lib/format';
 import { colors, radius, spacing } from '@/theme';
+import {
+  formatTime,
+  groupAuditEntries,
+  mixedRunLabel,
+  type AuditGroup,
+} from '@/lib/auditGroups';
 import { describeAuditAction, describeAuditDetail } from '@/lib/auditText';
 
 const ENTITY_FILTERS: { id: AuditEntity | 'all'; label: string }[] = [
@@ -42,17 +48,30 @@ const ACTION_ICONS: Record<string, keyof typeof Ionicons.glyphMap> = {
   session: 'log-in-outline',
 };
 
+/** Entries fetched per "Show older". */
+const PAGE_SIZE = 100;
+/** The feed's own ceiling (migration 0026). */
+const MAX_ENTRIES = 500;
+
 export default function AuditScreen() {
   const [filter, setFilter] = useState<AuditEntity | 'all'>('all');
+  // Grows by a page at a time when "Show older" is pressed.
+  const [limit, setLimit] = useState(PAGE_SIZE);
 
   const query = useQuery({
-    queryKey: queryKeys.auditLog({ filter }),
+    queryKey: [...queryKeys.auditLog({ filter }), limit],
     queryFn: () =>
       auditService.list({
-        limit: 100,
+        limit,
         entityType: filter === 'all' ? undefined : filter,
       }),
+    // Keep the entries already on screen while the next page loads, so the
+    // list does not blank and jump back to the top.
+    placeholderData: keepPreviousData,
   });
+
+  const days = useMemo(() => groupAuditEntries(query.data ?? []), [query.data]);
+  const mayHaveOlder = (query.data?.length ?? 0) >= limit && limit < MAX_ENTRIES;
 
   return (
     <Screen onRefresh={() => void query.refetch()} refreshing={query.isRefetching}>
@@ -74,7 +93,10 @@ export default function AuditScreen() {
           return (
             <Pressable
               key={item.id}
-              onPress={() => setFilter(item.id)}
+              onPress={() => {
+                setFilter(item.id);
+                setLimit(PAGE_SIZE);
+              }}
               accessibilityRole="button"
               accessibilityState={{ selected: active }}
               style={[styles.chip, active && styles.chipActive]}
@@ -102,45 +124,144 @@ export default function AuditScreen() {
         />
       ) : (
         <View style={styles.list}>
-          {query.data?.map((entry) => (
-            <Card key={entry.id} variant="outlined" style={styles.row}>
-              <View style={styles.icon}>
-                <Ionicons
-                  name={ACTION_ICONS[entry.entity_type] ?? 'ellipse-outline'}
-                  size={16}
-                  color={colors.brand}
-                />
-              </View>
-
-              <View style={styles.rowText}>
-                <Text variant="bodyMedium">{describeAuditAction(entry.action)}</Text>
-                {/* Who, then what. The whole point of the log is to answer
-                    "who opened whose document", so both are names. */}
-                <Text variant="callout">
-                  {entry.actor_name ?? 'Unknown'}
-                  {entry.actor_role ? (
-                    <Text variant="callout" muted>{` (${entry.actor_role})`}</Text>
-                  ) : null}
-                </Text>
-                {entry.entity_id ? (
-                  <Text variant="caption" color="textSecondary" numberOfLines={2}>
-                    {entry.subject ?? describeMissing(entry.entity_type)}
-                  </Text>
-                ) : null}
-                {describeAuditDetail(entry.action, entry.metadata) ? (
-                  <Text variant="caption" color="textSecondary">
-                    {describeAuditDetail(entry.action, entry.metadata)}
-                  </Text>
-                ) : null}
-                <Text variant="caption" muted>
-                  {formatDateTime(entry.created_at)}
-                </Text>
-              </View>
-            </Card>
+          {days.map((day) => (
+            <View key={day.key} style={styles.day}>
+              <Text variant="overline" color="textSecondary" accessibilityRole="header">
+                {day.label}
+              </Text>
+              {day.groups.map((group) => (
+                <AuditGroupCard key={`${group.key}|${group.entries[0]!.id}`} group={group} />
+              ))}
+            </View>
           ))}
+
+          {mayHaveOlder ? (
+            <Button
+              label="Show older"
+              variant="outline"
+              icon="chevron-down"
+              onPress={() => setLimit((current) => Math.min(current + PAGE_SIZE, MAX_ENTRIES))}
+              loading={query.isFetching}
+              fullWidth
+            />
+          ) : limit >= MAX_ENTRIES ? (
+            <Text variant="caption" muted align="center">
+              Showing the latest {MAX_ENTRIES} entries.
+            </Text>
+          ) : null}
         </View>
       )}
     </Screen>
+  );
+}
+
+/**
+ * One card per run of the same thing. A single entry reads exactly as before;
+ * a run shows a count and the time span, and opens to list each entry.
+ */
+function AuditGroupCard({ group }: { group: AuditGroup }) {
+  const [open, setOpen] = useState(false);
+  const first = group.entries[0]!;
+  const count = group.entries.length;
+  const single = count === 1;
+  const detail = single ? describeAuditDetail(first.action, first.metadata) : null;
+  // Newest first, so the last entry is the earliest.
+  const span = single
+    ? formatTime(first.created_at)
+    : `${formatTime(group.entries[count - 1]!.created_at)} – ${formatTime(first.created_at)}`;
+
+  const body = (
+    <>
+      <View style={styles.icon}>
+        <Ionicons
+          name={ACTION_ICONS[first.entity_type] ?? 'ellipse-outline'}
+          size={16}
+          color={colors.brand}
+        />
+      </View>
+
+      <View style={styles.rowText}>
+        <Text variant="bodyMedium">
+          {mixedRunLabel(group) ?? describeAuditAction(first.action)}
+          {single ? '' : ` ×${count}`}
+        </Text>
+        <Text variant="callout">
+          {first.actor_name ?? 'Unknown'}
+          {first.actor_role ? <Text variant="callout" muted>{` (${first.actor_role})`}</Text> : null}
+        </Text>
+        {first.entity_id ? (
+          <Text variant="caption" color="textSecondary" numberOfLines={2}>
+            {single
+              ? (first.subject ?? describeMissing(first.entity_type))
+              : (group.sharedSubject ?? describeMissing(first.entity_type))}
+          </Text>
+        ) : null}
+        {detail ? (
+          <Text variant="caption" color="textSecondary">
+            {detail}
+          </Text>
+        ) : null}
+        <Text variant="caption" muted>
+          {span}
+        </Text>
+
+        {open ? (
+          <View style={styles.expanded}>
+            {group.entries.map((entry) => {
+              const entryDetail = describeAuditDetail(entry.action, entry.metadata);
+              return (
+                <View key={entry.id} style={styles.expandedRow}>
+                  <Text variant="caption" muted style={styles.expandedTime}>
+                    {formatTime(entry.created_at)}
+                  </Text>
+                  <View style={styles.rowText}>
+                    <Text variant="caption" color="textSecondary">
+                      {mixedRunLabel(group)
+                        ? describeAuditAction(entry.action)
+                        : (entry.subject ?? describeMissing(entry.entity_type))}
+                    </Text>
+                    {entryDetail ? (
+                      <Text variant="caption" muted>
+                        {entryDetail}
+                      </Text>
+                    ) : null}
+                  </View>
+                </View>
+              );
+            })}
+          </View>
+        ) : null}
+      </View>
+
+      {single ? null : (
+        <Ionicons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={16}
+          color={colors.textMuted}
+        />
+      )}
+    </>
+  );
+
+  if (single) {
+    return (
+      <Card variant="outlined" style={styles.row}>
+        {body}
+      </Card>
+    );
+  }
+
+  return (
+    <Pressable
+      onPress={() => setOpen((value) => !value)}
+      accessibilityRole="button"
+      accessibilityState={{ expanded: open }}
+      accessibilityHint={open ? 'Hides the individual entries' : `Shows all ${count} entries`}
+    >
+      <Card variant="outlined" style={styles.row}>
+        {body}
+      </Card>
+    </Pressable>
   );
 }
 
@@ -182,11 +303,28 @@ const styles = StyleSheet.create({
     borderColor: colors.brand,
   },
   list: {
+    gap: spacing.lg,
+  },
+  day: {
     gap: spacing.sm,
+  },
+  expanded: {
+    marginTop: spacing.sm,
+    paddingTop: spacing.sm,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.divider,
+    gap: spacing.sm,
+  },
+  expandedRow: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  expandedTime: {
+    width: 40,
   },
   row: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: spacing.md,
   },
   icon: {
