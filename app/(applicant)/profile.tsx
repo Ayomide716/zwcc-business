@@ -11,7 +11,7 @@
  * whole chain rather than only their latest attempt.
  */
 import { useRouter } from 'expo-router';
-import { ACCOUNT_DELETION_IN_APP } from '@/config/account.config';
+import { useAccountDeletionVisible } from '@/hooks/useAccountDeletionVisible';
 import { useEffect, useState } from 'react';
 import { Ionicons } from '@expo/vector-icons';
 import { Alert, Pressable, StyleSheet, View } from 'react-native';
@@ -39,6 +39,7 @@ export default function ProfileScreen() {
   const router = useRouter();
   const toast = useToast();
   const { profile, user, role, refreshProfile, signOut } = useAuth();
+  const showDeleteAccount = useAccountDeletionVisible();
   const { data: history = [] } = useMyApplicationHistory();
 
   const [editing, setEditing] = useState(false);
@@ -262,8 +263,8 @@ export default function ProfileScreen() {
         {/* The right to delete belongs to everyone with an account, so it sits
             beside sign-out rather than buried in settings. Whether it is
             allowed right now is explained on the next screen. Hidden until
-            the App Store needs it — see ACCOUNT_DELETION_IN_APP. */}
-        {ACCOUNT_DELETION_IN_APP ? (
+            the App Store needs it, except to preview testers — see account.config. */}
+        {showDeleteAccount ? (
           <ListGroup>
             <ListRow
               icon="trash-outline"

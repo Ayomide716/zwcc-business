@@ -6,7 +6,7 @@
  * shape and alignment.
  */
 import { useRouter } from 'expo-router';
-import { ACCOUNT_DELETION_IN_APP } from '@/config/account.config';
+import { useAccountDeletionVisible } from '@/hooks/useAccountDeletionVisible';
 import { Alert, StyleSheet, View } from 'react-native';
 
 import { BuildFootprint } from '@/components/app';
@@ -25,6 +25,7 @@ import { ROLE_LABELS } from '@/types/roles';
 export default function StaffProfileScreen() {
   const router = useRouter();
   const { profile, role, signOut } = useAuth();
+  const showDeleteAccount = useAccountDeletionVisible();
 
   function handleSignOut() {
     Alert.alert('Sign out?', 'You will need to sign in again to review applications.', [
@@ -142,8 +143,8 @@ export default function StaffProfileScreen() {
         {/* The right to delete belongs to everyone with an account, so it sits
             beside sign-out rather than buried in settings. Whether it is
             allowed right now is explained on the next screen. Hidden until
-            the App Store needs it — see ACCOUNT_DELETION_IN_APP. */}
-        {ACCOUNT_DELETION_IN_APP ? (
+            the App Store needs it, except to preview testers — see account.config. */}
+        {showDeleteAccount ? (
           <ListGroup>
             <ListRow
               icon="trash-outline"

@@ -13,3 +13,21 @@
  * "contact the church" to "delete it yourself", so the two can never disagree.
  */
 export const ACCOUNT_DELETION_IN_APP = false;
+
+/**
+ * Accounts that see the Delete account button while it is hidden from everyone
+ * else — for testing the flow end to end before it is switched on.
+ *
+ * Stored as SHA-256 fingerprints of the lower-cased email, never the address
+ * itself: this repository is public, and a tester's email has no business
+ * being readable in it. To add someone, hash their address the same way.
+ *
+ * This decides only who SEES the button. Deleting your own account is safe
+ * for anyone, so the server does not enforce the list; it cannot be used to
+ * reach anybody else's account either way.
+ *
+ * Irrelevant once ACCOUNT_DELETION_IN_APP is true, when everyone sees it.
+ */
+export const ACCOUNT_DELETION_PREVIEW_EMAIL_SHA256: readonly string[] = [
+  'bf9fd26d1f8ca751521353af2aa34f290291253f8232c13e193bbf2f1e5ae459',
+];
