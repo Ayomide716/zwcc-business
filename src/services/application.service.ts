@@ -215,6 +215,21 @@ export const applicationService = {
       carriedValues = asFormValues(previous.form_data);
       // Declarations must be given afresh for each application.
       for (const id of DECLARATION_FIELD_IDS) delete carriedValues[id];
+    } else {
+      // A first application starts from what sign-up already collected.
+      // Asking for the same email twice is how a typo gets in the second time
+      // ("gmil.com"), and the account's copy is the one every email goes to.
+      // The fields stay editable; this only saves retyping them.
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('full_name, phone, email')
+        .eq('id', userId)
+        .maybeSingle();
+      if (profile) {
+        if (profile.full_name) carriedValues.full_name = profile.full_name;
+        if (profile.phone) carriedValues.phone = profile.phone;
+        if (profile.email) carriedValues.email = profile.email;
+      }
     }
 
     const { data, error } = await supabase

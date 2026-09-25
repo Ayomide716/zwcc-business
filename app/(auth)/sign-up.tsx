@@ -12,6 +12,7 @@ import { TextField } from '@/components/ui/TextField';
 import { useToast } from '@/providers/ToastProvider';
 import { profileService } from '@/services/profile.service';
 import { colors, spacing } from '@/theme';
+import { EmailField } from '@/components/app/EmailField';
 import { emailError } from '@/validation/email';
 
 /** Minimum that is defensible without being hostile to type on a phone. */
@@ -127,17 +128,16 @@ export default function SignUpScreen() {
           required
         />
 
-        <TextField
+        <EmailField
           label="Email address"
           value={email}
-          onChangeText={setEmail}
-          keyboardType="email-address"
-          inputMode="email"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
-          textContentType="emailAddress"
+          onChangeText={(next) => {
+            setEmail(next);
+            // A fixed address should not keep showing the old complaint.
+            if (errors.email) setErrors(({ email: _cleared, ...others }) => others);
+          }}
           placeholder="you@example.com"
+          helpText="Every email about your application goes here, so check it carefully."
           error={errors.email}
           required
         />

@@ -13,6 +13,7 @@ import type { FieldDefinition } from '@/config/form.config';
 import { GRANT_PROGRAM } from '@/config/program.config';
 import { shiftYears } from '@/lib/date';
 import { formatCurrencyInput, parseCurrencyInput } from '@/lib/format';
+import { EmailField } from '@/components/app/EmailField';
 
 export interface FormFieldRendererProps {
   field: FieldDefinition;
@@ -158,15 +159,10 @@ export function FormFieldRenderer({
 
     case 'email':
       return (
-        <TextField
+        <EmailField
           label={field.label}
           value={asString}
           onChangeText={onChange}
-          keyboardType="email-address"
-          inputMode="email"
-          autoCapitalize="none"
-          autoCorrect={false}
-          autoComplete="email"
           placeholder={field.placeholder}
           required={field.required}
           error={error}

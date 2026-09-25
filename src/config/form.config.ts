@@ -161,6 +161,10 @@ export const APPLICATION_STEPS: StepDefinition[] = [
         type: 'email',
         placeholder: 'you@example.com',
         required: true,
+        // Filled in from the account. Emails about the application go to the
+        // address the person signs in with, not this field, so say so rather
+        // than let someone expect news at a different address.
+        helpText: 'Filled in from your account. Updates about your application are sent to the email you sign in with.',
       },
       {
         id: 'residential_address',
