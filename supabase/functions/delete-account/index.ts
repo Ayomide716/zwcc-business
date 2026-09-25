@@ -16,6 +16,11 @@
  *
  * Order matters:
  *
+ *   0. Completed grants are copied, without anything identifying, into
+ *      `grant_records` (migration 0025). This comes first because it reads the
+ *      person's applications, reports and agreement while they still exist.
+ *      If it fails, nothing has been deleted.
+ *
  *   1. Files, in every bucket, under the person's own folder. Storage is not
  *      linked to the database by foreign keys, so deleting the account alone
  *      would leave their NIN slip, photographs and videos behind with nothing
@@ -149,6 +154,20 @@ Deno.serve(async (request) => {
     auth: { persistSession: false, autoRefreshToken: false },
   });
 
+  // Keep the anonymous record of any completed grant before anything else is
+  // touched. Safe to repeat: an application already archived is skipped.
+  const { data: grantsArchived, error: archiveError } = await asService.rpc(
+    'archive_completed_grants',
+    { p_user: user.id },
+  );
+  if (archiveError) {
+    console.error('delete-account: grant archive failed', user.id, archiveError);
+    return json(
+      { error: 'Your account could not be deleted. Nothing has been removed. Please try again.', code: 'archive_failed' },
+      500,
+    );
+  }
+
   const removed: Record<string, number> = {};
 
   try {
@@ -188,7 +207,11 @@ Deno.serve(async (request) => {
     action: 'account.deleted',
     entity_type: 'profile',
     entity_id: user.id,
-    metadata: { files_removed: removed, requested_by: 'account holder' },
+    metadata: {
+      files_removed: removed,
+      grants_archived: grantsArchived ?? 0,
+      requested_by: 'account holder',
+    },
   });
 
   return json({ deleted: true });

@@ -23,7 +23,7 @@ import { supabase } from '@/lib/supabase';
  * than ignored, so a new rule in the database can never be skipped by an older
  * version of the app.
  */
-export type DeletionBlocker = 'staff' | 'grant_on_record' | 'not_signed_in' | (string & {});
+export type DeletionBlocker = 'staff' | 'grant_in_progress' | 'not_signed_in' | (string & {});
 
 /**
  * Local copies of personal data. The cached query results hold the person's
@@ -60,10 +60,10 @@ export const accountService = {
     }
 
     throw new AppError(
-      code === 'staff' || code === 'grant_on_record' ? 'permission' : 'server',
+      code === 'staff' || code === 'grant_in_progress' ? 'permission' : 'server',
       'Account not deleted',
       message,
-      code !== 'staff' && code !== 'grant_on_record',
+      code !== 'staff' && code !== 'grant_in_progress',
       error,
     );
   },

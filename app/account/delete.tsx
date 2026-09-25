@@ -38,6 +38,15 @@ const WHAT_IS_REMOVED = [
   'Your notifications, and this phone’s link to them',
 ];
 
+/**
+ * Said up front so nobody is surprised later. Only applies to someone whose
+ * grant was completed, but stating it to everyone costs nothing and saves a
+ * second version of this screen.
+ */
+const WHAT_IS_KEPT =
+  'If you received a grant, the church keeps a record of it — its reference code, the amount '
+  + 'requested and the dates — with nothing that identifies you.';
+
 function blockerMessage(blocker: DeletionBlocker): { title: string; message: string } {
   switch (blocker) {
     case 'staff':
@@ -48,13 +57,14 @@ function blockerMessage(blocker: DeletionBlocker): { title: string; message: str
           + 'the reviews and decisions you have recorded. Ask an administrator to change your role '
           + 'back to applicant first, then you can delete it here.',
       };
-    case 'grant_on_record':
+    case 'grant_in_progress':
       return {
-        title: 'Your grant record has to be kept',
+        title: 'Your grant is still running',
         message:
-          'You have a signed grant agreement, so your application is the church’s record of money '
-          + `committed to you. Please contact ${ORGANISATION.name} at ${ORGANISATION.supportEmail} `
-          + 'to ask for your account to be closed.',
+          'You have signed a grant agreement and your monthly reports are still due, so your '
+          + 'account cannot be deleted until the grant is completed. You can delete it yourself '
+          + `then. If you need to leave the programme before that, please contact ${ORGANISATION.name} `
+          + `at ${ORGANISATION.supportEmail}.`,
       };
     case 'not_signed_in':
       return {
@@ -190,6 +200,10 @@ export default function DeleteAccountScreen() {
               </Text>
             ))}
           </View>
+
+          <Text variant="caption" color="textSecondary">
+            {WHAT_IS_KEPT}
+          </Text>
 
           <Banner
             tone="warning"

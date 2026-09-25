@@ -176,7 +176,7 @@ export const PRIVACY_POLICY: LegalDocument = {
       body: [
         'Application records are retained so that the history of the programme is preserved, including applications that were not approved.',
         // Added at the lawyer's request, 25 September 2026.
-        'If you delete your account, your records are removed with it, except the record of any grant for which you have signed an agreement, which the church keeps as its record of money committed.',
+        'If you delete your account, your records are removed with it. If you received a grant, the church keeps a record of that grant — its reference code, the amount requested and the dates — without your name, contact details, documents or reports.',
         'A record that an account was deleted is kept for audit purposes. It contains no name or contact details.',
       ],
     },
@@ -187,7 +187,7 @@ export const PRIVACY_POLICY: LegalDocument = {
         'You have the right to ask us to correct information that is inaccurate.',
         'You have the right to ask us to delete your information, subject to our record-keeping obligations.',
         // Added at the lawyer's request, 25 September 2026.
-        'You can delete your account yourself at any time from the Profile screen, using Delete account. This removes your profile, your applications, the documents you uploaded and your progress reports. If you have signed a grant agreement, contact Zion World Christian Center to ask for your account to be closed.',
+        'You can delete your account yourself from the Profile screen, using Delete account. This removes your profile, your applications, the documents you uploaded and your progress reports. While a grant you have signed for is still running, your account can be deleted once the grant is completed; if you need to leave the programme before then, contact Zion World Christian Center.',
         'You have the right to withdraw your consent and to object to certain processing.',
         'You have the right to complain to the Nigeria Data Protection Commission.',
       ],
