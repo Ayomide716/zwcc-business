@@ -26,7 +26,7 @@ export interface ScreenHeaderProps {
   eyebrow?: string;
   title: string;
   subtitle?: string;
-  /** Shows a back chevron. Defaults to router.back(). */
+  /** Shows a back chevron. Defaults to going back, or home if there is nowhere to go back to. */
   showBack?: boolean;
   onBack?: () => void;
   right?: React.ReactNode;
@@ -48,7 +48,16 @@ export function ScreenHeader({
     <View style={[styles.header, style]}>
       {showBack ? (
         <Pressable
-          onPress={onBack ?? (() => router.back())}
+          onPress={
+            onBack ??
+            (() => {
+              // A screen opened with nothing behind it — from a notification,
+              // or as the first screen after sign-in — used to swallow the tap.
+              // Going home instead means back always does something.
+              if (router.canGoBack()) router.back();
+              else router.replace('/');
+            })
+          }
           hitSlop={12}
           accessibilityRole="button"
           accessibilityLabel="Go back"

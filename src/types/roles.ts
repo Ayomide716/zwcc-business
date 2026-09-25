@@ -25,7 +25,12 @@ export const ROLE_LABELS: Record<Role, string> = {
 export const ROLE_HOME_ROUTE: Record<Role, string> = {
   applicant: '/(applicant)/dashboard',
   committee: '/(committee)/dashboard',
-  admin: '/(admin)/dashboard',
+  // Administrators start in the review surface, like the committee, and open
+  // Administration on top of it. Landing them on Administration directly left
+  // nothing underneath, so its back button had nowhere to go and did nothing,
+  // and the review queue — where an administrator spends most of their time —
+  // was a screen away.
+  admin: '/(committee)/dashboard',
 };
 
 export function isRole(value: unknown): value is Role {
