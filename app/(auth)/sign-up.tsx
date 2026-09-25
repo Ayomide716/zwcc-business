@@ -12,6 +12,7 @@ import { TextField } from '@/components/ui/TextField';
 import { useToast } from '@/providers/ToastProvider';
 import { profileService } from '@/services/profile.service';
 import { colors, spacing } from '@/theme';
+import { emailError } from '@/validation/email';
 
 /** Minimum that is defensible without being hostile to type on a phone. */
 const MIN_PASSWORD_LENGTH = 8;
@@ -36,9 +37,10 @@ export default function SignUpScreen() {
     if (fullName.trim().length < 3) {
       next.fullName = 'Enter your full name as it appears on your ID.';
     }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(email.trim())) {
-      next.email = 'Enter a valid email address.';
-    }
+    // Catches misspellings like "gmil.com" as well as a malformed address —
+    // this is the address every email about their application goes to.
+    const emailProblem = emailError(email);
+    if (emailProblem) next.email = emailProblem;
     if (!/^(\+?234|0)[789]\d{9}$/.test(phone.replace(/[\s()-]/g, ''))) {
       next.phone = 'Enter a valid Nigerian phone number, e.g. 08031234567.';
     }

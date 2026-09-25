@@ -16,6 +16,7 @@ import {
   type StepDefinition,
 } from '@/config/form.config';
 import { ageInYears, parseISODate } from '@/lib/date';
+import { EMAIL_PATTERN, suggestEmailCorrection } from '@/validation/email';
 
 export interface FieldError {
   fieldId: string;
@@ -27,7 +28,6 @@ export interface ValidationResult {
   errors: Record<string, string>;
 }
 
-const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/;
 /** Nigerian mobile numbers, accepting 0803…, +234803… and 234803… forms. */
 const PHONE_PATTERN = /^(\+?234|0)[789]\d{9}$/;
 
@@ -112,7 +112,16 @@ function buildFieldSchema(field: FieldDefinition): z.ZodTypeAny {
       const schema = z
         .string()
         .trim()
-        .regex(EMAIL_PATTERN, { message: 'Enter a valid email address.' });
+        .regex(EMAIL_PATTERN, { message: 'Enter a valid email address.' })
+        .superRefine((value, ctx) => {
+          const suggestion = suggestEmailCorrection(value);
+          if (suggestion) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              message: `Check the spelling. Did you mean ${suggestion}?`,
+            });
+          }
+        });
       return required ? schema : schema.or(z.literal('')).optional();
     }
 
