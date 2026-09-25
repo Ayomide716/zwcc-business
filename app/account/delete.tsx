@@ -140,7 +140,13 @@ export default function DeleteAccountScreen() {
     >
       <ScreenHeader
         title="Delete account"
-        subtitle="This removes your account and everything in it. It cannot be undone."
+        subtitle={
+          // Promising removal above a message that refuses it reads as a
+          // contradiction, so the warning only appears when deletion is open.
+          blocked || blocker.isError
+            ? undefined
+            : 'This removes your account and everything in it. It cannot be undone.'
+        }
         showBack
       />
 

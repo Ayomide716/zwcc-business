@@ -3,9 +3,16 @@
  *
  * Reviewed and authorised by Zion World Christian Center's lawyer on the
  * wording as it stood in the app, and published without the draft notice from
- * 25 September 2026. The only changes made at publication were removing the
- * bracketed drafting notes ("[Placeholder — …]"), dropping the two sections
- * that contained nothing else, and renumbering. No wording was added.
+ * 25 September 2026. At publication the bracketed drafting notes
+ * ("[Placeholder — …]") were removed, the two sections that contained nothing
+ * else were dropped, and the sections renumbered.
+ *
+ * Later the same day, at the lawyer's request, the Privacy Policy gained the
+ * disclosures it had been missing: the device notification token (section 2),
+ * the named providers that handle data and what each receives (section 7), and
+ * how account deletion works and what survives it (sections 8 and 9). Every
+ * added sentence describes what the app actually does, checked against the
+ * code at the time; none of them sets a new obligation. Each is marked below.
  *
  * Changing either document is a content edit here and ships over the air. Any
  * change to what these documents say should go back to the church's lawyer
@@ -116,6 +123,8 @@ export const PRIVACY_POLICY: LegalDocument = {
         'Documents: the identification, business and verification documents you upload.',
         'Monitoring information: your monthly business progress reports, including any photographs or videos you attach.',
         'Technical information: records of actions taken in the app, kept for audit and security purposes.',
+        // Added at the lawyer's request, 25 September 2026.
+        'Device information: a notification token for each phone you sign in on, used only to send you notifications, and switched off when you sign out.',
       ],
     },
     {
@@ -154,6 +163,11 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: '7. Third-party services',
       body: [
         'The app uses Supabase for database, authentication and file storage.',
+        // Added at the lawyer's request, 25 September 2026.
+        'Emails about your application are sent through Resend. Resend receives your email address, your first name and the text of the message, and nothing else from your application.',
+        'Push notifications are delivered through Expo’s push notification service and, on Android phones, Google’s Firebase Cloud Messaging. They receive your device’s notification token, the title and text of each notification, and an internal reference number for it. They do not receive your application, your documents or your contact details.',
+        'When the app opens, it checks with Expo for updates to the app. That check sends the app’s version, your phone’s operating system and a random identifier for the installation, which is not linked to your name or your account.',
+        'These providers may store or process information outside Nigeria.',
         'Email, SMS and WhatsApp notification providers may be engaged to deliver messages to you.',
       ],
     },
@@ -161,6 +175,9 @@ export const PRIVACY_POLICY: LegalDocument = {
       heading: '8. How long we keep it',
       body: [
         'Application records are retained so that the history of the programme is preserved, including applications that were not approved.',
+        // Added at the lawyer's request, 25 September 2026.
+        'If you delete your account, your records are removed with it, except the record of any grant for which you have signed an agreement, which the church keeps as its record of money committed.',
+        'A record that an account was deleted is kept for audit purposes. It contains no name or contact details.',
       ],
     },
     {
@@ -169,6 +186,8 @@ export const PRIVACY_POLICY: LegalDocument = {
         'You have the right to ask for a copy of the information we hold about you.',
         'You have the right to ask us to correct information that is inaccurate.',
         'You have the right to ask us to delete your information, subject to our record-keeping obligations.',
+        // Added at the lawyer's request, 25 September 2026.
+        'You can delete your account yourself at any time from the Profile screen, using Delete account. This removes your profile, your applications, the documents you uploaded and your progress reports. If you have signed a grant agreement, contact Zion World Christian Center to ask for your account to be closed.',
         'You have the right to withdraw your consent and to object to certain processing.',
         'You have the right to complain to the Nigeria Data Protection Commission.',
       ],

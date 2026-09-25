@@ -13,7 +13,8 @@
  */
 import {
   AGREEMENT_CLAUSES,
-  AGREEMENT_PLACEHOLDER_NOTICE,
+  DRAFT_AGREEMENT_NOTICE,
+  DRAFT_TEMPLATE_VERSIONS,
   AGREEMENT_TEMPLATE_VERSION,
   type SignatureMethod,
 } from '@/config/agreement.config';
@@ -61,7 +62,8 @@ export const agreementService = {
             applicant_id: applicantId,
             template_version: AGREEMENT_TEMPLATE_VERSION,
             content_snapshot: {
-              notice: AGREEMENT_PLACEHOLDER_NOTICE,
+              // Approved text carries no notice. The key is left out rather
+              // than set to null so the stored copy says only what was shown.
               clauses: AGREEMENT_CLAUSES,
               issuedAt: new Date().toISOString(),
             } as unknown as Json,
@@ -194,15 +196,21 @@ export const agreementService = {
       | null;
 
     if (snapshot?.clauses?.length) {
+      const version = agreement?.template_version ?? AGREEMENT_TEMPLATE_VERSION;
       return {
-        notice: snapshot.notice ?? AGREEMENT_PLACEHOLDER_NOTICE,
+        // A draft stays labelled a draft for as long as the agreement exists:
+        // that is what the person actually received and signed. Approved
+        // versions carry no notice.
+        notice:
+          snapshot.notice ??
+          (DRAFT_TEMPLATE_VERSIONS.includes(version) ? DRAFT_AGREEMENT_NOTICE : null),
         clauses: snapshot.clauses,
-        version: agreement?.template_version ?? AGREEMENT_TEMPLATE_VERSION,
+        version,
       };
     }
 
     return {
-      notice: AGREEMENT_PLACEHOLDER_NOTICE,
+      notice: null,
       clauses: AGREEMENT_CLAUSES,
       version: AGREEMENT_TEMPLATE_VERSION,
     };

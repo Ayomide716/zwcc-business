@@ -179,13 +179,17 @@ export default function AgreementScreen() {
         against each other, which read as one block with two headings.
       */}
       <View style={styles.stack}>
-        {/* The placeholder warning is not dismissible and is shown first. */}
-        <Banner
-          tone="warning"
-          title="Draft agreement"
-          message={content.notice}
-          icon="construct-outline"
-        />
+        {/* Only an agreement issued under the draft text carries a notice. It
+            is not dismissible and is shown first, because it is part of what
+            that person received. */}
+        {content.notice ? (
+          <Banner
+            tone="warning"
+            title="Draft agreement"
+            message={content.notice}
+            icon="construct-outline"
+          />
+        ) : null}
 
         {isSigned ? (
           <Banner
