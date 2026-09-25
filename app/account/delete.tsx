@@ -13,7 +13,7 @@
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Linking, StyleSheet, View } from 'react-native';
 
 import { Button } from '@/components/ui/Button';
 import { Banner, LoadingState } from '@/components/ui/Feedback';
@@ -67,6 +67,18 @@ function blockerMessage(blocker: DeletionBlocker): { title: string; message: str
         message: `Please contact ${ORGANISATION.name} at ${ORGANISATION.supportEmail}.`,
       };
   }
+}
+
+/**
+ * A refusal that says "contact the church" should come with a way to do it.
+ * Opens the person's email app with the address and subject filled in; staff
+ * are not offered this because their route is an administrator, not an email.
+ */
+function emailTheChurch() {
+  const subject = encodeURIComponent('Please close my ZWCC Business Grant account');
+  void Linking.openURL(`mailto:${ORGANISATION.supportEmail}?subject=${subject}`).catch(() => {
+    // No email app. The address is on screen, so there is nothing to add.
+  });
 }
 
 export default function DeleteAccountScreen() {
@@ -124,7 +136,16 @@ export default function DeleteAccountScreen() {
   return (
     <Screen
       footer={
-        blocked || blocker.isError ? undefined : (
+        blocked && blocker.data !== 'staff' && blocker.data !== 'not_signed_in' ? (
+          <Button
+            label="Email the church"
+            variant="outline"
+            icon="mail-outline"
+            onPress={emailTheChurch}
+            fullWidth
+            size="lg"
+          />
+        ) : blocked || blocker.isError ? undefined : (
           <Button
             label="Delete my account permanently"
             variant="danger"
